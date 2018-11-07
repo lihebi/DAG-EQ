@@ -8,6 +8,17 @@
 - https://github.com/hwalsuklee/tensorflow-mnist-VAE
 - https://github.com/oduerr/dl_tutorial/tree/master/tensorflow/vae
 - https://github.com/stitchfix/fauxtograph
+- DCGAN: https://github.com/carpedm20/DCGAN-tensorflow
+
+edward: a package with variational inference, not auto encoder
+https://github.com/blei-lab/edward
+
+Jonathan Hui
+- a really good post:
+  https://jhui.github.io/2017/03/06/Variational-autoencoders/
+- Code:
+  https://github.com/jhui/deep_learning/tree/master/variational_autoencoder
+
 
 keras:
 - blog (very good):
