@@ -22,24 +22,10 @@ def gen_causal_data():
     """
     pass
 
-
-def multi_sampling(args):
-    """Reparameterization trick by sampling fr an isotropic unit Gaussian.
-
-    # Arguments:
-        args (tensor): mean and log of variance of Q(z|X)
-
-    # Returns:
-        z (tensor): sampled latent vector
-    """
-    mu, A = args
-    # mu, A = z_mu, A
-    dim = K.int_shape(A)[1]
-    epsilon = K.random_normal(shape=(-1, dim, 1))
-    # epsilon
-    # z_mu + tf.matmul(A, epsilon)
-    res = mu + tf.matmul(A, epsilon)
-    return tf.reshape(res, shape=(-1, dim))
+def myinv(m):
+    res = tf.linalg.inv(m)
+    # res = m
+    return res
 
 def compute_z(w, mu, sigma):
     dim = K.int_shape(mu)[1]
@@ -48,10 +34,10 @@ def compute_z(w, mu, sigma):
     w_mat = tf.contrib.distributions.fill_triangular(w)
     
     # Compute the distribution for z
-    z_mu = K.batch_dot(tf.linalg.inv(K.eye(dim) - w_mat), mu)
-    mat_left = tf.linalg.inv(K.eye(dim) - w_mat)
+    z_mu = K.batch_dot(myinv(K.eye(dim) - w_mat), mu)
+    mat_left = myinv(K.eye(dim) - w_mat)
     mat_middle = tf.matrix_diag(tf.square(sigma))
-    mat_right = tf.transpose(tf.linalg.inv(K.eye(dim) - w_mat), perm=(0,2,1))
+    mat_right = tf.transpose(myinv(K.eye(dim) - w_mat), perm=(0,2,1))
     z_sigma = K.batch_dot(K.batch_dot(mat_left, mat_middle), mat_right)
     
     return w_mat, z_mu, z_sigma
@@ -90,15 +76,20 @@ def multi_sampling_v2(args):
 
     # omega = AA^T
     # FIMXE sigma must be positive definite
-    A = tf.linalg.cholesky(z_sigma)
+    # A = tf.linalg.cholesky(z_sigma)
+    # DEBUG
+    # A = z_sigma
+    cov = tf.matrix_diag(tf.square(sigma))
+    AA = tf.linalg.cholesky(cov)
+    mat_left = myinv(K.eye(dim) - w_mat)
+    A = K.batch_dot(mat_left, AA)
+    
     # dim = K.int_shape(A)[1]
     epsilon = K.random_normal(shape=(batch, dim))
     # epsilon
     # z_mu + tf.matmul(A, epsilon)
-    # FIXME z_mu shape
-    res = z_mu + K.batch_dot(A, epsilon)
-    return tf.reshape(res, shape=(-1, dim))
-    
+    # return (?, 2)
+    return z_mu + K.batch_dot(A, epsilon)
 
 # def sample(mu, sigma):
 #     res = np.zeros(dim)
@@ -198,24 +189,56 @@ def causal_vae():
 
     reconstruction_loss *= original_dim
 
-    # w_mat, z_mu, z_sigma = compute_z(w, mu, sigma)
-    # term1 = K.log(tf.linalg.det(z_sigma))
-    # term2 = tf.trace(z_sigma)
-    # term3 = tf.reduce_sum(K.dot(z_mu, z_mu), axis=1)
-    
+    _, z_mu, z_sigma = compute_z(w, mu, sigma)
+    term1 = K.log(tf.linalg.det(z_sigma))
+    term2 = tf.trace(z_sigma)
+    # FIXME term3 has (?,1), while other terms have (?,)
+    term3 = K.reshape(K.batch_dot(z_mu, z_mu, axes=1), shape=(-1,))
+    # term3 = K.sum(tf.tensordot(z_mu, z_mu, axes=1), axis=1)
+    # tf.tensordot(z_mu, z_mu, axes=2)
+
+    # K.dot(z_mu, z_mu)
+    # K.eval(K.zeros(5))
+    # K.eval(K.dot(K.ones((2,3)), K.ones((3,4))))
+    # K.dot(K.ones((1,2)), K.ones((2,1))).shape
+    # K.eval(K.dot(K.ones((1,2)), K.ones((2,1))))
+    # K.batch_dot(K.ones(2), K.ones(2))
+    # K.eval(tf.tensordot(tf.ones(2), tf.ones(2), axes=1))
+    # K.eval(tf.matmul(tf.ones((2,3)), tf.ones((3,4))))
+    # K.eval(tf.tensordot(tf.ones((2,3)), tf.ones((3,4)), axes=1))
+    # K.eval(K.ones(2))
+
     # kl_loss = -0.5 * (1 + term1 - term2 - term3)
+    #
+    # TODO NOW Seems to be inconsistent with different starts. Are GPU
+    # keeping some states?
+    kl_loss = - 0.5 * (1 + term1 - term2 - term3)
+    # kl_loss = K.mean(K.mean(w_mat, axis=1), axis=1)
+    # kl_loss = 1
     
     # Original VAE kl loss
     # kl_loss = 1 + z_sigma - K.square(z_mu) - K.exp(z_sigma)
     # kl_loss = K.sum(kl_loss, axis=-1)
     # kl_loss *= -0.5
     
-    # vae_loss = K.mean(reconstruction_loss + kl_loss)
+    # Trying to use tf.distribution and tf.kl_divergence
+    # dqz = tf.distributions.Normal(loc=z_mu, scale=z_sigma)
+    # dpz = tf.distributions.Normal(loc=0.0, scale=1.0)
+
+    # dqz = tf.contrib.distributions.MultivariateNormalFullCovariance(loc=z_mu, covariance_matrix=z_sigma)
+    # dpz = tf.contrib.distributions.MultivariateNormalFullCovariance(loc=tf.zeros(latent_dim), covariance_matrix=tf.matrix_diag(tf.ones(latent_dim)))
+    
+    # kl_loss = tf.distributions.kl_divergence(dqz, dpz)
+
+    vae_loss = K.mean(reconstruction_loss + kl_loss)
     # DEBUG
-    vae_loss = K.mean(reconstruction_loss)
+    # vae_loss = K.mean(reconstruction_loss)
     vae.add_loss(vae_loss)
-    vae.compile(optimizer='adam')
+    # vae.compile(optimizer='adam')
+    vae.compile(optimizer='rmsprop')
     vae.summary()
+    encoder.summary()
+    decoder.summary()
     plot_model(vae,
                to_file='vae_mlp.png',
                show_shapes=True)
@@ -223,8 +246,10 @@ def causal_vae():
             epochs=epochs,
             batch_size=batch_size,
             validation_data=(x_test, None))
-    plot_results(models,
-                 data,
-                 batch_size=batch_size,
-                 model_name="vae_mlp")
+    # plot_results(models,
+    #              data,
+    #              batch_size=batch_size,
+    #              model_name="vae_mlp")
     
+if __name__ == '__main__':
+    causal_vae()
