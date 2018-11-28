@@ -7,11 +7,14 @@ from keras.datasets import mnist
 from keras.losses import mse, binary_crossentropy
 from keras.utils import plot_model
 from keras import backend as K
+from keras import regularizers
 
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 import os
+
+import tensorflow as tf
 
 
 def gen_causal_data():
@@ -22,7 +25,7 @@ def gen_causal_data():
 # reparameterization trick
 # instead of sampling from Q(z|X), sample eps = N(0,I)
 # z = z_mean + sqrt(var)*eps
-def vae_sampling(args):
+def sampling(args):
     """Reparameterization trick by sampling fr an isotropic unit Gaussian.
 
     # Arguments:
@@ -39,39 +42,75 @@ def vae_sampling(args):
     epsilon = K.random_normal(shape=(batch, dim))
     return z_mean + K.exp(0.5 * z_log_var) * epsilon
 
-def sample_z(dim, w, mu, sigma):
-    """FIXME
+def multi_sampling(args):
+    """Reparameterization trick by sampling fr an isotropic unit Gaussian.
+
+    # Arguments:
+        args (tensor): mean and log of variance of Q(z|X)
+
+    # Returns:
+        z (tensor): sampled latent vector
     """
-    z = K.zeros(dim)
-    for i in range(dim):
-        a,b = weight_segment(i)
-        W.append(w[a:b] + [0]*(dim-i))
-    for i in range(dim):
-        batch = K.shape(mu)[0]
-        dim = K.int_shape(mu)[1]
-        # by default, random_normal has mean=0 and std=1.0
-        epsilon = K.random_normal(shape=(batch, dim))
-        z.append(np.prod(z, W[i]) + mu + sigma * epsilon)
-    return z
-        
-def weight_segment(n):
-    """
-    >>> weight_segment(0)
-    (0,0)
-    >>> weight_segment(1)
-    (0,1)
-    >>> weight_segment(2)
-    (1,3)
-    >>> weight_segment(3)
-    (3,6)
-    >>> weight_segment(4)
-    (6,10)
-    """
-    if n == 0:
-        return (0,0)
-    else:
-        a,b = weight_segment(n-1)
-        return b, b+n
+    mu, A = args
+    # mu, A = z_mu, A
+    dim = K.int_shape(A)[1]
+    epsilon = K.random_normal(shape=(-1, dim, 1))
+    # epsilon
+    # z_mu + tf.matmul(A, epsilon)
+    res = mu + tf.matmul(A, epsilon)
+    return tf.reshape(res, shape=(-1, dim))
+
+def compute_z(w, mu, sigma):
+    dim = K.int_shape(mu)[1]
+    # FIXME this fill in clockwise spiral. But this should not matter
+    # as long as I'm using it this way consistently
+    w_mat = tf.contrib.distributions.fill_triangular(w)
+    # w_mat = add_column_right(add_row_above(w_mat))
+    # for i in range(latent_dim):
+    #     for j in range(i):
+    #         K.update(w_mat[i][j], w[int(i * (i+1) / 2 + j)])
+    
+    # Compute the distribution for z
+    # tf.linalg.inv(K.eye(latent_dim) - w_mat)
+    z_mu = tf.linalg.matmul(tf.linalg.inv(K.eye(dim) - w_mat),
+                            tf.reshape(mu, (-1,dim,1)))
+    z_mu = tf.reshape(z_mu, shape=(-1, dim))
+    tf.linalg.inv(K.eye(dim) - w_mat)
+    tf.matrix_diag(sigma)
+    mat_left = tf.linalg.inv(K.eye(dim) - w_mat)
+    mat_middle = tf.matrix_diag(tf.square(sigma))
+    mat_right = tf.reshape(tf.transpose(tf.linalg.inv(K.eye(dim) - w_mat)),
+                           [-1,2,2])
+    # this is a covariate matrix, so actually Omega
+    z_sigma = tf.matmul(tf.matmul(mat_left, mat_middle), mat_right)
+    z_sigma
+    return w_mat, z_mu, z_sigma
+    
+
+def multi_sampling_v2(args):
+    w, mu, sigma = args
+    w_mat, z_mu, z_sigma = compute_z(w, mu, sigma)
+    # omega = AA^T
+    # FIMXE sigma must be positive definite
+    A = tf.linalg.cholesky(z_sigma)
+    dim = K.int_shape(A)[1]
+    epsilon = K.random_normal(shape=(-1, dim, 1))
+    # epsilon
+    # z_mu + tf.matmul(A, epsilon)
+    # FIXME z_mu shape
+    res = z_mu + tf.matmul(A, epsilon)
+    return tf.reshape(res, shape=(-1, dim))
+    
+
+# def sample(mu, sigma):
+#     res = np.zeros(dim)
+#     for i in range(dim):
+#         batch = K.shape(mu)[0]
+#         dim = K.int_shape(mu)[1]
+#         # by default, random_normal has mean=0 and std=1.0
+#         epsilon = K.random_normal(shape=(batch, dim))
+#         res[i] = (mu_z + K.exp(0.5 * sigma_z) * epsilon)
+#     return res
     
 def causal_vae():
     # MNIST dataset
@@ -92,12 +131,9 @@ def causal_vae():
     epochs = 50
 
     # number of variables, also number of mu and sigma
-    causal_latent_dim = 10
+    # latent_dim = 10
     # number of weights
-    causal_w_dim = weight_segment(causal_latent_dim-1)[1]
-    # causal_var_dim = causal_latent_dim
-    # causal_mu_dim = causal_latent_dim
-    # causal_sigma_dim  = causal_latent_dim
+    w_dim = int(latent_dim * (latent_dim + 1) / 2)
 
     # VAE model = encoder + decoder
     # build encoder model
@@ -105,27 +141,31 @@ def causal_vae():
     inputs = Input(shape=input_shape, name='encoder_input')
     # 512
     x = Dense(intermediate_dim, activation='relu')(inputs)
-    causal_w = Dense(causal_w_dim, name='causal_weights',
+    w = Dense(w_dim, name='causal_weights',
                      # FIXME regularizer
                      activity_regularizer=regularizers.l1(10e-5))(x)
-    causal_mu = Dense(causal_latent_dim, name='causal_mu')(x)
-    causal_sigma = Dense(causal_latent_dim,
-                         name='causal_sigma')(x)
-    # FIXME sample, reparameterization trick
-    z = sample_z(causal_latent_dim, causal_w, causal_mu, causal_sigma)
+    mu = Dense(latent_dim, name='causal_mu')(x)
+    sigma = Dense(latent_dim, name='causal_sigma')(x)
 
+    # sample, reparameterization trick
+    z = Lambda(multi_sampling_v2,
+               output_shape=(latent_dim,),
+               name='z')([w, mu, sigma])
+    
     # instantiate encoder model
     encoder = Model(inputs,
                     # the last is z
-                    [causal_w, causal_mu, causal_sigma, z],
+                    # [w, mu, sigma, z],
+                    [w, mu, sigma, z],
                     name='encoder')
+    
     encoder.summary()
     plot_model(encoder,
                to_file='causal_vae_mlp_encoder.png',
                show_shapes=True)
 
     # build decoder model
-    latent_inputs = Input(shape=(causal_latent_dim,), name='z_sampling')
+    latent_inputs = Input(shape=(latent_dim,), name='z_sampling')
     x = Dense(intermediate_dim, activation='relu')(latent_inputs)
     outputs = Dense(original_dim, activation='sigmoid')(x)
 
@@ -149,11 +189,19 @@ def causal_vae():
                                               outputs)
 
     reconstruction_loss *= original_dim
+
+    w_mat, z_mu, z_sigma = compute_z(w, mu, sigma)
+    term1 = K.log(tf.linalg.det(z_sigma))
+    term2 = tf.trace(z_sigma)
+    term3 = tf.reduce_sum(K.dot(z_mu, z_mu), axis=1)
     
-    # FIXME kl loss
-    kl_loss = 1 + z_log_var - K.square(z_mean) - K.exp(z_log_var)
-    kl_loss = K.sum(kl_loss, axis=-1)
-    kl_loss *= -0.5
+    kl_loss = -0.5 * (1 + term1 - term2 - term3)
+    
+    # Original VAE kl loss
+    # kl_loss = 1 + z_sigma - K.square(z_mu) - K.exp(z_sigma)
+    # kl_loss = K.sum(kl_loss, axis=-1)
+    # kl_loss *= -0.5
+    
     vae_loss = K.mean(reconstruction_loss + kl_loss)
     vae.add_loss(vae_loss)
     vae.compile(optimizer='adam')
