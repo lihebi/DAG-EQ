@@ -22,25 +22,6 @@ def gen_causal_data():
     """
     pass
 
-# reparameterization trick
-# instead of sampling from Q(z|X), sample eps = N(0,I)
-# z = z_mean + sqrt(var)*eps
-def sampling(args):
-    """Reparameterization trick by sampling fr an isotropic unit Gaussian.
-
-    # Arguments:
-        args (tensor): mean and log of variance of Q(z|X)
-
-    # Returns:
-        z (tensor): sampled latent vector
-    """
-
-    z_mean, z_log_var = args
-    batch = K.shape(z_mean)[0]
-    dim = K.int_shape(z_mean)[1]
-    # by default, random_normal has mean=0 and std=1.0
-    epsilon = K.random_normal(shape=(batch, dim))
-    return z_mean + K.exp(0.5 * z_log_var) * epsilon
 
 def multi_sampling(args):
     """Reparameterization trick by sampling fr an isotropic unit Gaussian.
@@ -65,40 +46,57 @@ def compute_z(w, mu, sigma):
     # FIXME this fill in clockwise spiral. But this should not matter
     # as long as I'm using it this way consistently
     w_mat = tf.contrib.distributions.fill_triangular(w)
-    # w_mat = add_column_right(add_row_above(w_mat))
-    # for i in range(latent_dim):
-    #     for j in range(i):
-    #         K.update(w_mat[i][j], w[int(i * (i+1) / 2 + j)])
     
     # Compute the distribution for z
-    # tf.linalg.inv(K.eye(latent_dim) - w_mat)
-    z_mu = tf.linalg.matmul(tf.linalg.inv(K.eye(dim) - w_mat),
-                            tf.reshape(mu, (-1,dim,1)))
-    z_mu = tf.reshape(z_mu, shape=(-1, dim))
-    tf.linalg.inv(K.eye(dim) - w_mat)
-    tf.matrix_diag(sigma)
+    z_mu = K.batch_dot(tf.linalg.inv(K.eye(dim) - w_mat), mu)
     mat_left = tf.linalg.inv(K.eye(dim) - w_mat)
     mat_middle = tf.matrix_diag(tf.square(sigma))
-    mat_right = tf.reshape(tf.transpose(tf.linalg.inv(K.eye(dim) - w_mat)),
-                           [-1,2,2])
-    # this is a covariate matrix, so actually Omega
-    z_sigma = tf.matmul(tf.matmul(mat_left, mat_middle), mat_right)
-    z_sigma
+    mat_right = tf.transpose(tf.linalg.inv(K.eye(dim) - w_mat), perm=(0,2,1))
+    z_sigma = K.batch_dot(K.batch_dot(mat_left, mat_middle), mat_right)
+    
     return w_mat, z_mu, z_sigma
     
+
+# reparameterization trick
+# instead of sampling from Q(z|X), sample eps = N(0,I)
+# z = z_mean + sqrt(var)*eps
+def sampling(args):
+    """Reparameterization trick by sampling fr an isotropic unit Gaussian.
+
+    # Arguments:
+        args (tensor): mean and log of variance of Q(z|X)
+
+    # Returns:
+        z (tensor): sampled latent vector
+    """
+
+    mu, sigma = args
+    batch = K.shape(mu)[0]
+    dim = K.int_shape(sigma)[1]
+    # by default, random_normal has mean=0 and std=1.0
+    epsilon = K.random_normal(shape=(batch, dim))
+    return mu + K.exp(0.5 * sigma) * epsilon
 
 def multi_sampling_v2(args):
     w, mu, sigma = args
     w_mat, z_mu, z_sigma = compute_z(w, mu, sigma)
+    batch = K.shape(mu)[0]
+    dim = K.int_shape(mu)[1]
+    
+    # # by default, random_normal has mean=0 and std=1.0
+    epsilon = K.random_normal(shape=(batch, dim))
+    # # epsilon = K.batch_dot(w_mat, epsilon)
+    # return mu + K.exp(0.5 * sigma) * epsilon + K.sum(w_mat)
+
     # omega = AA^T
     # FIMXE sigma must be positive definite
     A = tf.linalg.cholesky(z_sigma)
-    dim = K.int_shape(A)[1]
-    epsilon = K.random_normal(shape=(-1, dim, 1))
+    # dim = K.int_shape(A)[1]
+    epsilon = K.random_normal(shape=(batch, dim))
     # epsilon
     # z_mu + tf.matmul(A, epsilon)
     # FIXME z_mu shape
-    res = z_mu + tf.matmul(A, epsilon)
+    res = z_mu + K.batch_dot(A, epsilon)
     return tf.reshape(res, shape=(-1, dim))
     
 
@@ -141,22 +139,30 @@ def causal_vae():
     inputs = Input(shape=input_shape, name='encoder_input')
     # 512
     x = Dense(intermediate_dim, activation='relu')(inputs)
-    w = Dense(w_dim, name='causal_weights',
-                     # FIXME regularizer
-                     activity_regularizer=regularizers.l1(10e-5))(x)
+    # w = Dense(w_dim, name='causal_weights',
+    #                  # FIXME regularizer
+    #                  # activity_regularizer=regularizers.l1(10e-5)
+    # )(x)
+    w = Dense(w_dim, name='causal_weights')(x)
     mu = Dense(latent_dim, name='causal_mu')(x)
     sigma = Dense(latent_dim, name='causal_sigma')(x)
 
     # sample, reparameterization trick
     z = Lambda(multi_sampling_v2,
-               output_shape=(latent_dim,),
+               # output_shape=(latent_dim,),
                name='z')([w, mu, sigma])
+    # debug
+    # z = Lambda(sampling, name='z')([mu, sigma])
     
     # instantiate encoder model
     encoder = Model(inputs,
                     # the last is z
                     # [w, mu, sigma, z],
-                    [w, mu, sigma, z],
+                    # [sigma],
+                    # DEBUG
+                    # [sigma],
+                    z,
+                    # sigma,
                     name='encoder')
     
     encoder.summary()
@@ -176,7 +182,9 @@ def causal_vae():
 
     # instantiate VAE model
     # only use the last (z) of the output of encoder
-    outputs = decoder(encoder(inputs)[-1])
+    # outputs = decoder(encoder(inputs)[-1])
+    # DEBUG
+    outputs = decoder(encoder(inputs))
     vae = Model(inputs, outputs, name='causal_vae_mlp')
 
     # model and data
@@ -190,19 +198,21 @@ def causal_vae():
 
     reconstruction_loss *= original_dim
 
-    w_mat, z_mu, z_sigma = compute_z(w, mu, sigma)
-    term1 = K.log(tf.linalg.det(z_sigma))
-    term2 = tf.trace(z_sigma)
-    term3 = tf.reduce_sum(K.dot(z_mu, z_mu), axis=1)
+    # w_mat, z_mu, z_sigma = compute_z(w, mu, sigma)
+    # term1 = K.log(tf.linalg.det(z_sigma))
+    # term2 = tf.trace(z_sigma)
+    # term3 = tf.reduce_sum(K.dot(z_mu, z_mu), axis=1)
     
-    kl_loss = -0.5 * (1 + term1 - term2 - term3)
+    # kl_loss = -0.5 * (1 + term1 - term2 - term3)
     
     # Original VAE kl loss
     # kl_loss = 1 + z_sigma - K.square(z_mu) - K.exp(z_sigma)
     # kl_loss = K.sum(kl_loss, axis=-1)
     # kl_loss *= -0.5
     
-    vae_loss = K.mean(reconstruction_loss + kl_loss)
+    # vae_loss = K.mean(reconstruction_loss + kl_loss)
+    # DEBUG
+    vae_loss = K.mean(reconstruction_loss)
     vae.add_loss(vae_loss)
     vae.compile(optimizer='adam')
     vae.summary()
