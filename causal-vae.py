@@ -16,6 +16,9 @@ import os
 
 import tensorflow as tf
 
+# tf.set_random_seed(seed)
+# np.random.seed(seed)
+
 def plot_results(models,
                  data,
                  batch_size=128,
@@ -68,6 +71,7 @@ def plot_results(models,
 
 def myinv(m):
     res = tf.linalg.inv(m)
+    # res = m
     return res
 
 def compute_z_old(w, mu, sigma):
@@ -136,7 +140,7 @@ def causal_vae_model(input_shape, latent_dim):
     # build decoder model
     latent_inputs = Input(shape=(latent_dim,), name='z_sampling')
     x = Dense(intermediate_dim, activation='relu')(latent_inputs)
-    outputs = Dense(original_dim, activation='sigmoid')(x)
+    outputs = Dense(input_shape[0], activation='sigmoid')(x)
     decoder = Model(latent_inputs, outputs, name='decoder')
     decoder.summary()
     outputs = decoder(encoder(inputs))
@@ -146,15 +150,19 @@ def causal_vae_model(input_shape, latent_dim):
     # reconstruction_loss = mse(inputs, outputs)
     reconstruction_loss = binary_crossentropy(inputs,
                                               outputs)
-    reconstruction_loss *= original_dim
+    reconstruction_loss *= input_shape[0]
 
     z_w, z_mu, z_sigma = compute_z(w, mu, sigma)
-    term1 = K.log(tf.linalg.det(z_sigma))
+
+    # term1 = K.log(tf.linalg.det(z_sigma))
+    term1 = K.log(K.sum(tf.square(sigma)))
+    
     term2 = tf.trace(z_sigma)
     term3 = K.reshape(K.batch_dot(z_mu, z_mu, axes=1), shape=(-1,))
     kl_loss = - 0.5 * (1 + term1 - term2 - term3)
     vae_loss = K.mean(reconstruction_loss + kl_loss)
     vae.add_loss(vae_loss)
+    # vae.compile(optimizer='SGD')
     # vae.compile(optimizer='adam')
     vae.compile(optimizer='rmsprop')
     vae.summary()
@@ -172,9 +180,11 @@ def causal_vae_mnist():
     x_test = x_test.astype('float32') / 255
     input_shape = (original_dim, )
     latent_dim = 2
+    
     vae, encoder, decoder = causal_vae_model(input_shape, 2)
-    vae.summary()
-    vae.fit(x_train, epochs=10, batch_size=128,
+    # vae.summary()
+    # encoder.summary()
+    vae.fit(x_train, epochs=2, batch_size=128, shuffle=True,
             validation_data=(x_test, None))
     data = (x_test, y_test)
     plot_results((encoder, decoder),
