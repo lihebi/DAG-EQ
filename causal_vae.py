@@ -74,18 +74,6 @@ def myinv(m):
     # res = m
     return res
 
-def compute_z_old(w, mu, sigma):
-    dim = K.int_shape(mu)[1]
-    # FIXME this fill in clockwise spiral. But this should not matter
-    # as long as I'm using it this way consistently
-    w_mat = tf.contrib.distributions.fill_triangular(w)
-    # Compute the distribution for z
-    z_mu = K.batch_dot(myinv(K.eye(dim) - w_mat), mu)
-    mat_left = myinv(K.eye(dim) - w_mat)
-    mat_middle = tf.matrix_diag(tf.square(sigma))
-    mat_right = tf.transpose(myinv(K.eye(dim) - w_mat), perm=(0,2,1))
-    z_sigma = K.batch_dot(K.batch_dot(mat_left, mat_middle), mat_right)
-    return w_mat, z_mu, z_sigma
 
 def compute_z(w, mu, sigma):
     dim = K.int_shape(mu)[1]
@@ -104,6 +92,44 @@ def compute_z(w, mu, sigma):
     mat_right = tf.transpose(myinv(K.eye(dim) - z_w), perm=(0,2,1))
     z_sigma = K.batch_dot(K.batch_dot(mat_left, mat_middle), mat_right)
     return z_w, z_mu, z_sigma
+
+def compute_z_numpy_single(w, mu, sigma):
+    dim = mu.shape[0]
+    w = np.reshape(w, (dim, dim))
+    # np.tril([[1,2,3],[4,5,6],[7,8,9]], -1)
+    z_w = np.tril(w, -1)
+    # Compute the distribution for z
+    mat_left = np.linalg.inv(np.eye(dim) - z_w)
+    z_mu = np.matmul(mat_left, mu)
+
+    # np.diag([1,2,3])
+    mat_middle = np.diag(np.square(sigma))
+    mat_right = np.transpose(np.linalg.inv(np.eye(dim) - z_w))
+    z_sigma = np.matmul(np.matmul(mat_left, mat_middle), mat_right)
+    return z_w, z_mu, z_sigma
+
+def compute_z_numpy(w, mu, sigma):
+    res_w = []
+    res_mu = []
+    res_sigma = []
+    for i in range(w.shape[0]):
+        w_, mu_, sigma_ = compute_z_numpy_single(w[i], mu[i], sigma[i])
+        res_w.append(w_)
+        res_mu.append(mu_)
+        res_sigma.append(sigma_)
+    return np.array(res_w), np.array(res_mu), np.array(res_sigma)
+
+def test():
+    w
+    sigma
+    out = compute_z_numpy_single(w[0], mu[0], sigma[0])
+    w[:2].shape[0]
+    out = compute_z_numpy(w[:2], mu[:2], sigma[:2])
+    out = compute_z_numpy(w, mu, sigma)
+    out[0].shape
+    out[1].shape
+    out[2].shape
+        
 
 def multi_sampling(args):
     w, mu, sigma = args
@@ -134,8 +160,9 @@ def causal_vae_model(input_shape, latent_dim):
     z = Lambda(multi_sampling, name='z')([w, mu, sigma])
     encoder = Model(inputs,
                     # the last is z
-                    # [w, mu, sigma, z],
-                    z, name='encoder')
+                    [w, mu, sigma, z],
+                    # z,
+                    name='encoder')
     encoder.summary()
     # build decoder model
     latent_inputs = Input(shape=(latent_dim,), name='z_sampling')
@@ -143,7 +170,7 @@ def causal_vae_model(input_shape, latent_dim):
     outputs = Dense(input_shape[0], activation='sigmoid')(x)
     decoder = Model(latent_inputs, outputs, name='decoder')
     decoder.summary()
-    outputs = decoder(encoder(inputs))
+    outputs = decoder(encoder(inputs)[-1])
     vae = Model(inputs, outputs, name='causal_vae_mlp')
 
     # use either one of these loss
@@ -162,7 +189,7 @@ def causal_vae_model(input_shape, latent_dim):
     kl_loss = - 0.5 * (1 + term1 - term2 - term3)
     vae_loss = K.mean(reconstruction_loss + kl_loss)
     vae.add_loss(vae_loss)
-    # vae.compile(optimizer='SGD')
+    # vae.compile(optimizer='sgd')
     # vae.compile(optimizer='adam')
     vae.compile(optimizer='rmsprop')
     vae.summary()
@@ -184,7 +211,7 @@ def causal_vae_mnist():
     vae, encoder, decoder = causal_vae_model(input_shape, 2)
     # vae.summary()
     # encoder.summary()
-    vae.fit(x_train, epochs=2, batch_size=128, shuffle=True,
+    vae.fit(x_train, epochs=20, batch_size=128, shuffle=True,
             validation_data=(x_test, None))
     data = (x_test, y_test)
     plot_results((encoder, decoder),
