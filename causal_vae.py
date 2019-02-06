@@ -8,6 +8,7 @@ from keras.losses import mse, binary_crossentropy
 from keras.utils import plot_model
 from keras import backend as K
 from keras import regularizers
+from keras.callbacks import EarlyStopping
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -149,10 +150,8 @@ def causal_vae_model(input_shape, latent_dim):
     intermediate_dim = 512
     inputs = Input(shape=input_shape, name='encoder_input')
     x = Dense(intermediate_dim, activation='relu')(inputs)
-    # w = Dense(w_dim, name='causal_weights',
-    #           activity_regularizer=regularizers.l1(10e-5))(x)
-    # w = Dense(w_dim, name='causal_weights',
-    #           kernel_regularizer=regularizers.l2(0.01))(x)
+    # w = Dense(latent_dim * latent_dim, name='causal_weights',
+    #           kernel_regularizer=regularizers.l1(0.01))(x)
     w = Dense(latent_dim * latent_dim, name='causal_weights')(x)
     mu = Dense(latent_dim, name='causal_mu')(x)
     sigma = Dense(latent_dim, name='causal_sigma')(x)
@@ -187,6 +186,15 @@ def causal_vae_model(input_shape, latent_dim):
     term2 = tf.trace(z_sigma)
     term3 = K.reshape(K.batch_dot(z_mu, z_mu, axes=1), shape=(-1,))
     kl_loss = - 0.5 * (1 + term1 - term2 - term3)
+
+    # TODO Interventional loss
+    # 1. make a random pertubation to latent_inputs as z
+    # 2. compute ez and zprime
+    # 3. decode to ex and xprime
+    # 
+    # 4. compare distribution ???. This should be done on Epoch
+    # basis. How to compute log likelihood?
+    
     vae_loss = K.mean(reconstruction_loss + kl_loss)
     vae.add_loss(vae_loss)
     # vae.compile(optimizer='sgd')
@@ -207,17 +215,21 @@ def causal_vae_mnist():
     x_test = x_test.astype('float32') / 255
     input_shape = (original_dim, )
     latent_dim = 2
-    
+
     vae, encoder, decoder = causal_vae_model(input_shape, 2)
     # vae.summary()
     # encoder.summary()
-    vae.fit(x_train, epochs=20, batch_size=128, shuffle=True,
-            validation_data=(x_test, None))
+    history = vae.fit(x_train, epochs=15, batch_size=128,
+                      shuffle=True, validation_data=(x_test, None),
+                      callbacks=[EarlyStopping(monitor='val_loss', min_delta=0,
+                                               patience=3, verbose=0, mode='auto')])
+    # plot_history(history, 'causal/history.png')
+    
     data = (x_test, y_test)
     plot_results((encoder, decoder),
                  data,
                  batch_size=128,
-                 model_name="causal_vae")
+                 model_name="causal")
     
 if __name__ == '__main__':
     causal_vae_mnist()
