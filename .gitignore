@@ -1,2 +1,7 @@
 *.png
 __pycache__
+*.tex
+*.pdf
+*.hdf5
+*.gif
+training_checkpoints
