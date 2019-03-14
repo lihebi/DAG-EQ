@@ -136,29 +136,34 @@ def generate_and_save_images(model, epoch, test_input):
     plt.savefig('image_at_epoch_{:04d}.png'.format(epoch))
     # plt.show()
 
+def train(generator, discriminator, batch):
+    # divide batch myself
+    noise = tf.random_normal([BATCH_SIZE, NOISE_DIM])
+    fake = generator(noise)
+    fake_pred = discriminator(fake)
+    real_pred = discrimnator(batch)
+    gen_loss = generator_loss(fake_pred)
+    disc_loss = discriminator_loss(real_pred, fake_pred)
+
+    generator.train_on_batch(batch, loss=gen_loss)
+    discriminator.train_on_batch(batch, loss=disc_loss)
+    
+    generator()
+    # model.train_on_batch
+    
+
 def main():
     generator = make_generator_model()
     discriminator = make_discriminator_model()
-    generator_optimizer = tf.train.AdamOptimizer(1e-4)
-    discriminator_optimizer = tf.train.AdamOptimizer(1e-4)
 
     discriminator.summary()
     generator.summary()
-    config = tf.ConfigProto(allow_soft_placement=True,
-                            gpu_options.allow_growth=True)
-    sess = tf.Session(config=config)
+    
+    # config = tf.ConfigProto(allow_soft_placement=True,
+    #                         allow_growth=True)
+    # sess = tf.Session(config=config)
 
     train_dataset = load_mnist()
-    # while True:
-    #     print('.')
-    #     sess.run(next_element)
-    train_dataset
-    sess.run(train_dataset)
-    # tf.zeros(8).eval()
-    with tf.Session() as sess:
-        print(sess.run(train_dataset.take(1)))
-        print(sess.run(tf.zeros(8)))
-    next_element.shape
     res = sess.run(next_element)
     res.shape
     train_gan(train_dataset, generator, discriminator,
