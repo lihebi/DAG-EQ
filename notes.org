@@ -1,0 +1,350 @@
+#+TITLE: Implementation notes
+
+
+* TODO-List
+
+** TODO run those VAEs
+** TODO run those GANs
+** DONE julia?
+   CLOSED: [2019-10-03 Thu 12:14]
+Read flux.jl code
+** TODO math equation data exp
+** TODO interventional loss function exp
+
+** clean up generative models
+*** GAN
+*** VAE
+
+** unsupervised representation learning
+*** InfoGAN
+*** NOTEARS
+*** Interventional Loss
+
+** Causal generative models
+*** TODO GAN
+*** TODO VAE
+*** TODO InfoGAN
+*** TODO NOTEARS
+*** TODO Causal
+
+
+
+* TODO-list
+
+** TODO Code from papers
+*** cite:2015-ICML-Lopez-Paz-Towards Towards a Learning Theory of Cause-Effect Inference
+Code: https://github.com/lopezpaz/causation_learning_theory
+
+*** [#B] cite:2017-Preprint-Goudet-Causal Causal Generative Neural Networks
+https://github.com/GoudetOlivier/CGNN
+
+*** DONE [#A] cite:2017-CVPR-Lopez-Paz-Discovering Discovering causal signals in images
+  CausalDiscoveryToolbox
+  https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox has an
+  implementation of NCC.
+
+*** DONE cite:2018-Preprint-Kalainathan-SAM SAM: Structural Agnostic Model, Causal Discovery and Penalized Adversarial Learning
+https://github.com/Diviyan-Kalainathan/SAM
+
+*** DONE cite:2018-ICLR-Kocaoglu-Causalgan CausalGAN: Learning Causal Implicit Generative Models with Adversarial Training
+code: https://github.com/mkocaoglu/CausalGAN
+
+*** DONE [#A] cite:2018-NIPS-Zheng-Dags DAGs with NO TEARS: Continuous optimization for structure learning
+NOTEARS https://github.com/xunzheng/notears
+
+*** DONE (2019) cite:2019-ICML-Yu-Dag DAG-GNN: DAG structure learning with graph neural networks
+DAG-GNN https://github.com/fishmoon1234/DAG-GNN
+
+*** DONE cite:2020-ICLRSubmit-Author1237-Gradient Gradient-based neural dag learning
+GraN-DAG https://github.com/kurowasan/GraN-DAG
+
+*** DONE cite:2020-ICLRSubmit-Author2311-Meta A meta-transfer objective for learning to disentangle causal mechanisms
+Code: https://github.com/ec6dde01667145e58de60f864e05a4/CausalOptimizationAnon
+
+** TODO run causal discovery
+
+*** constraint based methods
+- PC
+- FCI: can handle confounders
+*** score based
+- Greedy Equivalence Search (GES)
+- FGS
+
+Scores:
+- BIC
+- AIC
+
+*** inside equivalent class
+non-Gaussian or non-Linear
+
+- LiNGAM: Linear Non-Gaussian Acyclic Model:
+  https://sites.google.com/site/sshimizu06/lingam
+- no-linear model: seems to be extension to LiNGAM, do not have a special
+  algorithm, still use noise footprint.
+
+
+* Causal Toolbox
+** TODO Julia packages
+*** CausalInference.jl
+based on =pcalg=
+https://github.com/mschauer/CausalInference.jl
+** TODO MIT
+http://probcomp.csail.mit.edu/
+*** gen
+*** crosscat
+https://github.com/probcomp/crosscat
+
+** tutorial & references
+
+- a blog post http://fastml.com/bayesian-machine-learning/
+
+*** DONE Probabilistic Programming and Bayesian Methods for Hackers
+   CLOSED: [2019-11-25 Mon 22:28]
+a book, using PyMC3, about probablistic programming in general
+http://camdavidsonpilon.github.io/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers/
+
+** Bayesian learning in general
+*** PyMC: Probabilistic Programming in Python
+https://docs.pymc.io/
+
+** Bayesian Network learning
+*** Python Library for Probabilistic Graphical Models
+https://github.com/pgmpy/pgmpy
+
+*** Bayesian Network Modeling and Analysis
+https://github.com/paulgovan/BayesianNetwork
+
+
+*** Bayesian network Learning Improved Project (blip)
+A bayesian network learning code: https://github.com/mauro-idsia/blip
+
+** Causal inference only
+*** DoWhy | Making causal inference easy
+https://github.com/microsoft/dowhy
+
+** Causal learning
+
+*** DONE The Tetrad Project: Graphical Causal Models
+    CLOSED: [2019-11-30 Sat 17:13]
+- homepage: http://www.phil.cmu.edu/tetrad/
+- github: https://github.com/cmu-phil/tetrad
+- tutorial: https://rawgit.com/cmu-phil/tetrad/development/tetrad-gui/src/main/resources/resources/javahelp/manual/tetrad_tutorial.html
+- manual: http://cmu-phil.github.io/tetrad/manual/
+
+To build javadoc:
+
+#+begin_example
+mvn javadoc:javadoc
+#+end_example
+
+Reading the Tetrad code. The search code is in
+=tetrad/tetrad-lib/src/main/java/edu/cmu/tetrad/search=.  Something to pay
+attention:
+- [X] the synthetic data generation process. Seems to be in
+  =tetrad-lib/.../tetrad/algcomparison/simulation= (a bad choice)
+- [X] the GUI shows different algorithm in different categories, e.g.
+  - constraint/score-based
+  - allow confounders or not
+  - local (greedy) search or exact search.
+  Find them in the code. This turns out to be annotated, using
+  =edu.cmu.tetrad.annotation.Algorithm=, and the annotation happens not in
+  =search/=, but in =algcomparison/algorithm=. For example:
+
+#+BEGIN_SRC java
+@edu.cmu.tetrad.annotation.Algorithm(
+        name = "LiNGAM",
+        command = "lingam",
+        algoType = AlgType.forbid_latent_common_causes,
+        dataType = DataType.Continuous
+)
+@edu.cmu.tetrad.annotation.Algorithm(
+        name = "FCI",
+        command = "fci",
+        algoType = AlgType.allow_latent_common_causes
+)
+@Bootstrapping
+public class Fci implements Algorithm, TakesInitialGraph, HasKnowledge, TakesIndependenceWrapper {}
+@edu.cmu.tetrad.annotation.Algorithm(
+        name = "FGES",
+        command = "fges",
+        algoType = AlgType.forbid_latent_common_causes
+)
+@Bootstrapping
+public class Fges implements Algorithm, TakesInitialGraph, HasKnowledge, UsesScoreWrapper {}
+#+END_SRC
+
+
+
+- [X] Algorithms:
+  - CCD: *Cyclic* Causal Discovery algorithm
+  - DCI (Distributed Causal Inference): important because related to dataset mixing
+  - FAS: fast adjacency search, used in many variants
+  - FCI: Fast Causal Inference
+    - GFci, "A Hybrid Causal Search Algorithm for Latent Variable Models," JMLR 2016.
+  - GES: greedy search, in =Fges.java=, "Optimal structure identification with greedy search"
+  - LiNGAM: Lingam.java, "A linear nongaussian acyclic model for causal discovery"
+  - PC ("Peter/Clark") algorithm
+    - PC Local algorithm
+
+- [X] independence test
+  - IndTestChiSquare.java
+  - IndTestDSep.java
+  - IndTestFisherZ.java
+
+- other
+  - MeekRules.java: meek rule seems to relate to background knowledge, "Causal
+    inference and causal explanation with background knowledge".
+
+- [X] scores
+  - BDe score
+  - BIC score
+  - Dirichlet Score (seems to be the BDeu score)
+  - MVPScore.java, mixed variable polynomial BIC score for fGES?
+
+- [ ] I'll probably also need to implement parameter learning
+- [ ] To verify correctness of my implementation, compare the results (e.g. strcture learned, p value)
+
+
+**** wrappers
+These two are really just wrappers. Both provides example data.
+- R: https://github.com/bd2kccd/r-causal
+- python: https://github.com/bd2kccd/py-causal, this provides many jupyter notebooks
+
+Not very interesting wrappers:
+- cmd: https://github.com/bd2kccd/causal-cmd
+- web: https://github.com/bd2kccd/causal-web
+- REST: https://github.com/bd2kccd/causal-rest-api
+
+*** CausalDiscoveryToolbox
+Package for causal inference in graphs and in the pairwise settings.
+https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox
+
+Most of the discovery algorithms call R libraries. There are also some pairwise
+algorithms, e.g. NCC, where the original authors write a NN from scratch, and
+the code consistency is questionable.
+
+This is a good reference, but I'm not using it either.
+
+*** TODO R packages
+
+**** R package pcalg
+https://cran.r-project.org/web/packages/pcalg/index.html
+
+#+begin_quote
+The main algorithms for causal structure learning are PC (for observational data
+without hidden variables), FCI and RFCI (for observational data with hidden
+variables), and GIES (for a mix of data from observational studies
+(i.e. observational data) and data from experiments involving interventions
+(i.e. interventional data) without hidden variables). For causal inference the
+IDA algorithm, the Generalized Backdoor Criterion (GBC), the Generalized
+Adjustment Criterion (GAC) and some related functions are implemented. Functions
+for incorporating background knowledge are provided.
+#+end_quote
+
+So
+- PC
+- FCI
+- RFCI
+- GIES
+
+**** R package bnlearn
+http://www.bnlearn.com/
+
+Constraint based:
+- PC
+- Grow-Shrink (GS)
+- Hybrid Parents & Children (HPC)
+- ...
+
+Score based:
+- Hill Climbing (HC);
+- Tabu Search (Tabu);
+
+Hybrid:
+- Max-Min Hill Climbing (MMHC);
+- ...
+
+Local:
+- Chow-Liu;
+- ARACNE;
+
+Score functions:
+
+#+begin_quote
+categorical data (multinomial distribution):
+- the multinomial log-likelihood;
+- the Akaike Information Criterion (AIC);
+- the Bayesian Information Criterion (BIC);
+- the multinomial predictive log-likelihood;
+- a score equivalent Dirichlet posterior density (BDe);
+- a sparse Dirichlet posterior density (BDs);
+- a Dirichlet posterior density based on Jeffrey's prior (BDJ);
+- a modified Bayesian Dirichlet for mixtures of interventional and observational data;
+- the locally averaged BDe score (BDla);
+- the K2 score;
+
+continuous data (multivariate normal distribution):
+- the multivariate Gaussian log-likelihood;
+- the corresponding Akaike Information Criterion (AIC);
+- the corresponding Bayesian Information Criterion (BIC);
+- the corresponding predictive log-likelihood;
+- a score equivalent Gaussian posterior density (BGe);
+
+mixed data (conditional Gaussian distribution):
+- the conditional Gaussian log-likelihood;
+- the corresponding Akaike Information Criterion (AIC);
+- the corresponding Bayesian Information Criterion (BIC);
+- the corresponding predictive log-likelihood.
+#+end_quote
+
+**** sparsebn
+Learning Sparse Bayesian Networks from High-Dimensional Data
+https://cran.r-project.org/web/packages/sparsebn/index.html
+
+*** TODO Tübingen group
+- many papers and source code: http://webdav.tuebingen.mpg.de/causality/
+  - they also built the "Database with cause-effect pairs"
+
+
+** Other
+
+*** pyro: Deep Universal Probabilistic Programming
+http://pyro.ai/
+
+
+*** edwardlib
+A library for probabilistic modeling, inference, and criticism.
+http://edwardlib.org/
+
+
+*** ZhuSuan: A Library for Bayesian Deep Learning
+https://github.com/thu-ml/zhusuan
+
+*** Stan: Sampling Through Adaptive Neighborhoods
+ https://mc-stan.org/
+
+**** The No-U-Turn Sampler: Adaptively Setting Path Lengths in Hamiltonian Monte Carlo
+ Stan uses Nuts as sampler.
+
+ #+begin_quote
+ Most of the computation [in Stan] is done using Hamiltonian Monte Carlo. HMC
+ requires some tuning, so Matt Hoffman up and wrote a new algorithm, Nuts (the
+ “No-U-Turn Sampler”) which optimizes HMC adaptively. In many settings, Nuts is
+ actually more computationally efficient than the optimal static HMC!
+ #+end_quote
+
+**** Automatic Variational Inference in Stan
+ https://arxiv.org/abs/1506.03431
+
+ #+begin_quote
+ Variational inference is a scalable technique for approximate Bayesian
+ inference. Deriving variational inference algorithms requires tedious
+ model-specific calculations; this makes it difficult to automate. We propose an
+ automatic variational inference algorithm, automatic differentiation variational
+ inference (ADVI). The user only provides a Bayesian model and a dataset; nothing
+ else.
+ #+end_quote
+
+*** Infer.NET by Microsoft
+https://dotnet.github.io/infer/
+
