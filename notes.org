@@ -43,22 +43,22 @@ https://github.com/GoudetOlivier/CGNN
   https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox has an
   implementation of NCC.
 
-*** DONE cite:2018-Preprint-Kalainathan-SAM SAM: Structural Agnostic Model, Causal Discovery and Penalized Adversarial Learning
+*** TODO cite:2018-Preprint-Kalainathan-SAM SAM: Structural Agnostic Model, Causal Discovery and Penalized Adversarial Learning
 https://github.com/Diviyan-Kalainathan/SAM
 
 *** DONE cite:2018-ICLR-Kocaoglu-Causalgan CausalGAN: Learning Causal Implicit Generative Models with Adversarial Training
 code: https://github.com/mkocaoglu/CausalGAN
 
-*** DONE [#A] cite:2018-NIPS-Zheng-Dags DAGs with NO TEARS: Continuous optimization for structure learning
+*** TODO [#A] cite:2018-NIPS-Zheng-Dags DAGs with NO TEARS: Continuous optimization for structure learning
 NOTEARS https://github.com/xunzheng/notears
 
-*** DONE (2019) cite:2019-ICML-Yu-Dag DAG-GNN: DAG structure learning with graph neural networks
+*** TODO (2019) cite:2019-ICML-Yu-Dag DAG-GNN: DAG structure learning with graph neural networks
 DAG-GNN https://github.com/fishmoon1234/DAG-GNN
 
-*** DONE cite:2020-ICLRSubmit-Author1237-Gradient Gradient-based neural dag learning
+*** TODO cite:2020-ICLRSubmit-Author1237-Gradient Gradient-based neural dag learning
 GraN-DAG https://github.com/kurowasan/GraN-DAG
 
-*** DONE cite:2020-ICLRSubmit-Author2311-Meta A meta-transfer objective for learning to disentangle causal mechanisms
+*** TODO cite:2020-ICLRSubmit-Author2311-Meta A meta-transfer objective for learning to disentangle causal mechanisms
 Code: https://github.com/ec6dde01667145e58de60f864e05a4/CausalOptimizationAnon
 
 ** TODO run causal discovery
@@ -123,6 +123,156 @@ A bayesian network learning code: https://github.com/mauro-idsia/blip
 https://github.com/microsoft/dowhy
 
 ** Causal learning
+*** TODO R packages
+
+**** DONE cite:2099-Manual-XXX-pcalg R package pcalg
+CLOSED: [2019-12-02 Mon 13:23]
+https://cran.r-project.org/web/packages/pcalg/index.html
+
+#+begin_example
+svn checkout svn://svn.r-forge.r-project.org/svnroot/pcalg/
+#+end_example
+
+
+#+begin_quote
+The main algorithms for causal structure learning are PC (for observational data
+without hidden variables), FCI and RFCI (for observational data with hidden
+variables), and GIES (for a mix of data from observational studies
+(i.e. observational data) and data from experiments involving interventions
+(i.e. interventional data) without hidden variables). For causal inference the
+IDA algorithm, the Generalized Backdoor Criterion (GBC), the Generalized
+Adjustment Criterion (GAC) and some related functions are implemented. Functions
+for incorporating background knowledge are provided.
+#+end_quote
+
+So
+- PC
+- FCI
+- RFCI
+- GIES
+
+
+***** cite:2014-Manual-Markus-More More Causal Inference with Graphical Models in R Package pcalg
+Discovery:
+- pc(): constraint based
+- fci(): generalization of PC, for allowing latent variables
+- skeleton(): a subroutine
+
+More discovery:
+- rfci(): much faster than FCI
+- ges(): score-based
+- gies(): a generalization of GES to interventional data
+- simy(): simy is a dynamic programming approach, same interface as gies, which
+  means interventional data. The cost is exponential, but computes exact optimum
+  of BIC score
+
+Inference:
+- ida()
+- idaFast()
+- backdoor(): check if a causal effect is identifiable or not
+
+This paper seems to be a super set of previous.
+
+- PC and GES assumes no hidden variables
+- FCI and RFCI can allow hidden variables
+- GIES: assume no hidden variables. (HEBI: Jointly observational and
+  interventional data).
+
+****** (UAI 2006) A simple approach for finding the globally optimal Bayesian network structure
+simy, a dynamic programming approach
+****** cite:2012-Journal-Kalisch-Causal Causal inference using graphical models with the R package pcalg
+Previous version.
+****** (2012) Characterization and greedy learning of interventional Markov equivalence classes of directed acyclic graph
+GIES
+****** (2009) Estimating High-Dimensional Intervention Effects from Observational Data
+IDA method to compute cause effect. Seems to be combining PC and generalized
+backdoor criterion.
+
+***** cite:2099-Manual-Kalisch-Overview
+
+Some additional discovery:
+- lingram: constraint based, no hidden confounders
+- fciPlus: constraint based, allow hidden variables (confounders?)
+
+and randDAG generation
+
+****** (2013 UAI) Learning sparse causal models is not NP-hard
+FCI+
+
+
+**** R package bnlearn
+http://www.bnlearn.com/, by Marco Scutari, looks like a independent hacker.
+
+There is a mirror: https://github.com/cran/bnlearn
+
+Constraint based:
+- PC
+- Grow-Shrink (GS)
+- Hybrid Parents & Children (HPC)
+- ...
+
+Score based:
+- Hill Climbing (HC);
+- Tabu Search (Tabu);
+
+Hybrid:
+- Max-Min Hill Climbing (MMHC);
+- ...
+
+Local:
+- Chow-Liu;
+- ARACNE;
+
+Score functions:
+
+#+begin_quote
+categorical data (multinomial distribution):
+- the multinomial log-likelihood;
+- the Akaike Information Criterion (AIC);
+- the Bayesian Information Criterion (BIC);
+- the multinomial predictive log-likelihood;
+- a score equivalent Dirichlet posterior density (BDe);
+- a sparse Dirichlet posterior density (BDs);
+- a Dirichlet posterior density based on Jeffrey's prior (BDJ);
+- a modified Bayesian Dirichlet for mixtures of interventional and observational data;
+- the locally averaged BDe score (BDla);
+- the K2 score;
+
+continuous data (multivariate normal distribution):
+- the multivariate Gaussian log-likelihood;
+- the corresponding Akaike Information Criterion (AIC);
+- the corresponding Bayesian Information Criterion (BIC);
+- the corresponding predictive log-likelihood;
+- a score equivalent Gaussian posterior density (BGe);
+
+mixed data (conditional Gaussian distribution):
+- the conditional Gaussian log-likelihood;
+- the corresponding Akaike Information Criterion (AIC);
+- the corresponding Bayesian Information Criterion (BIC);
+- the corresponding predictive log-likelihood.
+#+end_quote
+***** (2010) Learning Bayesian Networks with the bnlearn R Package
+
+**** sparsebn
+Learning Sparse Bayesian Networks from High-Dimensional Data
+
+- https://cran.r-project.org/web/packages/sparsebn/index.html
+- https://github.com/itsrainingdata/sparsebn
+
+**** More R packages
+- http://CRAN.R-project.org/package=gRain
+- http://CRAN.R-project.org/package=gRbase
+- http://CRAN.R-project.org/package=gRc
+- http://CRAN.R-project.org/package=deal
+
+**** ICP
+ICP:
+- https://cran.r-project.org/web/packages/InvariantCausalPrediction/index.html
+- CRAN mirror: https://github.com/cran/InvariantCausalPrediction
+
+nonlinear ICP
+- https://github.com/cran/nonlinearICP
+- CRAN mirror: https://github.com/cran/nonlinearICP
 
 *** DONE The Tetrad Project: Graphical Causal Models
     CLOSED: [2019-11-30 Sat 17:13]
@@ -224,82 +374,6 @@ algorithms, e.g. NCC, where the original authors write a NN from scratch, and
 the code consistency is questionable.
 
 This is a good reference, but I'm not using it either.
-
-*** TODO R packages
-
-**** R package pcalg
-https://cran.r-project.org/web/packages/pcalg/index.html
-
-#+begin_quote
-The main algorithms for causal structure learning are PC (for observational data
-without hidden variables), FCI and RFCI (for observational data with hidden
-variables), and GIES (for a mix of data from observational studies
-(i.e. observational data) and data from experiments involving interventions
-(i.e. interventional data) without hidden variables). For causal inference the
-IDA algorithm, the Generalized Backdoor Criterion (GBC), the Generalized
-Adjustment Criterion (GAC) and some related functions are implemented. Functions
-for incorporating background knowledge are provided.
-#+end_quote
-
-So
-- PC
-- FCI
-- RFCI
-- GIES
-
-**** R package bnlearn
-http://www.bnlearn.com/
-
-Constraint based:
-- PC
-- Grow-Shrink (GS)
-- Hybrid Parents & Children (HPC)
-- ...
-
-Score based:
-- Hill Climbing (HC);
-- Tabu Search (Tabu);
-
-Hybrid:
-- Max-Min Hill Climbing (MMHC);
-- ...
-
-Local:
-- Chow-Liu;
-- ARACNE;
-
-Score functions:
-
-#+begin_quote
-categorical data (multinomial distribution):
-- the multinomial log-likelihood;
-- the Akaike Information Criterion (AIC);
-- the Bayesian Information Criterion (BIC);
-- the multinomial predictive log-likelihood;
-- a score equivalent Dirichlet posterior density (BDe);
-- a sparse Dirichlet posterior density (BDs);
-- a Dirichlet posterior density based on Jeffrey's prior (BDJ);
-- a modified Bayesian Dirichlet for mixtures of interventional and observational data;
-- the locally averaged BDe score (BDla);
-- the K2 score;
-
-continuous data (multivariate normal distribution):
-- the multivariate Gaussian log-likelihood;
-- the corresponding Akaike Information Criterion (AIC);
-- the corresponding Bayesian Information Criterion (BIC);
-- the corresponding predictive log-likelihood;
-- a score equivalent Gaussian posterior density (BGe);
-
-mixed data (conditional Gaussian distribution):
-- the conditional Gaussian log-likelihood;
-- the corresponding Akaike Information Criterion (AIC);
-- the corresponding Bayesian Information Criterion (BIC);
-- the corresponding predictive log-likelihood.
-#+end_quote
-
-**** sparsebn
-Learning Sparse Bayesian Networks from High-Dimensional Data
-https://cran.r-project.org/web/packages/sparsebn/index.html
 
 *** TODO Tübingen group
 - many papers and source code: http://webdav.tuebingen.mpg.de/causality/

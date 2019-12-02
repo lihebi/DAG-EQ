@@ -1,0 +1,5 @@
+#+TITLE: Implementation notes
+
+* TODO-list
+
+** TODO show plot in Emacs
