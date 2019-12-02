@@ -84,10 +84,18 @@ non-Gaussian or non-Linear
 
 
 * Causal Toolbox
-** TODO Julia packages
-*** CausalInference.jl
+** Julia packages
+*** DONE CausalInference.jl
+CLOSED: [2019-12-02 Mon 17:22]
 based on =pcalg=
 https://github.com/mschauer/CausalInference.jl
+
+Discovery:
+- PC
+- FCI
+
+But pretty clean. Would use as starting point.
+
 ** TODO MIT
 http://probcomp.csail.mit.edu/
 *** gen
