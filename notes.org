@@ -200,70 +200,53 @@ and randDAG generation
 FCI+
 
 
-**** R package bnlearn
+**** DONE R package bnlearn
+CLOSED: [2019-12-02 Mon 15:18]
 http://www.bnlearn.com/, by Marco Scutari, looks like a independent hacker.
 
 There is a mirror: https://github.com/cran/bnlearn
 
-Constraint based:
-- PC
-- Grow-Shrink (GS)
-- Hybrid Parents & Children (HPC)
-- ...
+Code quality is less than pcalg.
 
-Score based:
-- Hill Climbing (HC);
-- Tabu Search (Tabu);
+***** DONE cite:2009-Preprint-Scutari-Learning Learning Bayesian Networks with the bnlearn R Package
+CLOSED: [2019-12-02 Mon 15:10]
 
-Hybrid:
-- Max-Min Hill Climbing (MMHC);
-- ...
+constraint based algorithms
+- Grow-Shrink (gs)
+- Incremental Association Markov Blanket (iamb)
+- Fast Incremental Association (fast.iamb)
+- Interleaved Incremental Association (inter.iamb)
+- Max-Min Parents and Children (mmpc)
 
-Local:
-- Chow-Liu;
-- ARACNE;
+CI tests for discrete data:
+- mutual information
+- chi square
+- fast mutual information (fmi)
+- Akaike Information Criterion (aict)
 
-Score functions:
+CI tests for continuous data
+- linear correlation
+- Fisher's Z
+- mutual information (mi-g)
 
-#+begin_quote
-categorical data (multinomial distribution):
-- the multinomial log-likelihood;
-- the Akaike Information Criterion (AIC);
-- the Bayesian Information Criterion (BIC);
-- the multinomial predictive log-likelihood;
-- a score equivalent Dirichlet posterior density (BDe);
-- a sparse Dirichlet posterior density (BDs);
-- a Dirichlet posterior density based on Jeffrey's prior (BDJ);
-- a modified Bayesian Dirichlet for mixtures of interventional and observational data;
-- the locally averaged BDe score (BDla);
-- the K2 score;
+Score-based
+- Hill-climbing search (hc)
 
-continuous data (multivariate normal distribution):
-- the multivariate Gaussian log-likelihood;
-- the corresponding Akaike Information Criterion (AIC);
-- the corresponding Bayesian Information Criterion (BIC);
-- the corresponding predictive log-likelihood;
-- a score equivalent Gaussian posterior density (BGe);
-
-mixed data (conditional Gaussian distribution):
-- the conditional Gaussian log-likelihood;
-- the corresponding Akaike Information Criterion (AIC);
-- the corresponding Bayesian Information Criterion (BIC);
-- the corresponding predictive log-likelihood.
-#+end_quote
-***** (2010) Learning Bayesian Networks with the bnlearn R Package
+Scores:
+- likelihood and log-likelihood
+- Akaike Information Criterion (AIC)
+- Bayesian IC (BIC)
+- Bayesian Dirichlet equivalent score (BDe)
+- K2 score
+- equivalent Gaussian posterior density (bge): for continuous data
 
 **** sparsebn
 Learning Sparse Bayesian Networks from High-Dimensional Data
 
+Not good, very little information.
+
 - https://cran.r-project.org/web/packages/sparsebn/index.html
 - https://github.com/itsrainingdata/sparsebn
-
-**** More R packages
-- http://CRAN.R-project.org/package=gRain
-- http://CRAN.R-project.org/package=gRbase
-- http://CRAN.R-project.org/package=gRc
-- http://CRAN.R-project.org/package=deal
 
 **** ICP
 ICP:
@@ -273,6 +256,12 @@ ICP:
 nonlinear ICP
 - https://github.com/cran/nonlinearICP
 - CRAN mirror: https://github.com/cran/nonlinearICP
+
+**** More R packages
+- http://CRAN.R-project.org/package=gRain
+- http://CRAN.R-project.org/package=gRbase
+- http://CRAN.R-project.org/package=gRc
+- http://CRAN.R-project.org/package=deal
 
 *** DONE The Tetrad Project: Graphical Causal Models
     CLOSED: [2019-11-30 Sat 17:13]
@@ -365,7 +354,8 @@ Not very interesting wrappers:
 - web: https://github.com/bd2kccd/causal-web
 - REST: https://github.com/bd2kccd/causal-rest-api
 
-*** CausalDiscoveryToolbox
+*** DONE CausalDiscoveryToolbox
+CLOSED: [2019-12-02 Mon 13:26]
 Package for causal inference in graphs and in the pairwise settings.
 https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox
 

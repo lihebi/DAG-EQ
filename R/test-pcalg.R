@@ -16,8 +16,8 @@ test_data <- function() {
 
     gmG$g
     ## A graphNEL graph with directed edges
-    ## Number of Nodes = 8 
-    ## Number of Edges = 8 
+    ## Number of Nodes = 8
+    ## Number of Edges = 8
     dim(gmG$x)
     ## [1] 5000    8
 
@@ -146,7 +146,7 @@ test_LiNGRAM <- function() {
     ## run lingram
     X <- cbind(x1,x2)
     res <- lingam(X)
-    res    
+    res
 }
 
 
@@ -162,5 +162,5 @@ test_randDAG <- function() {
     dag3 <- randDAG(n=n, d=d, method = "er", DAG = TRUE,
                     weighted = TRUE, wFUN = list(myWgtFun, 0, s))
     dag4 <- randDAG(n=n, d=d, method = "power", DAG = TRUE,
-                    weighted = TRUE, wFUN = list(myWgtFun, 0, s))    
+                    weighted = TRUE, wFUN = list(myWgtFun, 0, s))
 }

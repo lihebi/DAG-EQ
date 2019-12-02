@@ -5,3 +5,5 @@ __pycache__
 *.hdf5
 *.gif
 training_checkpoints
+
+*.html
