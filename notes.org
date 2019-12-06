@@ -31,35 +31,6 @@ Read flux.jl code
 
 * TODO-list
 
-** TODO Code from papers
-*** cite:2015-ICML-Lopez-Paz-Towards Towards a Learning Theory of Cause-Effect Inference
-Code: https://github.com/lopezpaz/causation_learning_theory
-
-*** [#B] cite:2017-Preprint-Goudet-Causal Causal Generative Neural Networks
-https://github.com/GoudetOlivier/CGNN
-
-*** DONE [#A] cite:2017-CVPR-Lopez-Paz-Discovering Discovering causal signals in images
-  CausalDiscoveryToolbox
-  https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox has an
-  implementation of NCC.
-
-*** TODO cite:2018-Preprint-Kalainathan-SAM SAM: Structural Agnostic Model, Causal Discovery and Penalized Adversarial Learning
-https://github.com/Diviyan-Kalainathan/SAM
-
-*** DONE cite:2018-ICLR-Kocaoglu-Causalgan CausalGAN: Learning Causal Implicit Generative Models with Adversarial Training
-code: https://github.com/mkocaoglu/CausalGAN
-
-*** TODO [#A] cite:2018-NIPS-Zheng-Dags DAGs with NO TEARS: Continuous optimization for structure learning
-NOTEARS https://github.com/xunzheng/notears
-
-*** TODO (2019) cite:2019-ICML-Yu-Dag DAG-GNN: DAG structure learning with graph neural networks
-DAG-GNN https://github.com/fishmoon1234/DAG-GNN
-
-*** TODO cite:2020-ICLRSubmit-Author1237-Gradient Gradient-based neural dag learning
-GraN-DAG https://github.com/kurowasan/GraN-DAG
-
-*** TODO cite:2020-ICLRSubmit-Author2311-Meta A meta-transfer objective for learning to disentangle causal mechanisms
-Code: https://github.com/ec6dde01667145e58de60f864e05a4/CausalOptimizationAnon
 
 ** TODO run causal discovery
 
@@ -83,9 +54,27 @@ non-Gaussian or non-Linear
   algorithm, still use noise footprint.
 
 
+* Data
+** synthetic data generation
+graph type:
+- Erdős-Rényi (ER)
+- scale-free (SF)
+
 * Causal Toolbox
-** Julia packages
-*** DONE CausalInference.jl
+** DONE [#A] Causal Discovery Toolbox: Uncover causal relationships in Python
+CLOSED: [2019-12-02 Mon 13:26]
+Package for causal inference in graphs and in the pairwise settings.
+https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox
+
+Most of the discovery algorithms call various of R libraries, pcalg, bnlearn,
+CAM. There are also some pairwise algorithms, e.g. NCC, where the original
+authors write a NN from scratch, and the code consistency is questionable.
+
+This is a good reference, but I'm not using it either.
+
+It contains clean implementations of many recent NN approaches.
+
+** DONE [#A] CausalInference.jl
 CLOSED: [2019-12-02 Mon 17:22]
 based on =pcalg=
 https://github.com/mschauer/CausalInference.jl
@@ -96,45 +85,48 @@ Discovery:
 
 But pretty clean. Would use as starting point.
 
-** TODO MIT
-http://probcomp.csail.mit.edu/
-*** gen
-*** crosscat
-https://github.com/probcomp/crosscat
+** DONE Code from papers
+CLOSED: [2019-12-05 Thu 22:03]
+*** cite:2015-ICML-Lopez-Paz-Towards Towards a Learning Theory of Cause-Effect Inference
+Code: https://github.com/lopezpaz/causation_learning_theory
 
-** tutorial & references
+*** DONE cite:2018-Journal-Goudet-Learning Learning functional causal models with generative neural networks
+CLOSED: [2019-12-05 Thu 22:03]
+https://github.com/GoudetOlivier/CGNN, good quality, heavy in OO, also a copy in CDT
 
-- a blog post http://fastml.com/bayesian-machine-learning/
+*** [#A] cite:2017-CVPR-Lopez-Paz-Discovering Discovering causal signals in images
+  CausalDiscoveryToolbox
+  https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox has an
+  implementation of NCC.
 
-*** DONE Probabilistic Programming and Bayesian Methods for Hackers
-   CLOSED: [2019-11-25 Mon 22:28]
-a book, using PyMC3, about probablistic programming in general
-http://camdavidsonpilon.github.io/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers/
+*** DONE [#B] cite:2018-Preprint-Kalainathan-SAM SAM: Structural Agnostic Model, Causal Discovery and Penalized Adversarial Learning
+CLOSED: [2019-12-05 Thu 22:01]
+https://github.com/Diviyan-Kalainathan/SAM
 
-** Bayesian learning in general
-*** PyMC: Probabilistic Programming in Python
-https://docs.pymc.io/
+*** DONE [#A] cite:2018-NIPS-Zheng-Dags DAGs with NO TEARS: Continuous optimization for structure learning
+CLOSED: [2019-12-04 Wed 10:20]
+NOTEARS https://github.com/xunzheng/notears
 
-** Bayesian Network learning
-*** Python Library for Probabilistic Graphical Models
-https://github.com/pgmpy/pgmpy
+*** DONE (2019) cite:2019-ICML-Yu-Dag DAG-GNN: DAG structure learning with graph neural networks
+CLOSED: [2019-12-05 Thu 18:14]
+DAG-GNN https://github.com/fishmoon1234/DAG-GNN, good quality
 
-*** Bayesian Network Modeling and Analysis
-https://github.com/paulgovan/BayesianNetwork
+*** DONE cite:2020-ICLRSubmit-Author1237-Gradient Gradient-based neural dag learning
+CLOSED: [2019-12-05 Thu 18:14]
+GraN-DAG https://github.com/kurowasan/GraN-DAG
+
+*** DONE [#B] cite:2020-ICLRSubmit-Author2311-Meta A meta-transfer objective for learning to disentangle causal mechanisms
+CLOSED: [2019-12-05 Thu 15:41]
+Code: https://github.com/ec6dde01667145e58de60f864e05a4/CausalOptimizationAnon
+
+Seems to be missing something, e.g. ModelA2B.
 
 
-*** Bayesian network Learning Improved Project (blip)
-A bayesian network learning code: https://github.com/mauro-idsia/blip
 
-** Causal inference only
-*** DoWhy | Making causal inference easy
-https://github.com/microsoft/dowhy
-
-** Causal learning
-*** DONE R packages
+** DONE R packages
 CLOSED: [2019-12-02 Mon 16:35]
 
-**** DONE cite:2099-Manual-XXX-pcalg R package pcalg
+*** DONE [#A] cite:2099-Manual-XXX-pcalg R package pcalg
 CLOSED: [2019-12-02 Mon 13:23]
 https://cran.r-project.org/web/packages/pcalg/index.html
 
@@ -161,7 +153,7 @@ So
 - GIES
 
 
-***** cite:2014-Manual-Markus-More More Causal Inference with Graphical Models in R Package pcalg
+**** cite:2014-Manual-Markus-More More Causal Inference with Graphical Models in R Package pcalg
 Discovery:
 - pc(): constraint based
 - fci(): generalization of PC, for allowing latent variables
@@ -187,17 +179,17 @@ This paper seems to be a super set of previous.
 - GIES: assume no hidden variables. (HEBI: Jointly observational and
   interventional data).
 
-****** (UAI 2006) A simple approach for finding the globally optimal Bayesian network structure
+***** (UAI 2006) A simple approach for finding the globally optimal Bayesian network structure
 simy, a dynamic programming approach
-****** cite:2012-Journal-Kalisch-Causal Causal inference using graphical models with the R package pcalg
+***** cite:2012-Journal-Kalisch-Causal Causal inference using graphical models with the R package pcalg
 Previous version.
-****** (2012) Characterization and greedy learning of interventional Markov equivalence classes of directed acyclic graph
+***** (2012) Characterization and greedy learning of interventional Markov equivalence classes of directed acyclic graph
 GIES
-****** (2009) Estimating High-Dimensional Intervention Effects from Observational Data
+***** (2009) Estimating High-Dimensional Intervention Effects from Observational Data
 IDA method to compute cause effect. Seems to be combining PC and generalized
 backdoor criterion.
 
-***** cite:2099-Manual-Kalisch-Overview
+**** cite:2099-Manual-Kalisch-Overview
 
 Some additional discovery:
 - lingram: constraint based, no hidden confounders
@@ -205,11 +197,11 @@ Some additional discovery:
 
 and randDAG generation
 
-****** (2013 UAI) Learning sparse causal models is not NP-hard
+***** (2013 UAI) Learning sparse causal models is not NP-hard
 FCI+
 
 
-**** DONE R package bnlearn
+*** DONE R package bnlearn
 CLOSED: [2019-12-02 Mon 15:18]
 http://www.bnlearn.com/, by Marco Scutari, looks like a independent hacker.
 
@@ -217,7 +209,7 @@ There is a mirror: https://github.com/cran/bnlearn
 
 Code quality is less than pcalg.
 
-***** DONE cite:2009-Preprint-Scutari-Learning Learning Bayesian Networks with the bnlearn R Package
+**** DONE cite:2009-Preprint-Scutari-Learning Learning Bayesian Networks with the bnlearn R Package
 CLOSED: [2019-12-02 Mon 15:10]
 
 constraint based algorithms
@@ -249,7 +241,7 @@ Scores:
 - K2 score
 - equivalent Gaussian posterior density (bge): for continuous data
 
-**** sparsebn
+*** sparsebn
 Learning Sparse Bayesian Networks from High-Dimensional Data
 
 Not good, very little information.
@@ -257,7 +249,7 @@ Not good, very little information.
 - https://cran.r-project.org/web/packages/sparsebn/index.html
 - https://github.com/itsrainingdata/sparsebn
 
-**** ICP
+*** ICP
 ICP:
 - https://cran.r-project.org/web/packages/InvariantCausalPrediction/index.html
 - CRAN mirror: https://github.com/cran/InvariantCausalPrediction
@@ -266,7 +258,7 @@ nonlinear ICP
 - https://github.com/cran/nonlinearICP
 - CRAN mirror: https://github.com/cran/nonlinearICP
 
-**** More R packages
+*** More R packages
 - http://CRAN.R-project.org/package=gRain
 - http://CRAN.R-project.org/package=gRbase
 - http://CRAN.R-project.org/package=gRc
@@ -274,7 +266,7 @@ nonlinear ICP
 - https://github.com/cran/CAM: this is removed from CRAN
 - https://github.com/ericstrobl/RCIT: this is just a CI test package
 
-*** DONE The Tetrad Project: Graphical Causal Models
+** DONE The Tetrad Project: Graphical Causal Models
     CLOSED: [2019-11-30 Sat 17:13]
 - homepage: http://www.phil.cmu.edu/tetrad/
 - github: https://github.com/cmu-phil/tetrad
@@ -355,7 +347,7 @@ public class Fges implements Algorithm, TakesInitialGraph, HasKnowledge, UsesSco
 - [ ] To verify correctness of my implementation, compare the results (e.g. strcture learned, p value)
 
 
-**** wrappers
+*** wrappers
 These two are really just wrappers. Both provides example data.
 - R: https://github.com/bd2kccd/r-causal
 - python: https://github.com/bd2kccd/py-causal, this provides many jupyter notebooks
@@ -365,18 +357,8 @@ Not very interesting wrappers:
 - web: https://github.com/bd2kccd/causal-web
 - REST: https://github.com/bd2kccd/causal-rest-api
 
-*** DONE CausalDiscoveryToolbox
-CLOSED: [2019-12-02 Mon 13:26]
-Package for causal inference in graphs and in the pairwise settings.
-https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox
 
-Most of the discovery algorithms call various of R libraries, pcalg, bnlearn,
-CAM. There are also some pairwise algorithms, e.g. NCC, where the original
-authors write a NN from scratch, and the code consistency is questionable.
-
-This is a good reference, but I'm not using it either.
-
-*** DONE Tübingen group
+** DONE Tübingen group
 CLOSED: [2019-12-02 Mon 16:35]
 - many papers and source code: http://webdav.tuebingen.mpg.de/causality/
   - they also built the "Database with cause-effect pairs"
@@ -384,60 +366,94 @@ CLOSED: [2019-12-02 Mon 16:35]
 Most papers are matlab, Janzing's paper is R.
 
 
-**** (2008) Nonlinear causal discovery with additive noise models
+*** (2008) Nonlinear causal discovery with additive noise models
 - code: http://webdav.tuebingen.mpg.de/causality/additive-noise.tar.gz
 
-**** cite:2009-ICML-Peters-Detecting Detecting the Direction of Causal Time Series
+*** cite:2009-ICML-Peters-Detecting Detecting the Direction of Causal Time Series
 - code: http://webdav.tuebingen.mpg.de/causality/online_time_dir_hsic.zip
 
-**** (2009) Distinguishing cause from effect with constrained nonlinear ICA
+*** (2009) Distinguishing cause from effect with constrained nonlinear ICA
 - code: http://webdav.tuebingen.mpg.de/causality/CauseOrEffect_NICA.rar
   - pure matlab
-**** (2010) Causal Markov  condition for submodular information measures
+*** (2010) Causal Markov  condition for submodular information measures
 - code: http://personal-homepages.mis.mpg.de/steudel/lzInformation.zip
 
-**** cite:2010-UAI-Zhang-Invariant Invariant Gaussian Process Latent Variable Models and Application in Causal Discovery
-**** cite:2010-AISTATS-Peters-Identifying Identifying Cause and Effect on Discrete Data using Additive Noise Models
+*** cite:2010-UAI-Zhang-Invariant Invariant Gaussian Process Latent Variable Models and Application in Causal Discovery
+*** cite:2010-AISTATS-Peters-Identifying Identifying Cause and Effect on Discrete Data using Additive Noise Models
 - code: http://webdav.tuebingen.mpg.de/causality/online_aistats_arxive_discrete.zip
 
-**** cite:2010-ICML-Janzing-Telling Telling cause from effect based on high-dimensional observations
+*** cite:2010-ICML-Janzing-Telling Telling cause from effect based on high-dimensional observations
 - code: http://webdav.tuebingen.mpg.de/causality/online_trace_method_July_2010.tar.gz
 
-**** cite:2010-UAI-Daniusis-Inferring Inferring deterministic causal relations
+*** cite:2010-UAI-Daniusis-Inferring Inferring deterministic causal relations
 - code: http://webdav.tuebingen.mpg.de/causality/igci.tar.gz
   - Joris Mooij, single .m file
 
-**** cite:2010-NIPS-Stegle-Probabilistic Probabilistic latent variable models for distinguishing between cause and effect
+*** cite:2010-NIPS-Stegle-Probabilistic Probabilistic latent variable models for distinguishing between cause and effect
 - code: http://webdav.tuebingen.mpg.de/causality/nips2010-gpi-code.tar.gz
 
-**** cite:2011-UAI-Peters-Identifiability Identifiability of Causal Graphs using Functional Models
+*** cite:2011-UAI-Peters-Identifiability Identifiability of Causal Graphs using Functional Models
 - code: http://webdav.tuebingen.mpg.de/causality/identifiability_dags_snapshot.zip
 
-**** (UAI 2011) Testing whether linear relations are causal: A free probability approach
+*** (UAI 2011) Testing whether linear relations are causal: A free probability approach
 - code: http://webdav.tuebingen.mpg.de/causality/code_zscheischler.zip
 
-**** cite:2011-UAI-Zhang-Kernel Kernel-based conditional independence test and application in causal discovery
+*** cite:2011-UAI-Zhang-Kernel Kernel-based conditional independence test and application in causal discovery
 - code: http://people.tuebingen.mpg.de/kzhang/KCI-test.zip
 
-**** [#B] cite:2011-NIPS-Mooij-Causal On Causal Discovery with Cyclic Additive Noise Models
+*** [#B] cite:2011-NIPS-Mooij-Causal On Causal Discovery with Cyclic Additive Noise Models
 - code: http://webdav.tuebingen.mpg.de/causality/NIPS2011-code.tar.gz
   - C++ and matlab for plotting, pretty good
 
-**** cite:2011-UAI-Janzing-Detecting Detecting low-complexity unobserved causes
+*** cite:2011-UAI-Janzing-Detecting Detecting low-complexity unobserved causes
 - code: http://webdav.tuebingen.mpg.de/causality/UAI2011_Janzing_purity_code.zip
 
-**** (2013) Quantifying causal influences
+*** (2013) Quantifying causal influences
 - code: http://webdav.tuebingen.mpg.de/causality/AOS2013-code.zip
 
-**** cite:2013-UAI-Sgouritsa-Identifying Identifying Finite Mixtures of Nonparametric Product Distributions and Causal Inference of Confounders
+*** cite:2013-UAI-Sgouritsa-Identifying Identifying Finite Mixtures of Nonparametric Product Distributions and Causal Inference of Confounders
 
-**** [#B] (2017) Detecting confounding in multivariate linear models via spectral analysis
+*** [#B] (2017) Detecting confounding in multivariate linear models via spectral analysis
 - code: http://webdav.tuebingen.mpg.de/causality/confounder_detection_linear.zip
   - R code, readable, with 4 real data
 
-**** [#B] cite:2018-ICML-Janzing-Detecting Detecting non-causal artifacts in multivariate linear regression models
+*** [#B] cite:2018-ICML-Janzing-Detecting Detecting non-causal artifacts in multivariate linear regression models
 - code: http://webdav.tuebingen.mpg.de/causality/confounder_detection_independent_sources.zip
   - R code, readable, with 3 real data
+
+
+** Not causal learning
+*** TODO MIT
+http://probcomp.csail.mit.edu/
+**** gen
+**** crosscat
+https://github.com/probcomp/crosscat
+
+*** tutorial & references
+
+- a blog post http://fastml.com/bayesian-machine-learning/
+
+**** DONE Probabilistic Programming and Bayesian Methods for Hackers
+   CLOSED: [2019-11-25 Mon 22:28]
+a book, using PyMC3, about probablistic programming in general
+http://camdavidsonpilon.github.io/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers/
+
+*** Causal inference only
+**** DoWhy | Making causal inference easy
+https://github.com/microsoft/dowhy
+*** Bayesian Network learning
+**** Python Library for Probabilistic Graphical Models
+https://github.com/pgmpy/pgmpy
+
+**** Bayesian Network Modeling and Analysis
+https://github.com/paulgovan/BayesianNetwork
+
+
+**** Bayesian network Learning Improved Project (blip)
+A bayesian network learning code: https://github.com/mauro-idsia/blip
+*** Bayesian learning in general
+**** PyMC: Probabilistic Programming in Python
+https://docs.pymc.io/
 
 
 ** Other
