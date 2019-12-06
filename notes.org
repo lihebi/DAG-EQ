@@ -3,6 +3,67 @@
 
 * TODO-List
 
+** DONE Implement data generation
+CLOSED: [2019-12-06 Fri 17:41]
+- random graph
+  - Erdős-Rényi (ER)
+  - scale-free (SF)
+- random weights
+- gaussian noise
+- different models
+  - linear model
+  - generalized linear
+  - non-linear model
+  - additive gaussian noise
+
+** TODO Implement some cdt algorithms in Julia
+- CGNN
+- NOTEARS
+- DAG-GNN
+- GraN-DAG
+- meta-transfer
+
+** TODO Implement traditional algorithms
+- [X] PC
+- [X] FCI
+- LiNGRAM
+- GIES
+- CAM
+
+** TODO Implement supervised re-parametric
+Train:
+- assume linear gaussian model
+- design a new convolution (on graph), probably use GCN
+- generate random model
+- generate mu and sigma
+- train f(mu, sigma)=adjacent_matrix
+
+Open problems:
+- conv operator, shared weights
+- order of nodes
+- generalized reparametric
+
+Inference:
+- compute statistics mu and sigma
+- f(mu, sigma)
+
+** TODO Implement interventional loss
+- implement generative model
+  - generator
+  - discriminator
+- implement causal effect inference
+  - hard intervention
+  - soft intervention
+  - multiple interventions
+- implement interventional loss
+  - random intervention
+  - compute effect
+  - discriminator likelyhood
+- train with interventional loss
+
+
+* old TODO-list
+
 ** TODO run those VAEs
 ** TODO run those GANs
 ** DONE julia?
@@ -26,10 +87,6 @@ Read flux.jl code
 *** TODO InfoGAN
 *** TODO NOTEARS
 *** TODO Causal
-
-
-
-* TODO-list
 
 
 ** TODO run causal discovery
