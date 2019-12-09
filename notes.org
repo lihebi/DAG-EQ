@@ -53,7 +53,7 @@ Inference:
   - generator
   - discriminator
 - implement causal effect inference
-  - hard intervention
+  - [X] hard intervention
   - soft intervention
   - multiple interventions
 - implement interventional loss

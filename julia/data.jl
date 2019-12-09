@@ -181,9 +181,86 @@ function print_data(dag)
     end
 end
 
+""" Intervene on a node, the do-notation semantic.
+
+FIXME are we setting v to a fixed value, or a distribution of values?
+TODO multiple interventions
+TODO hard and soft interventions
+
+1. I should not set it to a fixed value. If setting to a fixed value, which
+value are we talking about? If we select a predefined value, the mixture
+distribution for this variable will have a fixed value. In calculating
+interventional loss, we have no clue how to set the same intervention, thus the
+interventional loss would be hard to fit.
+
+UPDATE: I can probably still use this, and use a random value for the fixed value.
+
+2. Instead, I should probably use a distribution, or simply just N(0,1), and
+this can be simulated in computing interventional loss easily. This provides two
+signals to the interventional loss:
+  - the parents of the node has been cut
+  - the descendants, in case of arrows
+
+3. I can also use soft intervention, where instead of removing old mechanism, we
+add a new W*randn(). This signal should be weaker, because we lose the signal of
+parents.
+
+"""
+function intervene!(dag, v)
+    # FIXME should we have noise for the fixed v value?
+    # FIXME should we generate new noise variable?
+    # FIXME should I test if v has parents or not?
+
+    if length(inneighbors(dag, v)) == 0
+        # FIXME should I avoid such interventions?
+        @warn "The node $(v) has no parents, the intervention does not make sense."
+    end
+
+    # 1. get data for v, set it
+    N = length(get_prop(dag, v, :data))
+    set_prop!(dag, v, :data, randn(N))
+
+    # 2. for all descendants of v, recompute the value
+    des = descendants(dag, v)
+    @info "Recomputing for $(length(des)) nodes .."
+    # clear
+    for d in des
+        rem_prop!(dag, d, :data)
+    end
+    # recompute
+    # FIXME should we use the same noise? This should not matter.
+    for d in des
+        gen_data!(dag, d, N)
+    end
+end
+""" Intervene a random node.
+
+"""
+function intervene!(dag)
+    l = collect(vertices(dag))
+    v = l[rand(1:length(l))]
+    @info "intervening on node $v .."
+    intervene!(dag, v)
+end
+
+""" Return a list of descendant vertex of v
+"""
+function descendants(dag, v)
+    g = bfs_tree(dag, v)
+    # HACK [] will have type Array{Any}, while [v] will have Array{Int64}
+    ret = [v]
+    for e in edges(g)
+        push!(ret, e.src)
+        push!(ret, e.dst)
+    end
+    # ret |> unique |> (r)->filter((x)->x!=v, r) |> sort
+    setdiff(Set(ret), [v]) |> collect |> sort
+end
+
 function test()
     g = gen_ER() |> Graph |> random_orientation_dag |> MetaDiGraph
     is_cyclic(g)
+    g
 
     set_weights!(g)
     print_weights(g)
@@ -193,14 +270,25 @@ function test()
     gen_data!(g, overwrite=true, N=5)
     print_data(g)
 
+    for i in 1:10
+        intervene!(g)
+    end
+
+    intervene!(g, 2)
+
+
     for v in vertices(g)
         @show v
         @show ! has_prop(g, v, :data)
     end
 
-    randn(20,2) * [1,2]
+    bfs_tree(g, 1)
+    bfs_tree(g, 2)
+    bfs_tree(g, 3)
+    bfs_parents(g, 2)
 
-    hcat([randn(20), randn(20)]) * [1,2]
-
-    [randn(20), randn(20)] * [1,2]
+    descendants(g, 1)
+    descendants(g, 2)
+    descendants(g, 3)
+    descendants(g, 4)
 end
