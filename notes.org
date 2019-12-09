@@ -3,27 +3,28 @@
 
 * TODO-List
 
-** DONE Implement data generation
-CLOSED: [2019-12-06 Fri 17:41]
-- random graph
+** TODO Implement data generation
+- [X] random graph
   - Erdős-Rényi (ER)
   - scale-free (SF)
-- random weights
+- [X] random weights
 - gaussian noise
-- different models
-  - linear model
-  - generalized linear
-  - non-linear model
+- [-] different models
+  - [X] linear model
+  - [ ] generalized linear
+  - [ ] non-linear model
   - additive gaussian noise
 
-** TODO Implement some cdt algorithms in Julia
+** CANCELED Implement some cdt algorithms in Julia
+CLOSED: [2019-12-06 Fri 18:08]
 - CGNN
 - NOTEARS
 - DAG-GNN
 - GraN-DAG
 - meta-transfer
 
-** TODO Implement traditional algorithms
+** CANCELED Implement traditional algorithms
+CLOSED: [2019-12-06 Fri 18:08]
 - [X] PC
 - [X] FCI
 - LiNGRAM

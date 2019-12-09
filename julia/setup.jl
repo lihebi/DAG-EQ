@@ -12,6 +12,7 @@ Pkg.add("GraphPlot")
 Pkg.add("Compose")
 Pkg.add("Cairo")
 Pkg.add("Fontconfig")
+Pkg.add("MetaGraphs")
 
 Pkg.instantiate()
 

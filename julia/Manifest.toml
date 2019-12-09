@@ -45,6 +45,12 @@ git-tree-sha1 = "c0d1e16cd421002bd4e16ec4c6da8229d0e0ed3b"
 uuid = "8e462317-f959-576b-b3c1-403f26cec956"
 version = "0.4.0"
 
+[[CodecZlib]]
+deps = ["BinaryProvider", "Libdl", "TranscodingStreams"]
+git-tree-sha1 = "05916673a2627dd91b4969ff8ba6941bc85a960e"
+uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
+version = "0.6.0"
+
 [[ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
 git-tree-sha1 = "10050a24b09e8e41b951e9976b109871ce98d965"
@@ -65,9 +71,9 @@ version = "0.7.0"
 
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
-git-tree-sha1 = "ed2c4abadf84c53d9e58510b5fc48912c2336fbb"
+git-tree-sha1 = "0caaa696071d6e7872ddf30e58ed6ec0b49954c4"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "2.2.0"
+version = "3.0.0"
 
 [[Compose]]
 deps = ["Base64", "Colors", "DataStructures", "Dates", "IterTools", "JSON", "LinearAlgebra", "Measures", "Printf", "Random", "Requires", "UUIDs"]
@@ -134,10 +140,10 @@ uuid = "a2cc645c-3eea-5389-862e-a155d0052231"
 version = "0.3.1"
 
 [[Graphics]]
-deps = ["Colors", "Compat", "NaNMath"]
-git-tree-sha1 = "e3ead4211073d4117a0d2ef7d1efc5c8092c8412"
+deps = ["Colors", "LinearAlgebra", "NaNMath"]
+git-tree-sha1 = "58ae9effc8844860ad126a7a3fb8c01f9c3768a2"
 uuid = "a2bd30eb-e257-5431-a919-1863eab51364"
-version = "0.4.0"
+version = "1.0.0"
 
 [[Inflate]]
 deps = ["Pkg", "Printf", "Random", "Test"]
@@ -153,6 +159,12 @@ uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 git-tree-sha1 = "05110a2ab1fc5f932622ffea2a003221f4782c18"
 uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 version = "1.3.0"
+
+[[JLD2]]
+deps = ["CodecZlib", "DataStructures", "FileIO", "Mmap", "Printf"]
+git-tree-sha1 = "343d1ec8ae7d57a608d79ef12e9a853cbb9acd96"
+uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+version = "0.1.3"
 
 [[JSON]]
 deps = ["Dates", "Distributed", "Mmap", "Sockets", "Test", "Unicode"]
@@ -194,6 +206,12 @@ deps = ["Test"]
 git-tree-sha1 = "ddfd6d13e330beacdde2c80de27c1c671945e7d9"
 uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
 version = "0.3.0"
+
+[[MetaGraphs]]
+deps = ["JLD2", "LightGraphs", "Random"]
+git-tree-sha1 = "43ebbe06b22d213e4a8750424f9c7d1311bee2a6"
+uuid = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
+version = "0.6.4"
 
 [[Missings]]
 deps = ["DataAPI"]
@@ -341,6 +359,12 @@ uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 git-tree-sha1 = "c3aab236f122445406cf7a6de8af0b794da5a950"
 uuid = "0796e94c-ce3b-5d07-9a54-7f471281c624"
 version = "0.5.7"
+
+[[TranscodingStreams]]
+deps = ["Random", "Test"]
+git-tree-sha1 = "7c53c35547de1c5b9d46a4797cf6d8253807108c"
+uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
+version = "0.9.5"
 
 [[URIParser]]
 deps = ["Test", "Unicode"]
