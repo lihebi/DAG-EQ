@@ -9,7 +9,9 @@ Pkg.add("FileIO")
 Pkg.add("LightGraphs")
 
 Pkg.add("GraphPlot")
-Pkg.add("Compose")
+# a compatibility bug with Cairo
+# https://github.com/GiovineItalia/Compose.jl/pull/360
+Pkg.add(PackageSpec(name="Compose", rev="master"))
 Pkg.add("Cairo")
 Pkg.add("Fontconfig")
 Pkg.add("MetaGraphs")
