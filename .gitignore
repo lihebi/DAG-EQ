@@ -7,3 +7,6 @@ __pycache__
 training_checkpoints
 
 *.html
+
+*.jpg
+*.zip
