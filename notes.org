@@ -3,7 +3,8 @@
 
 * TODO-List
 
-** TODO Implement data generation
+** DONE Implement data generation
+CLOSED: [2019-12-10 Tue 16:10]
 - [X] random graph
   - Erdős-Rényi (ER)
   - scale-free (SF)
@@ -55,20 +56,45 @@ sample) graphs, not just the correct graph
 *** Intergrate with (noise-based?) assymetrcis
 For distinguishing equivalent classes
 
-** TODO Implement interventional loss
-- implement generative model
-  - generator
-  - discriminator
-- implement causal effect inference
-  - [X] hard intervention
-  - soft intervention
-  - multiple interventions
-- implement interventional loss
-  - random intervention
-  - compute effect
-  - discriminator likelyhood
-- train with interventional loss
+** GAN for MNIST
+*** DONE test python code for GAN
+CLOSED: [2019-12-10 Tue 16:07]
+*** DONE debug DCGAN for julia
+CLOSED: [2019-12-10 Tue 16:06]
 
+My experience:
+- dropout is very important, use in discriminator
+- dropout can be used together with batchnorm
+- use bias = false is not required
+- the last conv in generator should not be stride=2, but 1, i.e. no scaling
+  performed in the last conv
+- normalize MNIST to -1,1 instead of 0,1 seems to be very important
+
+*** Python GAN references
+- PyTorch-GAN 5k stars https://github.com/eriklindernoren/PyTorch-GAN
+- https://github.com/znxlwm/pytorch-MNIST-CelebA-GAN-DCGAN
+- tensorflow official DCGAN
+- pytorch official DCGAN
+
+** TODO Implement interventional loss
+
+*** TODO use dense GAN for graphical model
+- generator
+- discriminator
+
+*** TODO implement causal effect inference (compute effect)
+- [X] hard intervention
+- soft intervention
+- multiple interventions
+
+*** TODO implement interventional loss
+- random intervention
+- compute effect
+- discriminator likelyhood
+
+*** TODO train with interventional loss
+
+** More Ideas
 *** different interventions
 - hard do-notation
 - hard do-distribution
