@@ -16,6 +16,29 @@ Pkg.add("Cairo")
 Pkg.add("Fontconfig")
 Pkg.add("MetaGraphs")
 
+
+Pkg.add("Images")
+Pkg.add("ProgressMeter")
+Pkg.add("MLDatasets")
+Pkg.add("ImageMagick")
+
+
+# Flux
+Pkg.add("CUDAnative")
+Pkg.rm("CUDAnative")
+Pkg.rm("CuArrays")
+#!!!
+Pkg.rm("Distributions")
+
+Pkg.add("Flux")
+Pkg.rm("Flux")
+Pkg.rm("Tracker")
+Pkg.add(PackageSpec(name="Flux", version="0.9"))
+Pkg.pin(PackageSpec(name="Flux", version="0.9"))
+Pkg.add(PackageSpec(name="Flux", rev="master"))
+Pkg.free("Flux")
+Pkg.add("Tracker")
+
 Pkg.instantiate()
 
 Pkg.status()
