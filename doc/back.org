@@ -126,3 +126,72 @@ There are still several difficulties about this application:
    of a digit (so that we can fit the causal model). Then we still
    need to consider the look of the digit. Thus, there needs to be
    a random noise vector associated with each causal variable.
+
+* VAE Implementations
+- https://github.com/ericjang/draw
+- https://github.com/ikostrikov/TensorFlow-VAE-GAN-DRAW
+- https://github.com/openai/iaf
+- https://github.com/hwalsuklee/tensorflow-mnist-VAE
+- https://github.com/oduerr/dl_tutorial/tree/master/tensorflow/vae
+- https://github.com/stitchfix/fauxtograph
+- DCGAN: https://github.com/carpedm20/DCGAN-tensorflow
+
+edward: a package with variational inference, not auto encoder
+https://github.com/blei-lab/edward
+
+Jonathan Hui
+- a really good post:
+  https://jhui.github.io/2017/03/06/Variational-autoencoders/
+- Code:
+  https://github.com/jhui/deep_learning/tree/master/variational_autoencoder
+
+
+keras:
+- blog (very good):
+  https://blog.keras.io/building-autoencoders-in-keras.html
+- code (not necessarily company to above post):
+  https://github.com/keras-team/keras/blob/master/examples/variational_autoencoder.py
+- https://github.com/keras-team/keras/blob/master/examples/variational_autoencoder_deconv.py
+- with concrete latent distribution (by someone else)
+  https://github.com/EmilienDupont/vae-concrete
+- keras tutorial: Keras as a simplified interface to TensorFlow
+  https://blog.keras.io/keras-as-a-simplified-interface-to-tensorflow-tutorial.html
+
+y0ast:
+- https://github.com/y0ast/Variational-Autoencoder
+- https://github.com/y0ast/VAE-Torch
+- https://github.com/y0ast/VAE-TensorFlow
+
+Hyperspherical Variational Auto-Encoders
+- blog: https://nicola-decao.github.io/s-vae
+- https://github.com/nicola-decao/s-vae-tf
+
+kvfrans:
+- blog: http://kvfrans.com/variational-autoencoders-explained/
+  - the code: https://github.com/kvfrans/variational-autoencoder
+
+A good blog post:
+- https://jmetzen.github.io/2015-11-27/vae.html
+
+Blog post
+- Part 1:
+  https://blog.fastforwardlabs.com/2016/08/12/introducing-variational-autoencoders-in-prose-and.html
+- Part 2 (TODO):
+  https://blog.fastforwardlabs.com/2016/08/22/under-the-hood-of-the-variational-autoencoder-in.html
+- Code: https://github.com/fastforwardlabs/vae-tf/
+
+Blog (TODO):
+- https://jaan.io/what-is-variational-autoencoder-vae-tutorial/
+- code: https://github.com/altosaar/variational-autoencoder
+
+Jeremy Jordan
+- https://www.jeremyjordan.me/autoencoders/
+- https://www.jeremyjordan.me/variational-autoencoders/
+
+A pdf tutorial on Arxiv:
+- https://arxiv.org/abs/1606.05908
+
+Other posts:
+- no code https://ermongroup.github.io/cs228-notes/extras/vae/
+- https://www.doc.ic.ac.uk/~js4416/163/website/neural-networks/index.html
+
