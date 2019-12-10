@@ -1,3 +1,10 @@
+
+# For 1070
+g=7.0
+# For 2080 Ti
+# g=9.0
+ENV["CUARRAYS_MEMORY_LIMIT"] = convert(Int, round(g * 1024 * 1024 * 1024))
+
 using LightGraphs
 using LightGraphs.SimpleGraphs
 using Base.Iterators
@@ -18,6 +25,7 @@ using MetaGraphs
 using ImageMagick
 
 using MLDatasets
+
 
 struct EmacsDisplay <: AbstractDisplay end
 
@@ -399,6 +407,10 @@ function load_MNIST_ds(;batch_size)
     # on demand. I prefer to just move online during training.
     train_x, train_y = MLDatasets.MNIST.traindata();
     test_x,  test_y  = MLDatasets.MNIST.testdata();
+    # normalize into -1, 1
+    train_x = (train_x .- 0.5) .* 2
+    test_x = (test_x .- 0.5) .* 2
+
     # reshape to add channel, and onehot y encoding
     #
     # I'll just permute dims to make it column major
