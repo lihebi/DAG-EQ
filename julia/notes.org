@@ -68,6 +68,30 @@ My experience:
 - compute effect
 - discriminator likelyhood
 
+*** STARTED related work
+Looks like I have to compare against them, so it does not hurt implementing them now.
+
+**** TODO The NOTEARS framework
+NOTEARS does not seem to recover beyond equivalent class.
+
+I'm at the optimization solver, and currently
+- Optim uses autodiff. However, it is slow, and does not seem to solve correctly
+- I'm trying something else, like NLopt suite, and this seems to work
+
+***** TODO score metrics
+And the score seems to be very different when I modify notears's python code with:
+- replace 2 * d * d with just the result and gradient of d*d
+- the L1 regularizer also matters
+
+**** meta-transfer
+And the +NOTEARS version
+
+**** traditional
+- PC
+- LiNGRAM
+- GES (using FGS)
+
+
 *** TODO train with interventional loss
 
 ** More Ideas on Interventional loss

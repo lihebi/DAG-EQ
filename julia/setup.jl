@@ -16,6 +16,10 @@ Pkg.add("Cairo")
 Pkg.add("Fontconfig")
 Pkg.add("MetaGraphs")
 
+Pkg.add("Optim")
+Pkg.add("NLopt")
+Pkg.add("LineSearches")
+Pkg.add("CSV")
 
 Pkg.add("Images")
 Pkg.add("ProgressMeter")
