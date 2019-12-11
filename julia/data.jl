@@ -14,8 +14,8 @@ import Base.display
 using FileIO
 using FileIO: @format_str
 
-using GraphPlot
-using Compose
+using GraphPlot: gplot, circular_layout
+using Compose: PNG, draw
 import Cairo, Fontconfig
 
 using Flux: onehotbatch
@@ -26,6 +26,7 @@ using ImageMagick
 
 using MLDatasets
 
+using SparseArrays: sparse
 
 struct EmacsDisplay <: AbstractDisplay end
 
@@ -137,17 +138,25 @@ end
 
 
 # FIXME DAG
-function gen_ER()
-    n = 10
-    m = 10
+function gen_ER(d=10)
+    n = d
+    m = d
     erdos_renyi(n, m, is_directed=true)
 end
 
-function gen_SF()
-    n = 10
-    m = 10
+function gen_SF(d=10)
+    n = d
+    m = d
     # static_scale_free(n, m, 2)
     barabasi_albert(n, convert(Int, round(m/n)), is_directed=true)
+end
+
+function gen_ER_dag(d=10)
+    gen_ER(d)  |> Graph |> random_orientation_dag |> MetaDiGraph
+end
+
+function gen_SF_dag(d=10)
+    gen_SF(d)  |> Graph |> random_orientation_dag |> MetaDiGraph
 end
 
 function test()
@@ -163,16 +172,55 @@ function test()
 
 end
 
+""" Get the weight adj matrix.
+"""
+function dag_W(dag::AbstractGraph{U}) where U
+    # adjacency_matrix(g)
+    n_v = nv(dag)
+    nz = ne(dag)
+    # colpt = ones(U, n_v + 1)
+
+    W = zeros(n_v, n_v)
+
+    # rowval = sizehint!(Vector{U}(), nz)
+    for j in 1:n_v  # this is by column, not by row.
+        dsts = sort(inneighbors(dag, j))
+        for i in dsts
+            W[i,j] = get_prop(dag, i, j, :weight)
+        end
+        # colpt[j + 1] = colpt[j] + length(dsts)
+        # append!(rowval, dsts)
+    end
+
+    # FIXME why init to 1?
+    # spmx = SparseMatrixCSC(n_v, n_v, colpt, rowval, ones(Int, nz))
+    # return spmx
+    return sparse(W)
+end
+
+
 """ Generate model parameters according to the DAG structure and causal mechanism
 
 """
-function set_weights!(dag, mechanism="default")
+function gen_weights(dag)
     # dag is a meta graph, I'll need to attach parameters to each edge
     # 1. go through all edges
     # 2. attach edges
+    # FIXME to ensure pureness, copy dag
     for e in edges(dag)
         set_prop!(dag, e, :weight, randn())
     end
+    W = dag_W(dag)
+    for e in edges(dag)
+        rem_prop!(dag, e, :weight)
+    end
+    W
+end
+
+""" TODO ensure W and dag are consistent
+"""
+function is_consistent(dag, W)
+    false
 end
 
 
@@ -193,26 +241,21 @@ function gen_data_old(dag, mechanism="default")
     # 4. generate randn + parents
 end
 
-function gen_data!(dag; N=20, overwrite=false)
+function gen_data!(dag, W, N)
     # v = select_vertex(dag)
-    if overwrite
-        for v in vertices(dag)
-            rem_prop!(dag, v, :data)
-        end
-    end
     for v in vertices(dag)
-        gen_data!(dag, v, N)
+        gen_data!(dag, W, N, v)
     end
 end
 
-function gen_data!(dag, v, N)
+function gen_data!(dag, W, N, v)
     # start from a random node that does not have data, i.e. 1
     if ! has_prop(dag, v, :data)
         parents = inneighbors(dag, v)
         # if it has parents, run gen_data for its parents
         if length(parents) > 0
             for p in parents
-                gen_data!(dag, p, N)
+                gen_data!(dag, W, N, p)
             end
         end
         # gen data for itself
@@ -220,8 +263,10 @@ function gen_data!(dag, v, N)
             pdata = map(parents) do p
                 get_prop(dag, p, :data)
             end
+            # FIXME ensure correctness (not zero)
             weights = map(parents) do p
-                get_prop(dag, p, v, :weight)
+                # get_prop(dag, p, v, :weight)
+                W[p,v]
             end
             # causal mechanism
             data = hcat(pdata...) * weights + randn(N)
@@ -231,6 +276,33 @@ function gen_data!(dag, v, N)
             set_prop!(dag, v, :data, randn(N))
         end
     end
+end
+
+function dag_data(dag)
+    d = nv(dag)
+    N = length(get_prop(dag, 1, :data))
+    # FIXME column or row major?
+    X = []
+    for i in 1:d
+        xi = get_prop(dag, i, :data)
+        push!(X, xi)
+    end
+    # FIXME get X into a matrix
+    # transpose(hcat(X...))
+    hcat(X...)
+end
+
+function gen_data(dag, W, N)
+    d = nv(dag)
+    # 2. gen_data!
+    gen_data!(dag, W, N)
+    # 3. get_data
+    X = dag_data(dag)
+    # 4. remove data from dag
+    for i in 1:d
+        rem_prop!(dag, i, :data)
+    end
+    X
 end
 
 function print_weights(dag)
