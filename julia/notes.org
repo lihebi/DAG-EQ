@@ -71,17 +71,27 @@ My experience:
 *** STARTED related work
 Looks like I have to compare against them, so it does not hurt implementing them now.
 
-**** TODO The NOTEARS framework
+**** DONE The NOTEARS framework
+CLOSED: [2019-12-11 Wed 17:00]
 NOTEARS does not seem to recover beyond equivalent class.
 
 I'm at the optimization solver, and currently
 - Optim uses autodiff. However, it is slow, and does not seem to solve correctly
 - I'm trying something else, like NLopt suite, and this seems to work
 
-***** TODO score metrics
+https://github.com/xunzheng/notears
+
+***** DONE score metrics
+CLOSED: [2019-12-11 Wed 18:09]
 And the score seems to be very different when I modify notears's python code with:
 - replace 2 * d * d with just the result and gradient of d*d
 - the L1 regularizer also matters
+
+***** DONE non-negative box constraint
+CLOSED: [2019-12-11 Wed 18:09]
+https://github.com/xunzheng/notears/issues/5
+
+and related: 2*d*d w_est problem
 
 **** meta-transfer
 And the +NOTEARS version
@@ -185,3 +195,14 @@ non-Gaussian or non-Linear
 - no-linear model: seems to be extension to LiNGAM, do not have a special
   algorithm, still use noise footprint.
 
+* References
+** Code from papers
+- https://github.com/GoudetOlivier/CGNN, good quality, heavy in OO, also a copy in CDT
+- CausalDiscoveryToolbox
+  https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox has an
+  implementation of NCC.
+- https://github.com/Diviyan-Kalainathan/SAM
+- NOTEARS https://github.com/xunzheng/notears
+- DAG-GNN https://github.com/fishmoon1234/DAG-GNN, good quality
+- GraN-DAG https://github.com/kurowasan/GraN-DAG
+- meta-transfer: https://github.com/ec6dde01667145e58de60f864e05a4/CausalOptimizationAnon

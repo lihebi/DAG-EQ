@@ -144,6 +144,7 @@ function test()
     # FIXME number of edges, not used
     # m = 20
 
+    # FIXME try NOTEARS's data generation
     g = gen_ER_dag(20)
     is_cyclic(g) == false || error("not DAG")
 
@@ -158,14 +159,21 @@ function test()
     X[1,:]
 
     # run notears
-    notears(X)
+    Ŵ = notears(X)
     # compare the resulting W estimation
+
+    # visualize gragh
+    DiGraph(W)
+    DiGraph(Ŵ)
+    is_cyclic(DiGraph(Ŵ))
+
+    graphical_metrics(W, Ŵ)
 end
 
 using CSV
 
-function load_csv()
-    csv = CSV.read("/home/hebi/git/reading/notears/src/X.csv", header=false)
+function load_csv(fname)
+    csv = CSV.read(fname, header=false)
     typeof(csv)
     size(csv)
     # csv[1:10]
@@ -176,6 +184,48 @@ function load_csv()
 end
 
 function test_csv()
-    csv = load_csv()
-    notears(csv)
+    X = load_csv("/home/hebi/git/reading/notears/X.csv")
+    W = load_csv("/home/hebi/git/reading/notears/W_true.csv")
+    Ŵ = notears(X)
+
+    ge = DiGraph(Ŵ)
+    is_cyclic(ge)
+    nv(ge)
+    ne(ge)
+
+    graphical_metrics(W, Ŵ)
+end
+
+
+function graphical_metrics(W, Ŵ)
+    d, d = size(W)
+
+    g = DiGraph(W)
+    ĝ = DiGraph(Ŵ)
+
+    # FIXME reverse
+
+    # nnz
+    nnz = ne(ĝ)
+    @show nnz
+
+    # tpr: true positive rate
+    # the intersect of edges / total edges in ĝ
+    tp = sum(adjacency_matrix(g) .== adjacency_matrix(ĝ) .== 1)
+    tpr = tp / sum(adjacency_matrix(g) .== 1)
+    @show tpr
+
+    # fpr: false positive rate
+    fp = sum(adjacency_matrix(ĝ) .== 1 .!= adjacency_matrix(g))
+    fpr = fp / sum(adjacency_matrix(g) .== 0)
+    @show fpr
+
+    # fdr: false discovery rate
+    fdr = fp / sum(adjacency_matrix(ĝ) .== 1)
+    @show fdr
+
+    # shd: structural hamming distance
+    shd = sum(adjacency_matrix(g) .!= adjacency_matrix(ĝ))
+    @show shd
+    nothing
 end
