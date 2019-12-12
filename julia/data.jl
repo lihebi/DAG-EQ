@@ -208,7 +208,10 @@ function gen_weights(dag)
     # 2. attach edges
     # FIXME to ensure pureness, copy dag
     for e in edges(dag)
-        set_prop!(dag, e, :weight, randn())
+        # z = randn()
+        # MOTE using uniform in [-2,-0.5] and [0.5, 2], better performance, make sense because it is easier
+        z = (rand() * 1.5 + 0.5) * rand([1,-1])
+        set_prop!(dag, e, :weight, z)
     end
     W = dag_W(dag)
     for e in edges(dag)
@@ -301,6 +304,20 @@ function gen_data(dag, W, N)
     # 4. remove data from dag
     for i in 1:d
         rem_prop!(dag, i, :data)
+    end
+    X
+end
+
+function gen_data2(W, n)
+    d = size(W, 1)
+    X = zeros(n, d)
+    g = DiGraph(W)
+    # topological sort
+    # for vertices in order
+    for v in topological_sort_by_dfs(g)
+        parents = inneighbors(g, v)
+        # FIXME
+        X[:, v] = X[:, parents] * W[parents, v] + randn(n)
     end
     X
 end

@@ -149,7 +149,10 @@ function test()
     is_cyclic(g) == false || error("not DAG")
 
     W = gen_weights(g)
-    X = gen_data(g, W, 10)
+
+    # more data is faster and performs better
+    X = gen_data(g, W, 100)
+    X = gen_data2(W, 100)
 
     size(W)
     size(X)
@@ -188,7 +191,8 @@ function test_csv()
     W = load_csv("/home/hebi/git/reading/notears/W_true.csv")
     Ŵ = notears(X)
 
-    ge = DiGraph(Ŵ)
+    DiGraph(W)
+    DiGraph(Ŵ)
     is_cyclic(ge)
     nv(ge)
     ne(ge)
