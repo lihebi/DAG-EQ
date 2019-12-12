@@ -214,3 +214,20 @@ function test()
     g = generator_MNIST()
     d = discriminator_MNIST()
 end
+
+
+function graph_generator()
+    # FIXME dim z
+    Chain(Dense(100, 1024, relu),
+          Dense(1024, 1024, relu),
+          Dense(1024, 784, tanh),
+          # FIXME number of nodes in adj matrix
+          x -> reshape(x, 2, 2, :))
+end
+
+function graph_discriminator()
+    Chain(x -> reshape(x, 2*2, :),
+          Dense(4, 256, leakyrelu),
+          Dense(256, 256, leakyrelu),
+          Dense(256, 1))
+end
