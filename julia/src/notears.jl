@@ -52,6 +52,7 @@ end
 
 # this works
 function my_opt_NLopt(_f, _g, lower, upper, w_est)
+    d = convert(Int, sqrt(size(w_est, 1) / 2))
     function obj_fn(v, G)
         ret = _f(v)
         g = _g(v)

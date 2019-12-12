@@ -16,7 +16,7 @@ function test_notears()
 
     # more data is faster and performs better
     X = gen_data(g, W, 100)
-    X = gen_data2(W, 100)
+    # X = gen_data2(W, 100)
 
     size(W)
     size(X)
