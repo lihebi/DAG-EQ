@@ -28,10 +28,9 @@ function h_fn(W)
 end
 
 function adj_fn(v)
-    # FIXME this seems to apply gradients
-    # reshape(v[1:d*d] - v[d*d+1:end], d, d)
-    d = convert(Int, sqrt(length(v)))
-    reshape(v, d, d)
+    d = convert(Int, sqrt(length(v)/2))
+    # NOTE: positive and negative part
+    reshape(v[1:d*d] - v[d*d+1:end], d, d)
 end
 
 
@@ -46,15 +45,11 @@ function f(v, X, rho, alpha)
     # X use 2
     h, G_h = h_fn(W)
 
-
     # rho and alpha uses
     obj = loss + 0.5 * rho * h * h + alpha * h + lambda1 * sum(v)
     G_smooth = G_loss + (rho * h + alpha) * G_h
 
-    # FIXME
-    # g_obj = np.concatenate((G_smooth + lambda1, - G_smooth + lambda1), axis=None)
-    g_obj = G_smooth .+ lambda1
-    # g_obj = G_smooth
+    g_obj = hcat(G_smooth .+ lambda1, - G_smooth .+ lambda1)
     return obj, g_obj
 end
 
@@ -67,7 +62,7 @@ function my_opt_NLopt(_f, _g, lower, upper, w_est)
         ret
     end
 
-    opt = NLopt.Opt(:LD_LBFGS, d*d)
+    opt = NLopt.Opt(:LD_LBFGS, 2*d*d)
     opt.lower_bounds = lower
     opt.upper_bounds = upper
     opt.min_objective = obj_fn
@@ -103,18 +98,14 @@ function notears(X)
     w_threshold=0.3
 
     n, d = size(X)
-    w_est = zeros(d*d)
+    w_est = zeros(2*d*d)
     rho = 1.0
     alpha = 0.0
     h = Inf
 
     # bounds
-    lower = zeros(d*d)
-    # typeof(lower)
-    upper = [if i==j 0. else Inf end for i in 1:d for j in 1:d]
-    # w_est = min.(w_est, upper)
-    # typeof(upper)
-    # FIXME why bounds?
+    lower = zeros(2*d*d)
+    upper = [if i==j 0. else Inf end for _ in 1:2 for i in 1:d for j in 1:d]
     for i in 1:max_iter
         w_new = nothing
         h_new = nothing
@@ -123,10 +114,9 @@ function notears(X)
             # @info "running optim .."
             _f = (v)->f(v, X, rho, alpha)[1]
             _g = (v)->f(v, X, rho, alpha)[2]
+
             # w_new = my_opt_Optim(_f, _g, lower, upper, w_est)
             w_new = my_opt_NLopt(_f, _g, lower, upper, w_est)
-            # @show w_new[1]
-            # w_new = sol.x
             h_new, _ = h_fn(adj_fn(w_new))
             @show h_new
             if h_new > 0.25 * h
@@ -137,13 +127,10 @@ function notears(X)
         end
         w_est, h = w_new, h_new
         alpha += rho * h
-        # @show rho
-        # @show h
         if h <= h_tol || rho >= rho_max
             break
         end
     end
-    # W_est
     res = adj_fn(w_est)
     res[abs.(res) .< w_threshold] .= 0
     res
