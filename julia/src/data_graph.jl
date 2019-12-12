@@ -1,13 +1,26 @@
+# CAUTION there are several problems about these two packages:
+#
+# 1. The Cairo and Fontconfig packages must be loaded before ImageMagick.
+#
+# 2. And I must import Cairo first, then Fontconfig.
+#
+# 3. Also import Cairo is needed for Compose to draw an image.
+import Cairo
+import Fontconfig
+
+# FIXME It looks like ImageMagick is not useful.
+using ImageMagick
+
 using LightGraphs
-using LightGraphs.SimpleGraphs
+# using LightGraphs.SimpleGraphs
 using MetaGraphs
 using Base.Iterators
-using ImageMagick
 
 using GraphPlot: gplot, circular_layout
 using Compose: PNG, draw
-import Cairo
-import Fontconfig
+
+using GraphPlot
+using Compose
 
 using Random
 
