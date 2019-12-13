@@ -30,6 +30,7 @@ import Base.show
 import Base.display
 
 include("display.jl")
+include("data.jl")
 
 """Display a PNG by writing it to tmp file and show the filename. The filename
 would be replaced by an Emacs plugin.
