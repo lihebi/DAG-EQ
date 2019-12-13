@@ -68,7 +68,7 @@ My experience:
 - compute effect
 - discriminator likelyhood
 
-*** STARTED related work
+*** related work
 Looks like I have to compare against them, so it does not hurt implementing them now.
 
 **** DONE The NOTEARS framework
@@ -139,12 +139,38 @@ Inference:
 - compute statistics mu and sigma
 - f(mu, sigma)
 
-*** negative sampling
+*** TODO Regularizing
+- it can reach high accuracy very quickly
+- but it seems to overfitting very quickly as well
+
+*** CANCELED negative sampling
+CLOSED: [2019-12-12 Thu 16:34]
 Use a distance measure, or AIC/BIC score to assign the score for all (or a
 sample) graphs, not just the correct graph
 
+*** TODO multi-variate
+*** TODO stochastic SGD
+- I need more data
+- when data is large, I need to batch
+- and I need to shuffle the batches as well, for stochastic
+*** TODO other models
+- different number of hidden units
+- different number of layers
+- different models, e.g. GCN
+
+*** TODO sharing weights
+For generalizing to other number of variables
+*** TODO generalizing to other models
+- linear + Gaussian
+- non-Gaussian, e.g. poisson
+- generalized linear
+- non-linear
+
+
 *** Intergrate with (noise-based?) assymetrcis
-For distinguishing equivalent classes
+- For distinguishing equivalent classes
+  - but it alrady works very well
+- using data other than statistics
 
 
 * old TODO-list

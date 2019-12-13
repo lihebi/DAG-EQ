@@ -69,7 +69,7 @@ end
 ##############################
 
 
-# FIXME DAG
+# (HEBI: FIXME NOW no <->)
 function gen_ER(d=10)
     n = d
     m = d
