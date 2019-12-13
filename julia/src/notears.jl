@@ -88,7 +88,7 @@ function my_opt_Optim(_f, _g, lower, upper, w_est)
 end
 
 # FIXME should I check the exact number matching?
-function notears(X)
+function notears(X, fix_upper=false)
     # max_iter=100
     max_iter=10
     h_tol=1e-8
@@ -103,7 +103,13 @@ function notears(X)
 
     # bounds
     lower = zeros(2*d*d)
-    upper = [if i==j 0. else Inf end for _ in 1:2 for i in 1:d for j in 1:d]
+    # DEBUG
+    if fix_upper
+        upper = [if (i==j || (i==2 && j==1)) 0.1 else Inf end for _ in 1:2 for i in 1:d for j in 1:d]
+    else
+        upper = [if i==j 0. else Inf end for _ in 1:2 for i in 1:d for j in 1:d]
+    end
+    # DEBUG setting the direction
     for i in 1:max_iter
         w_new = nothing
         h_new = nothing
@@ -116,7 +122,11 @@ function notears(X)
             # w_new = my_opt_Optim(_f, _g, lower, upper, w_est)
             w_new = my_opt_NLopt(_f, _g, lower, upper, w_est)
             h_new, _ = h_fn(adj_fn(w_new))
+
+            # VERBOSE
+            # @show loss_fn(X, adj_fn(w_new))[1]
             @show h_new
+
             if h_new > 0.25 * h
                 rho *= 10
             else
@@ -130,7 +140,8 @@ function notears(X)
         end
     end
     res = adj_fn(w_est)
-    res[abs.(res) .< w_threshold] .= 0
+    # DEBUG threshold or not, here or out
+    # res[abs.(res) .< w_threshold] .= 0
     res
 end
 
