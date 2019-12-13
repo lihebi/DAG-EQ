@@ -11,6 +11,8 @@ import Fontconfig
 # FIXME It looks like ImageMagick is not useful.
 using ImageMagick
 
+using ProgressMeter
+
 using LightGraphs
 # using LightGraphs.SimpleGraphs
 using MetaGraphs
@@ -382,3 +384,51 @@ function test()
     descendants(g, 4)
 end
 
+
+function myeye(n)
+    1 * Matrix(I, n, n)
+end
+
+# TODO more variables
+function gen_sup_data(g, N)
+    d = nv(g)
+    ds = map(1:N) do i
+        W = gen_weights(g)
+        # X = gen_data(g, W, N)
+
+        # compute from generated data
+        # μ = mean(X, dims=1)
+        # σ = var(X, dims=1)
+
+        # compute the μ and σ analytically
+        μ = zeros(d)
+        Σ = inv(myeye(d) - W) * inv((myeye(d) - W)')
+
+        # concate
+        vcat(μ, Σ...), reshape(Matrix(W), :)
+    end
+    input = map(ds) do x x[1] end
+    output = map(ds) do x x[2] end
+    hcat(input...), hcat(output...)
+end
+
+function gen_sup_data_all(ng, N, d)
+    # train data
+    ds = @showprogress 0.1 "Generating.." map(1:ng) do i
+        g = gen_ER_dag(d)
+        x, y = gen_sup_data(g, N)
+    end
+    input = map(ds) do x x[1] end
+    output = map(ds) do x x[2] end
+    hcat(input...), hcat(output...)
+end
+
+function gen_sup_ds(;ng, N, d, batch_size)
+    x, y = gen_sup_data_all(ng, N, d)
+    test_x, test_y = gen_sup_data_all(ng, N, d)
+
+    ds = DataSetIterator(x, y, batch_size)
+    test_ds = DataSetIterator(test_x, test_y, batch_size)
+
+    ds, test_ds
+end

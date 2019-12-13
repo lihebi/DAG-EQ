@@ -231,3 +231,9 @@ function graph_discriminator()
           Dense(256, 256, leakyrelu),
           Dense(256, 1))
 end
+
+function sup_model(d)
+    Chain(Dense(d*(d+1), 100, relu),
+          Dense(100, 100, relu),
+          Dense(100, d*d))
+end

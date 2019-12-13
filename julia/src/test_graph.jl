@@ -165,3 +165,40 @@ function test_notears_csv()
 end
 
 
+# TODO time to test the model!!
+function inf()
+end
+
+include("model.jl")
+include("train.jl")
+
+function test_sup()
+    # TODO test weight=1
+    # FIXME test on different instance of graph
+    # TODO test on different type of graph
+
+    # using dd in REPL to catch undefined d problems
+    dd = 5
+    ds, test_ds = gen_sup_ds(ng=10000, N=10, d=dd, batch_size=1000)
+    x, y = next_batch!(test_ds)
+
+    model = sup_model(dd) |> gpu
+    # model(gpu(x))
+    opt = ADAM(1e-4)
+    print_cb = sup_create_print_cb()
+    # test_cb = create_test_cb(model, test_ds)
+    test_cb1 = Flux.throttle(sup_create_test_cb(model, ds, "ds"), 10)
+    test_cb2 = Flux.throttle(sup_create_test_cb(model, test_ds, "test_ds"), 10)
+    function test_cb()
+        test_cb1()
+        test_cb2()
+    end
+    Flux.@epochs 50 sup_train!(model, opt, ds, test_ds,
+                               print_cb=print_cb,
+                               test_cb=test_cb,
+                               train_steps=ds.nbatch*100)
+
+    # TODO enforcing sparsity, and increase the loss weight of 1 edges, because
+    # there are much more 0s, and they can take control of loss and make 1s not
+    # significant. As an extreme case, the model may simply report 0 everywhere
+end
