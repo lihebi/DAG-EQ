@@ -139,6 +139,10 @@ Inference:
 - compute statistics mu and sigma
 - f(mu, sigma)
 
+*** TODO test on different graph
+for 5-var case, to see what's the scalability problem
+*** TODO reuse 5-var learned model on 20 var
+
 *** TODO Regularizing
 - it can reach high accuracy very quickly
 - but it seems to overfitting very quickly as well

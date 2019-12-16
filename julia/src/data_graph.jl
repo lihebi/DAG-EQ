@@ -18,6 +18,8 @@ using LightGraphs
 using MetaGraphs
 using Base.Iterators
 
+using Statistics: I
+
 using GraphPlot: gplot, circular_layout
 using Compose: PNG, draw
 
@@ -431,4 +433,15 @@ function gen_sup_ds(;ng, N, d, batch_size)
     test_ds = DataSetIterator(test_x, test_y, batch_size)
 
     ds, test_ds
+end
+
+dscache = Dict()
+# catch the datasets to avoid generation
+function gen_sup_ds_cached(;ng, N, d, batch_size)
+    ID = "$ng, $N, $d, $batch_size"
+    if ! haskey(dscache, ID)
+        ds, test_ds = gen_sup_ds(ng=ng, N=N, d=d, batch_size=100)
+        dscache[ID] = (ds, test_ds)
+    end
+    dscache[ID]
 end

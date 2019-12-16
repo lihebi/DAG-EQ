@@ -26,6 +26,8 @@ Pkg.add("ProgressMeter")
 Pkg.add("MLDatasets")
 Pkg.add("ImageMagick")
 
+Pkg.add("TensorBoardLogger")
+
 
 # Flux
 Pkg.add("CUDAnative")

@@ -199,11 +199,30 @@ nonlinear ICP
 - https://github.com/cran/nonlinearICP
 - CRAN mirror: https://github.com/cran/nonlinearICP
 
+**** deal: a package for learning bayesian networks
+http://CRAN.R-project.org/package=deal
+
+In 6.2, there's a table, number of possible DAGs grows more than exponentially
+with the number of nodes
+
+| #nodes |        #networks |
+|--------+------------------|
+|      1 |                1 |
+|      2 |              2-3 |
+|      3 |            12-25 |
+|      4 |          144-543 |
+|      5 |       4800-29281 |
+|      6 | 320000 - 3781503 |
+|      7 |       56e6 - 1e9 |
+|      8 |      1e10 - 1e11 |
+|      9 |        1e13-1e15 |
+|     10 |        1e16-1e18 |
+
+
 *** More R packages
 - http://CRAN.R-project.org/package=gRain
 - http://CRAN.R-project.org/package=gRbase
 - http://CRAN.R-project.org/package=gRc
-- http://CRAN.R-project.org/package=deal
 - https://github.com/cran/CAM: this is removed from CRAN
 - https://github.com/ericstrobl/RCIT: this is just a CI test package
 
