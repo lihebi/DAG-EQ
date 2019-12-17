@@ -10,5 +10,6 @@ training_checkpoints
 
 *.jpg
 *.zip
+*.tar.gz
 
 events.out.tfevents.*

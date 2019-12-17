@@ -138,9 +138,19 @@ Open problems:
 Inference:
 - compute statistics mu and sigma
 - f(mu, sigma)
+*** TODO ensure acyclic in evaluation
 
-*** TODO test on different graph
+*** DONE test on different graph
+CLOSED: [2019-12-16 Mon 14:31]
 for 5-var case, to see what's the scalability problem
+
+It does not work, so the problem is not the size of graph. With different graphs
+as test data, it does not work.
+
+But there is some good news:
+1. NN fits training data without any problem
+2. with more N per graph, it improves
+
 *** TODO reuse 5-var learned model on 20 var
 
 *** TODO Regularizing
@@ -202,6 +212,24 @@ Read flux.jl code
 *** TODO InfoGAN
 *** TODO NOTEARS
 *** TODO Causal
+
+** Number of unique DAG
+
+https://oeis.org/A003024
+
+|  d | #dag |
+|----+------|
+|  1 |      |
+|  2 |      |
+|  3 |      |
+|  4 |      |
+|  5 |      |
+|  6 |      |
+|  7 |      |
+|  8 |      |
+|  9 |      |
+| 10 |      |
+| 11 |      |
 
 
 ** TODO run causal discovery

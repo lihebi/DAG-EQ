@@ -27,6 +27,8 @@ Pkg.add("MLDatasets")
 Pkg.add("ImageMagick")
 
 Pkg.add("TensorBoardLogger")
+Pkg.add("Plots")
+Pkg.add("PyPlot")
 
 
 # Flux

@@ -414,6 +414,7 @@ function gen_sup_data(g, N)
     hcat(input...), hcat(output...)
 end
 
+# DEPRECATED
 function gen_sup_data_all(ng, N, d)
     # train data
     ds = @showprogress 0.1 "Generating.." map(1:ng) do i
@@ -425,6 +426,7 @@ function gen_sup_data_all(ng, N, d)
     hcat(input...), hcat(output...)
 end
 
+# DEPRECATED
 function gen_sup_ds(;ng, N, d, batch_size)
     x, y = gen_sup_data_all(ng, N, d)
     test_x, test_y = gen_sup_data_all(ng, N, d)
@@ -435,13 +437,174 @@ function gen_sup_ds(;ng, N, d, batch_size)
     ds, test_ds
 end
 
+function gen_sup_data_all_with_graph(N, gs)
+    # train data
+    ds = @showprogress 0.1 "Generating.." map(gs) do g
+        x, y = gen_sup_data(g, N)
+    end
+    input = map(ds) do x x[1] end
+    output = map(ds) do x x[2] end
+    hcat(input...), hcat(output...)
+end
+
+function gen_sup_ds_with_graph(N, gs; batch_size)
+    x, y = gen_sup_data_all_with_graph(N, gs)
+    DataSetIterator(x, y, batch_size)
+end
+
 dscache = Dict()
 # catch the datasets to avoid generation
 function gen_sup_ds_cached(;ng, N, d, batch_size)
     ID = "$ng, $N, $d, $batch_size"
     if ! haskey(dscache, ID)
-        ds, test_ds = gen_sup_ds(ng=ng, N=N, d=d, batch_size=100)
-        dscache[ID] = (ds, test_ds)
+        # generate graphs first
+        graphs = gen_graphs_hard(d, ng)
+        # ratio
+        index = convert(Int, round(length(graphs) / 5))
+        train_gs = graphs[1:index]
+        test_gs = graphs[index:end]
+
+        ds = gen_sup_ds_with_graph(N, train_gs, batch_size=batch_size)
+        test_ds = gen_sup_ds_with_graph(N, test_gs, batch_size=batch_size)
+
+        # ds, test_ds = gen_sup_ds(ng=ng, N=N, d=d, batch_size=100)
+        # dscache[ID] = (ds, test_ds)
     end
-    dscache[ID]
+    # dscache[ID]
+    ds, test_ds
+end
+
+# generate different types of graph for training and testing
+function gen_sup_ds_cached_diff(;ng, N, d, batch_size)
+    train_gs = gen_graphs_hard(d, ng, :ER)
+    # different graphs for testing
+    test_gs = gen_graphs_hard(d, ng, :SF)
+    # FIXME filter out same graphs if any
+    # DEBUG using a cheap test instead of filtering
+    @show size(train_gs)
+    @show size(test_gs)
+    all_gs = vcat(train_gs, test_gs)
+    @show size(all_gs)
+    unique_all_gs = unique(all_gs) do g
+        adjacency_matrix(g)
+    end
+    length(all_gs) == length(unique_all_gs) || begin
+        @show length(all_gs)
+        @show length(unique_all_gs)
+        error("test gs has overlap")
+    end
+
+    # FIXME setdiff not working
+    # diff = setdiff(test_gs, train_gs)
+    # @show size(diff)
+    # FIXME will they have the the same number of edges?
+
+    # TODO use different graphs for ds and test
+    ds = gen_sup_ds_with_graph(N, train_gs, batch_size=batch_size)
+    test_ds = gen_sup_ds_with_graph(N, test_gs, batch_size=batch_size)
+
+    # ds, test_ds = gen_sup_ds(ng=ng, N=N, d=d, batch_size=100)
+    # dscache[ID] = (ds, test_ds)
+    ds, test_ds
+end
+
+
+function gen_graphs(d, n, type=:ER)
+    # generate n
+    if type == :ER
+        f = gen_ER_dag
+    elseif type == :SF
+        f = gen_SF_dag
+    else
+        error("Not supported graph type.")
+    end
+    all_graphs = map(1:n) do i
+        f(d)
+    end
+    # @show length(all_graphs)
+    # filter
+    unique_graphs = unique(all_graphs) do g
+        # FIXME can this be compared directly?
+        adjacency_matrix(g)
+    end
+    # @show length(unique_graphs)
+    unique_graphs
+end
+
+function gen_graphs_hard(d, n, type=:ER)
+    # CAUTION this function will loop forever to generate enough unique graph
+    all_gs = []
+    @showprogress 0.1 "generating graph.." for i in 1:10
+        # @info "graph iter $i .."
+        gs = gen_graphs(d, n, type)
+        append!(all_gs, gs)
+        unique!(all_gs) do g
+            # FIXME can this be compared directly?
+            adjacency_matrix(g)
+        end
+
+        if length(all_gs) >= n
+            all_gs = all_gs[1:n]
+            break
+        end
+    end
+    # @show length(all_gs)
+    n == length(all_gs) || @warn "Not enougth unique graphs, $(length(all_gs)) < $n"
+    # hcat(all_gs)
+    all_gs
+end
+
+
+function test()
+    # there are totally about 10000 different graphs for d=5
+    gs = gen_graphs(5, 500000)
+    gs = gen_graphs(5, 500)
+    gs = gen_graphs_hard(5, 5000)
+    gs = gen_graphs_hard(7, 5000, :SF)
+    # test if unique
+    gen_ER_dag(5)
+    ds, test_ds = gen_sup_ds_cached_diff(ng=5000, d=7, N=2, batch_size=100)
+
+    gs1 = [gen_ER_dag(3) for _ in 1:10]
+    gs2 = [gen_ER_dag(3) for _ in 1:10]
+    setdiff(gs1, gs2)
+    unique(gs1) do g adjacency_matrix(g) end
+    for g in gs1
+        display(g)
+    end
+    gs1[3] == gs1[9]
+    unique(gs1)
+    unique((gs1[3], gs1[9]))
+    isequal(gs1[3], gs1[9])
+    intersect([gs1[3]], [gs1[9]])
+    gs1[3] in gs1[7:9]
+    intersect(gs1[3:5], gs1[7:9])
+    setdiff!(copy(gs1[3:5]), gs1[7:9])
+    delete!(copy(gs1[3:5]), gs1[9])
+    typeof(gs1) <: AbstractSet
+end
+
+# Base.isequal(g1, g2) = adjacency_matrix(g1) == adjacency_matrix(g2)
+
+
+function dag_seq_recur(n)
+    res = 0
+    if n == 0 return 1 end
+    for k in 1:n
+        # FIXME DP
+        res += (-1)^(k-1) * binomial(k, n) * 2^(k * (n-k)) * dag_seq_recur(n-k)
+    end
+    res
+end
+
+function test_dat_seq()
+    # FIXME number of ER graphs
+    dag_seq(0) == 1
+    dag_seq(1) == 1
+    dag_seq(2) == 3
+    dag_seq(3) == 25
+    dag_seq(4) == 543
+    dag_seq(5) == 29281
+    dag_seq(6) == 3781503
+    dag_seq(7) == 1138779265
 end
