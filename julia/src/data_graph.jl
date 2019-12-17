@@ -460,10 +460,11 @@ function gen_sup_ds_cached(;ng, N, d, batch_size)
         # generate graphs first
         graphs = gen_graphs_hard(d, ng)
         # ratio
-        index = convert(Int, round(length(graphs) / 5))
+        index = convert(Int, round(length(graphs) * 4 / 5))
         train_gs = graphs[1:index]
         test_gs = graphs[index:end]
 
+        # TODO use different graphs for ds and test
         ds = gen_sup_ds_with_graph(N, train_gs, batch_size=batch_size)
         test_ds = gen_sup_ds_with_graph(N, test_gs, batch_size=batch_size)
 
@@ -480,6 +481,7 @@ function gen_sup_ds_cached_diff(;ng, N, d, batch_size)
     # different graphs for testing
     test_gs = gen_graphs_hard(d, ng, :SF)
     # FIXME filter out same graphs if any
+
     # DEBUG using a cheap test instead of filtering
     @show size(train_gs)
     @show size(test_gs)
