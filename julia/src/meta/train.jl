@@ -38,12 +38,12 @@ function mdn_nll(pi, mu, sigma, y)
 
     log_prob_pi_y = log_prob_y + log.(pi)
 
-    loss = -log.(sum(exp.(log_prob_pi_y), dims=1))
+    # loss = -log.(sum(exp.(log_prob_pi_y), dims=1))
     # FIXME Tracker.jl cannot work through reduce
     loss = -logsumexp(log_prob_pi_y, dims=1)
-    @show loss
+    # @show loss
     # FIXME loss is -Inf
-    @show mean(loss)
+    # @show mean(loss)
     mean(loss)
 end
 

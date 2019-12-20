@@ -138,7 +138,8 @@ function test()
     
 end
 
-
+# from https://www.xarg.org/2016/06/the-log-sum-exp-trick-in-machine-learning/
+# and https://discourse.julialang.org/t/fast-logsumexp/22827
 function logsumexp(w)
     we = similar(w)
     offset = maximum(w)

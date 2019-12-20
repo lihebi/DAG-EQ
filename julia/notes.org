@@ -53,8 +53,17 @@ https://github.com/xunzheng/notears/issues/5
 and related: 2*d*d w_est problem
 ***** TODO why NOTEARS can distinguish A->B and B->A?
 
-**** STARTED meta-transfer in julia
+**** DONE meta-transfer in julia
+CLOSED: [2019-12-20 Fri 12:56]
 And the +NOTEARS version
+
+Several problems:
+1. Zygote cannot differentiate through likelihood:
+   https://github.com/FluxML/Zygote.jl/issues/436
+2. Tracker.jl TrackedArrays cannot work through logsumexp's mapreduce
+
+Thus it is basically impossible to get it work. But it's good enough, I
+understand how it works, let's implement do-loss.
 
 **** traditional
 - PC

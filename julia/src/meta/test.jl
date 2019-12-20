@@ -1,5 +1,8 @@
+include("data.jl")
+include("model.jl")
+include("train.jl")
 
-function test()
+function test_setup()
     scm = random_spline_scm(8, 10)
     plot_spline(scm)
 
@@ -10,16 +13,50 @@ function test()
     length(ps)
     ps[1]
 
-    train_nll!(model_x2y, scm, "X2Y")
-    train_nll!(model_y2x, scm, "Y2X")
-
-    dist_fn = () -> rand(Normal(0, 2), (1,50))
+    dist_fn = () -> rand(Normal(0, 2), (1,20))
     X = dist_fn()
     Y = scm.(X)
+    size(X)
+    size(Y)
+end
+
+function test_dist()
+    # See issue https://github.com/FluxML/Zygote.jl/issues/436
+    using Distributions
+    import Zygote
+    import Tracker
+    Zygote.gradient((μ, σ) -> loglikelihood(Normal(μ, σ), [1,2,3]), 0, 1)
+    # => (nothing, nothing)
+    Tracker.gradient((μ, σ) -> loglikelihood(Normal(μ, σ), [1,2,3]), 0, 1)
+    # => (6.0 (tracked), 11.0 (tracked))
+end
+
+
+function test_mdn_nll()
     out = model_x2y(X)
+
+    # FIXME out is TrackerArray, and it cannot go through mdn_nll
     mdn_nll(out..., Y)
+    # the clean array version works
+    mdn_nll(map((o)->o.data, out)..., Y)
+
+    # TODO test if Zygote.jl can differentiate across mdn_nll
+    Tracker.gradient(mdn_nll, out..., Y)
+    import Zygote
+
+    # if I'm using Flux#master, what would be the output?
+    gs = gradient(mdn_nll, out..., Y)
+    length(gs)
+    gs[1]
+    gs[2]
+    gs[3]
+    gs[4]
+end
+
+function test()
     xx = mdn_nll(out..., Y).data
     xxx = mdn_nll(out..., Y).data
+
     log(sum(exp.(xx)))
     logsumexp(xx)
 end
