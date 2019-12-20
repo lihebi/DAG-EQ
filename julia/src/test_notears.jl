@@ -7,7 +7,6 @@ include("notears.jl")
 # for threshold for now
 include("train.jl")
 
-
 # TODO test a A->B model to see if NOTEARS works for equivalent class
 
 function test_bi()
