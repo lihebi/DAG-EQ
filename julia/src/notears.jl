@@ -146,34 +146,45 @@ function notears(X, fix_upper=false)
 end
 
 function graphical_metrics(W, Ŵ)
-    d, d = size(W)
+    # assuming W is dxd matrix
+    d = size(W,1)
 
     g = DiGraph(W)
     ĝ = DiGraph(Ŵ)
 
-    # FIXME reverse
+    # this will make it 1 or 1
+    mg = adjacency_matrix(g)
+    mĝ = adjacency_matrix(ĝ)
 
     # nnz
-    nnz = ne(ĝ)
-    @show nnz
+    nnz = sum(mĝ)
+    # shd: structural hamming distance
+    shd = sum(mg .!= mĝ)
+
+    if shd > 0
+        @warn "Not same"
+        @info "true graph:"
+        display(g)
+        @info "estimated graph:"
+        display(ĝ)
+    end
+
+    tp = sum(mĝ[mg .== mĝ] .== 1)
+    fp = sum(mĝ[mĝ .== 1] .!= mg[mĝ .== 1])
+    tt = sum(mg .== 1)
+    ff = sum(mg .== 0)
+
+    prec = tp / (tp + fp)
+    recall = tp / tt
 
     # tpr: true positive rate
     # the intersect of edges / total edges in ĝ
-    tp = sum(adjacency_matrix(g) .== adjacency_matrix(ĝ) .== 1)
-    tpr = tp / sum(adjacency_matrix(g) .== 1)
-    @show tpr
-
+    tpr = tp / tt
     # fpr: false positive rate
-    fp = sum(adjacency_matrix(ĝ) .== 1 .!= adjacency_matrix(g))
-    fpr = fp / sum(adjacency_matrix(g) .== 0)
-    @show fpr
-
+    fpr = fp / ff
     # fdr: false discovery rate
-    fdr = fp / sum(adjacency_matrix(ĝ) .== 1)
-    @show fdr
+    fdr = fp / sum(mĝ .== 1)
 
-    # shd: structural hamming distance
-    shd = sum(adjacency_matrix(g) .!= adjacency_matrix(ĝ))
-    @show shd
-    nothing
+    # (:nnz=>nnz, :shd=>shd, :prec=>prec, :recall=>recall, :tpr=>tpr, :fpr=>fpr, :fdr=>fdr)
+    (:shd=>shd, :prec=>prec, :recall=>recall)
 end
