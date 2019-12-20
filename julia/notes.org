@@ -3,55 +3,6 @@
 
 * TODO-List
 
-** DONE Implement data generation
-CLOSED: [2019-12-10 Tue 16:10]
-- [X] random graph
-  - Erdős-Rényi (ER)
-  - scale-free (SF)
-- [X] random weights
-- gaussian noise
-- [-] different models
-  - [X] linear model
-  - [ ] generalized linear
-  - [ ] non-linear model
-  - additive gaussian noise
-
-** CANCELED Implement some cdt algorithms in Julia
-CLOSED: [2019-12-06 Fri 18:08]
-- CGNN
-- NOTEARS
-- DAG-GNN
-- GraN-DAG
-- meta-transfer
-
-** CANCELED Implement traditional algorithms
-CLOSED: [2019-12-06 Fri 18:08]
-- [X] PC
-- [X] FCI
-- LiNGRAM
-- GIES
-- CAM
-
-** GAN for MNIST
-*** DONE test python code for GAN
-CLOSED: [2019-12-10 Tue 16:07]
-*** DONE debug DCGAN for julia
-CLOSED: [2019-12-10 Tue 16:06]
-
-My experience:
-- dropout is very important, use in discriminator
-- dropout can be used together with batchnorm
-- use bias = false is not required
-- the last conv in generator should not be stride=2, but 1, i.e. no scaling
-  performed in the last conv
-- normalize MNIST to -1,1 instead of 0,1 seems to be very important
-
-*** Python GAN references
-- PyTorch-GAN 5k stars https://github.com/eriklindernoren/PyTorch-GAN
-- https://github.com/znxlwm/pytorch-MNIST-CelebA-GAN-DCGAN
-- tensorflow official DCGAN
-- pytorch official DCGAN
-
 ** TODO Implement interventional loss
 
 *** TODO use dense GAN for graphical model
@@ -67,6 +18,14 @@ My experience:
 - random intervention
 - compute effect
 - discriminator likelyhood
+
+*** Tuebingen pairs
+- NOTEARS does not work
+- implement LiNGRAM to see if it works
+- But it does not seem to have interventional data, and does not have ground
+  truth SEM to generate interventional data
+- what are the interventional data out there?
+- what is the optimization the meta-transfer is using?
 
 *** related work
 Looks like I have to compare against them, so it does not hurt implementing them now.
@@ -92,8 +51,9 @@ CLOSED: [2019-12-11 Wed 18:09]
 https://github.com/xunzheng/notears/issues/5
 
 and related: 2*d*d w_est problem
+***** TODO why NOTEARS can distinguish A->B and B->A?
 
-**** meta-transfer
+**** STARTED meta-transfer in julia
 And the +NOTEARS version
 
 **** traditional
@@ -121,70 +81,6 @@ might consider an extension of this work to seperated unknown interventions.
 - we then use the minimum loss of discriminator to calculate interventional
   loss, i.e. as long as one of the interventional distribution is consistent
   with the random intervention, we accept it.
-
-** TODO supervised re-parametric
-Train:
-- assume linear gaussian model
-- design a new convolution (on graph), probably use GCN
-- generate random model
-- generate mu and sigma
-- train f(mu, sigma)=adjacent_matrix
-
-Open problems:
-- conv operator, shared weights
-- order of nodes
-- generalized reparametric
-
-Inference:
-- compute statistics mu and sigma
-- f(mu, sigma)
-*** TODO ensure acyclic in evaluation
-
-*** DONE test on different graph
-CLOSED: [2019-12-16 Mon 14:31]
-for 5-var case, to see what's the scalability problem
-
-It does not work, so the problem is not the size of graph. With different graphs
-as test data, it does not work.
-
-But there is some good news:
-1. NN fits training data without any problem
-2. with more N per graph, it improves
-
-*** TODO reuse 5-var learned model on 20 var
-
-*** TODO Regularizing
-- it can reach high accuracy very quickly
-- but it seems to overfitting very quickly as well
-
-*** CANCELED negative sampling
-CLOSED: [2019-12-12 Thu 16:34]
-Use a distance measure, or AIC/BIC score to assign the score for all (or a
-sample) graphs, not just the correct graph
-
-*** TODO multi-variate
-*** TODO stochastic SGD
-- I need more data
-- when data is large, I need to batch
-- and I need to shuffle the batches as well, for stochastic
-*** TODO other models
-- different number of hidden units
-- different number of layers
-- different models, e.g. GCN
-
-*** TODO sharing weights
-For generalizing to other number of variables
-*** TODO generalizing to other models
-- linear + Gaussian
-- non-Gaussian, e.g. poisson
-- generalized linear
-- non-linear
-
-
-*** Intergrate with (noise-based?) assymetrcis
-- For distinguishing equivalent classes
-  - but it alrady works very well
-- using data other than statistics
 
 
 * old TODO-list
@@ -252,6 +148,124 @@ non-Gaussian or non-Linear
   https://sites.google.com/site/sshimizu06/lingam
 - no-linear model: seems to be extension to LiNGAM, do not have a special
   algorithm, still use noise footprint.
+
+
+* DONE-list
+** DONE Implement data generation
+CLOSED: [2019-12-10 Tue 16:10]
+- [X] random graph
+  - Erdős-Rényi (ER)
+  - scale-free (SF)
+- [X] random weights
+- gaussian noise
+- [-] different models
+  - [X] linear model
+  - [ ] generalized linear
+  - [ ] non-linear model
+  - additive gaussian noise
+
+** CANCELED Implement some cdt algorithms in Julia
+CLOSED: [2019-12-06 Fri 18:08]
+- CGNN
+- NOTEARS
+- DAG-GNN
+- GraN-DAG
+- meta-transfer
+
+** CANCELED Implement traditional algorithms
+CLOSED: [2019-12-06 Fri 18:08]
+- [X] PC
+- [X] FCI
+- LiNGRAM
+- GIES
+- CAM
+
+** DONE GAN for MNIST
+CLOSED: [2019-12-18 Wed 12:42]
+*** DONE test python code for GAN
+CLOSED: [2019-12-10 Tue 16:07]
+*** DONE debug DCGAN for julia
+CLOSED: [2019-12-10 Tue 16:06]
+
+My experience:
+- dropout is very important, use in discriminator
+- dropout can be used together with batchnorm
+- use bias = false is not required
+- the last conv in generator should not be stride=2, but 1, i.e. no scaling
+  performed in the last conv
+- normalize MNIST to -1,1 instead of 0,1 seems to be very important
+
+*** Python GAN references
+- PyTorch-GAN 5k stars https://github.com/eriklindernoren/PyTorch-GAN
+- https://github.com/znxlwm/pytorch-MNIST-CelebA-GAN-DCGAN
+- tensorflow official DCGAN
+- pytorch official DCGAN
+
+** CANCELED supervised re-parametric
+CLOSED: [2019-12-18 Wed 12:41]
+Train:
+- assume linear gaussian model
+- design a new convolution (on graph), probably use GCN
+- generate random model
+- generate mu and sigma
+- train f(mu, sigma)=adjacent_matrix
+
+Open problems:
+- conv operator, shared weights
+- order of nodes
+- generalized reparametric
+
+Inference:
+- compute statistics mu and sigma
+- f(mu, sigma)
+*** TODO ensure acyclic in evaluation
+
+*** DONE test on different graph
+CLOSED: [2019-12-16 Mon 14:31]
+for 5-var case, to see what's the scalability problem
+
+It does not work, so the problem is not the size of graph. With different graphs
+as test data, it does not work.
+
+But there is some good news:
+1. NN fits training data without any problem
+2. with more N per graph, it improves
+
+*** TODO reuse 5-var learned model on 20 var
+
+*** TODO Regularizing
+- it can reach high accuracy very quickly
+- but it seems to overfitting very quickly as well
+
+*** CANCELED negative sampling
+CLOSED: [2019-12-12 Thu 16:34]
+Use a distance measure, or AIC/BIC score to assign the score for all (or a
+sample) graphs, not just the correct graph
+
+*** TODO multi-variate
+*** TODO stochastic SGD
+- I need more data
+- when data is large, I need to batch
+- and I need to shuffle the batches as well, for stochastic
+*** TODO other models
+- different number of hidden units
+- different number of layers
+- different models, e.g. GCN
+
+*** TODO sharing weights
+For generalizing to other number of variables
+*** TODO generalizing to other models
+- linear + Gaussian
+- non-Gaussian, e.g. poisson
+- generalized linear
+- non-linear
+
+
+*** Intergrate with (noise-based?) assymetrcis
+- For distinguishing equivalent classes
+  - but it alrady works very well
+- using data other than statistics
+
 
 * References
 ** Code from papers
