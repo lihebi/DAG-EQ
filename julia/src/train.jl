@@ -133,7 +133,9 @@ function test()
     reset!(m)
 end
 
-my_accuracy(ŷ, y) = mean(onecold(cpu(ŷ)) .== onecold(cpu(y)))
+function gan_accuracy(ŷ, y)
+    sum((ŷ .> 0.5) .== (y .> 0.5)) / size(y)[end]
+end
 
 # https://github.com/soumith/ganhacks
 function train_GAN!(g, d, gopt, dopt, ds;
@@ -155,7 +157,9 @@ function train_GAN!(g, d, gopt, dopt, ds;
 
         # for calculating real/fake labels
         out = d(x)
-        noise = gpu(Float32.(randn(100, size(x)[end])))
+        # HACK get the size of hidden dim
+        z = size(g[1].W,2)
+        noise = gpu(Float32.(randn(z, size(x)[end])))
         real_label = gpu(Float32.(ones(size(out))))
         fake_label = gpu(Float32.(zeros(size(out))))
 
@@ -208,11 +212,17 @@ function train_GAN!(g, d, gopt, dopt, ds;
                   get!(dgz2_metric))
             # also print out a sample
             # noise = randn(100, 32) |> gpu;
-            fake = g(noise);
-            sample_and_view(fake)
+            fake = g(noise)
+            # sample_and_view(fake)
             # I want to print out the real and fake accuracy by D
-            @show my_accuracy(d(x), real_label)
-            @show my_accuracy(d(g(noise)), fake_label)
+            @show gan_accuracy(σ.(d(gpu(x))), real_label)
+            @show gan_accuracy(σ.(d(g(noise))), fake_label)
+
+            # generating a new x and noise
+            x, y = next_batch!(ds)
+            noise = gpu(Float32.(randn(z, size(x)[end])))
+            @show gan_accuracy(σ.(d(gpu(x))), real_label)
+            @show gan_accuracy(σ.(d(g(noise))), fake_label)
         end
     end
 end

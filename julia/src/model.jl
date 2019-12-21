@@ -232,8 +232,24 @@ function graph_discriminator()
           Dense(256, 1))
 end
 
-function sup_model(d)
-    Chain(Dense(d*(d+1), 100, relu),
+# z: hidden noise dim
+# d: graph node size
+function graph_data_generator(z, d)
+    Chain(Dense(z, 100, relu),
           Dense(100, 100, relu),
-          Dense(100, d*d))
+          Dense(100, d))
+end
+
+# d: graph node size
+function graph_data_discriminator(d)
+    Chain(Dense(d, 100, relu),
+          Dense(100, 100, relu),
+          Dense(100, 1))
+end
+
+function sup_model(d)
+    Chain(Dense(d*(d+1), 1024, relu),
+          Dense(1024, 1024, relu),
+          # Dense(1024, 1024, relu),
+          Dense(1024, d*d))
 end
