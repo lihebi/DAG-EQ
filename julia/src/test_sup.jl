@@ -10,6 +10,100 @@ include("train.jl")
 function inf()
 end
 
+function sup_model(d)
+    # first reshape
+    Chain(
+        x -> reshape(x, d * d, :),
+        Dense(d*d, 1024, relu),
+        Dense(1024, 1024, relu),
+        Dense(1024, d*d),
+        # reshape back
+        x -> reshape(x, d, d, :),
+    )
+end
+
+function test()
+    x = randn(5,5,1,10)
+    reshape(x, 25, 10)
+
+    # !!!!!!!!
+    x = randn(5,5,1,10)
+    y = reshape(x, 5, 5, 10)
+    Flux.mse(x,y)
+    Flux.mse(x,x)
+    Flux.mse(y,y)
+end
+
+function eq_model(d, z)
+    # eq model
+    # TODO put on GPU, I probably need to write GPU kernel for this
+    model = Chain(
+        x->reshape(x, d, d, 1, :),
+        Equivariant(1=>z),
+        LeakyReLU(),
+        Equivariant(z=>z),
+        LeakyReLU(),
+        Equivariant(z=>z),
+        LeakyReLU(),
+        # Equivariant(z=>z),
+        # LeakyReLU(),
+        # Equivariant(z=>z),
+        # LeakyReLU(),
+        # Equivariant(z=>z),
+        # Equivariant(z=>z),
+        Equivariant(z=>1),
+        # IMPORTANT drop the second-to-last dim 1
+        x->reshape(x, d, d, :)
+    )
+end
+
+function test_eq()
+    d=5
+    # TODO try more data
+    ng=1000
+    N=20
+    train_steps=1e4
+    ds, test_ds = gen_sup_ds_cached(ng=ng, N=N, d=d, batch_size=100)
+
+    X, Y = next_batch!(ds)# |> gpu
+    # add channel 1
+    # X = reshape(X, size(X)[1:end-1]..., 1, size(X)[end])
+    size(X)
+
+    # the previous sup model
+    model = sup_model(5) |> gpu
+    param_count(model)             # 1,106,969
+
+    # model = eq_model(100) |> gpu
+    model = eq_model(5, 100)
+    param_count(model)          # 28
+
+    # run on X
+    model(X)
+    size(X)
+
+    sup_graph_metrics(cpu(model(X)), cpu(Y))
+
+    # gpu test
+    model(gpu(X))
+    gpu(model)(gpu(X))
+    model(gpu(X))
+    cpu(model)(X)
+
+    # test gradient
+    gradient(()->sum(model(X)), params(model))
+
+    # really train
+    opt = ADAM(1e-5)
+    print_cb = Flux.throttle(sup_create_print_cb(), 1)
+    test_cb = Flux.throttle(sup_create_test_cb(model, test_ds, "test_ds", use_gpu=true), 10)
+    sup_train!(model, opt, ds, test_ds,
+               print_cb=print_cb,
+               test_cb=test_cb,
+               use_gpu=true,
+               train_steps=train_steps * 10)
+end
+
 
 function exp_sup(d; ng=10000, N=10, train_steps=1e5)
     # for scitific notation
@@ -48,15 +142,6 @@ function exp_sup(d; ng=10000, N=10, train_steps=1e5)
 end
 
 function test()
-    exp_sup(3)
-    exp_sup(5)
-    exp_sup(7)
-    exp_sup(10)
-    exp_sup(10, ng=100000, N=1)
-    exp_sup(10, ng=1000, N=100)
-    exp_sup(20, ng=10000, N=2)
-
-
     # so it does not work
     exp_sup(5, ng=1e3, N=2)     # prec=0.58, recall=0.80
     exp_sup(5, ng=1e3, N=20)    # prec=0.80, recall=0.95

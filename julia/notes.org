@@ -3,8 +3,42 @@
 
 * TODO-List
 
-** TODO Implement interventional loss
+** TODO supervised learning with equivariant model
+*** TODO gpu
+*** TODO more data points
+*** TODO init function
+simply 0
 
+This does not work, the model parameters does not change at all.
+*** DONE try previous MLP
+CLOSED: [2020-01-10 Fri 13:01]
+
+Delta debuggging what is wrong
+
+It is the 1 dim (5,5,1,100)
+
+** New round
+*** CANCELED use mixture multi-variant Gaussian to fit the data
+CLOSED: [2020-01-09 Thu 18:28]
+I should not use gaussian mixture, as that's not flexible, I need to know how
+many components.
+
+- observational
+- 1 interventional
+- 2+ interventional
+- observational + 1 interventional
+- observational + 2+ interventional
+
+*** TODO use mixture Gaussian likelihood as oracle
+to fit the do-loss
+
+- I probably try to derive the closed form first
+
+*** TODO sample interventions?
+*** TODO sample from cyclic intermediate graph state
+
+
+** TODO Implement interventional loss
 *** TODO use dense GAN for graphical model
 - generator
 - discriminator

@@ -257,7 +257,8 @@ end
 
 function sup_graph_metrics(out, y)
     # TODO try enforce some of this metrics in loss?
-    d = convert(Int, sqrt(size(y,1)))
+    # d = convert(Int, sqrt(size(y,1)))
+    d = size(y,1)
     # FIXME threshold value
     mat(y) = threshold(reshape(y, d, d, :), 0.3, true)
     mout = mat(out)
@@ -284,7 +285,7 @@ function sup_graph_metrics(out, y)
     GraphMetric(nnz, nny, tpr, fpr, fdr, shd, prec, recall)
 end
 
-function sup_create_test_cb(model, test_ds, msg; logger=nothing)
+function sup_create_test_cb(model, test_ds, msg; logger=nothing, use_gpu=true)
     function test_cb(step)
         test_run_steps = 20
 
@@ -295,7 +296,11 @@ function sup_create_test_cb(model, test_ds, msg; logger=nothing)
 
         # FIXME testmode!
         @showprogress 0.1 "Inner testing..." for i in 1:test_run_steps
-            x, y = next_batch!(test_ds) |> gpu
+            x, y = next_batch!(test_ds)
+            if use_gpu
+                x = gpu(x)
+                y = gpu(y)
+            end
             out = model(x)
 
             # FIXME performance on CPU
@@ -348,7 +353,8 @@ end
 function sup_train!(model, opt, ds, test_ds;
                     train_steps=ds.nbatch,
                     print_cb=(i, m)->(),
-                    test_cb=(i)->())
+                    test_cb=(i)->(),
+                    use_gpu=true)
     ps=Flux.params(model)
     loss_metric = MeanMetric{Float64}()
     gm = MeanMetric{GraphMetric}()
@@ -356,8 +362,10 @@ function sup_train!(model, opt, ds, test_ds;
     @info "training for $(train_steps) steps .."
     @showprogress 0.1 "Training..." for step in 1:train_steps
         x, y = next_batch!(ds)
-        x = gpu(x)
-        y = gpu(y)
+        if use_gpu
+            x = gpu(x)
+            y = gpu(y)
+        end
 
         # FIXME evaluating this too frequently might be inefficient
         #

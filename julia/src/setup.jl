@@ -36,6 +36,14 @@ Pkg.add("PyPlot")
 Pkg.add("Interpolations")
 Pkg.add("GaussianMixtures")
 Pkg.add("StatsFuns")
+Pkg.add("TensorOperations")
+Pkg.add(Pkg.PackageSpec(name="TensorOperations", rev="master"))
+Pkg.add(Pkg.PackageSpec(url="https://github.com/mcabbott/TensorGrad.jl", rev="master"))
+Pkg.free("TensorOperations")
+Pkg.status()
+Pkg.add(Pkg.PackageSpec(name="CuArrays", rev="master"))
+Pkg.add("FillArrays")
+
 
 # Flux
 Pkg.add("CUDAnative")
@@ -43,6 +51,12 @@ Pkg.rm("CUDAnative")
 Pkg.rm("CuArrays")
 #!!!
 Pkg.add("Distributions")
+
+##############################
+## debugging (not needed)
+Pkg.add("Colors")
+Pkg.add("BenchmarkTools")
+Pkg.add("GPUArrays")
 
 
 ##############################

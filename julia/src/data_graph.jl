@@ -23,9 +23,6 @@ using Statistics: I
 using GraphPlot: gplot, circular_layout
 using Compose: PNG, draw
 
-using GraphPlot
-using Compose
-
 using Random
 
 using SparseArrays: sparse
@@ -136,16 +133,22 @@ end
 """ Generate model parameters according to the DAG structure and causal mechanism
 
 """
-function gen_weights(dag)
+function gen_weights(dag, zfunc=()->1)
     # dag is a meta graph, I'll need to attach parameters to each edge
     # 1. go through all edges
     # 2. attach edges
     # FIXME to ensure pureness, copy dag
     for e in edges(dag)
+        # DEBUG trying different weights
+        #
         # z = randn()
         # MOTE using uniform in [-2,-0.5] and [0.5, 2], better performance, make sense because it is easier
-        z = (rand() * 1.5 + 0.5) * rand([1,-1])
-        set_prop!(dag, e, :weight, z)
+        # z = (rand() * 1.5 + 0.5) * rand([1,-1])
+        # z = (rand() + 0.5) * rand([1,-1])
+        # z = (rand() + 0.5)
+        # z = 1 * rand([1,-1])
+        # z = 0.5
+        set_prop!(dag, e, :weight, zfunc())
     end
     W = dag_W(dag)
     for e in edges(dag)
@@ -395,7 +398,10 @@ end
 function gen_sup_data(g, N)
     d = nv(g)
     ds = map(1:N) do i
-        W = gen_weights(g)
+        # DEBUG different weights
+        # W = gen_weights(g)
+        # W = gen_weights(g, ()->((rand() + 0.5) * rand([1,-1])))
+        W = gen_weights(g, ()->((rand() * 1.5 + 0.5) * rand([1,-1])))
         # X = gen_data(g, W, N)
 
         # compute from generated data
@@ -406,35 +412,11 @@ function gen_sup_data(g, N)
         μ = zeros(d)
         Σ = inv(myeye(d) - W) * inv((myeye(d) - W)')
 
-        # concate
-        vcat(μ, Σ...), reshape(Matrix(W), :)
+        Σ, W
     end
     input = map(ds) do x x[1] end
     output = map(ds) do x x[2] end
-    hcat(input...), hcat(output...)
-end
-
-# DEPRECATED
-function gen_sup_data_all(ng, N, d)
-    # train data
-    ds = @showprogress 0.1 "Generating.." map(1:ng) do i
-        g = gen_ER_dag(d)
-        x, y = gen_sup_data(g, N)
-    end
-    input = map(ds) do x x[1] end
-    output = map(ds) do x x[2] end
-    hcat(input...), hcat(output...)
-end
-
-# DEPRECATED
-function gen_sup_ds(;ng, N, d, batch_size)
-    x, y = gen_sup_data_all(ng, N, d)
-    test_x, test_y = gen_sup_data_all(ng, N, d)
-
-    ds = DataSetIterator(x, y, batch_size)
-    test_ds = DataSetIterator(test_x, test_y, batch_size)
-
-    ds, test_ds
+    cat(input..., dims=3), cat(output..., dims=3)
 end
 
 function gen_sup_data_all_with_graph(N, gs)
@@ -444,7 +426,7 @@ function gen_sup_data_all_with_graph(N, gs)
     end
     input = map(ds) do x x[1] end
     output = map(ds) do x x[2] end
-    hcat(input...), hcat(output...)
+    cat(input..., dims=3), cat(output..., dims=3)
 end
 
 function gen_sup_ds_with_graph(N, gs; batch_size)
