@@ -522,7 +522,7 @@ function gen_graphs_hard(d, n, type=:ER)
         # @info "graph iter $i .."
         gs = gen_graphs(d, n, type)
         append!(all_gs, gs)
-        unique!(all_gs) do g
+        all_gs = unique(all_gs) do g
             # FIXME can this be compared directly?
             adjacency_matrix(g)
         end
