@@ -49,6 +49,9 @@ Pkg.add("FillArrays")
 Pkg.add("CUDAnative")
 Pkg.rm("CUDAnative")
 Pkg.rm("CuArrays")
+Pkg.add("CUDAdrv")
+Pkg.add("CUDAapi")
+
 #!!!
 Pkg.add("Distributions")
 

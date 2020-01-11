@@ -234,6 +234,9 @@ function test_beq()
     p = Matrix(Int.(Diagonal(ones(5))[randperm(5), :]))
     p * eq(X)[:,:,1,1] * p'
     eq(p * X[:,:,1,1] * p')
+    p * cpu(model(X))[:,:,1,1] * p'
+    model(gpu(p * cpu(X)[:,:,1,1] * p'))
+
 
     # multi dim
     X = randn(5,5,2,100)
@@ -269,3 +272,52 @@ function test_beq()
     # testing GPU
     gpu(eq)(gpu(X))
 end
+
+function test_tensor()
+    using Libdl
+    Libdl.dlopen("libcuda")
+    Libdl.dlopen("libssl")
+    Libdl.dlopen("libcutensor")
+    using CuArrays
+    CuArrays.has_cutensor()
+    using TensorOperations
+
+    using CUDAdrv
+    CUDAdrv.functional()
+    CUDAdrv.version()
+
+    CuArrays.cuda_version()
+
+    Pkg.build("CUDAdrv")
+
+
+    using CUDAapi
+    CUDAapi.has_cuda()
+    CUDAapi.has_cudnn()
+    CUDAapi.find_toolkit()
+
+
+    A=randn(5,5,5,5,5,5)
+    B=randn(5,5,5)
+    C=randn(5,5,5)
+    D=zeros(5,5,5)
+    @tensor begin
+        D[a,b,c] = A[a,e,f,c,f,g]*B[g,b,e] + *C[c,a,b]
+        E[a,b,c] := A[a,e,f,c,f,g]*B[g,b,e] + *C[c,a,b]
+    end
+
+    @tensor randn(5,5)[i,j] * randn(5,5)[j,i]
+    @cutensor randn(5,5)[i,j] * randn(5,5)[j,i]
+
+    @cutensor OUT[a,b] := randn(5,5,5)[a,i,j] * randn(5,5,5)[j,i,b]
+
+    @tensor OUT[a,b,ch2,batch] := cu(rand(5,5,5,5))[a,b,ch1,batch] * cu(rand(5,5))[ch1,ch2]
+
+    @tensor cu(randn(5,5))[i,j] * cu(randn(5,5))[j,i]
+    @cutensor cu(randn(5,5))[i,j] * cu(randn(5,5))[j,i]
+end
+
+function test_eq()
+    Equivariant(1=>2).w
+end
+

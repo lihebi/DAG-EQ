@@ -1,8 +1,20 @@
 using Statistics
 using Dates: now
+try
+    # This is a weird error. I have to load libdl and dlopen libcutensor first, then
+    # CuArrays to have cutensor. Otherwise, if CuArrays is loaded first, libcutensor
+    # cannot be even dlopen-ed
+    using Libdl
+    Libdl.dlopen("libcutensor")
+catch ex
+    @warn "Cannot open libcutensor library"
+end
 
 include("data_graph.jl")
 include("model.jl")
+
+CuArrays.has_cutensor()
+
 include("train.jl")
 
 
@@ -65,7 +77,7 @@ function test_eq()
     train_steps=1e4
     ds, test_ds = gen_sup_ds_cached(ng=ng, N=N, d=d, batch_size=100)
 
-    X, Y = next_batch!(ds)# |> gpu
+    X, Y = next_batch!(ds) |> gpu
     # add channel 1
     # X = reshape(X, size(X)[1:end-1]..., 1, size(X)[end])
     size(X)
@@ -75,11 +87,42 @@ function test_eq()
     param_count(model)             # 1,106,969
 
     # model = eq_model(100) |> gpu
+    # ┌ Info: test_ds
+    # │   loss_v = 0.20647460743784904
+    # │   nnz = 721.2
+    # │   nny = 445.5
+    # │   tpr = 0.6815749975000338
+    # │   fpr = 0.20325712696593506
+    # │   fdr = 0.5787666837875985
+    # │   shd = 559.4
+    # │   prec = 0.4212333162124013
+    # └   recall = 0.6815749975000338
+    #
+    # 60600 params
     model = eq_model(5, 100)
+
+    # Trained a little bit
+    # ┌ Info: test_ds
+    # │   loss_v = 0.23060775846242904
+    # │   nnz = 578.9
+    # │   nny = 446.5
+    # │   tpr = 0.5019395303062226
+    # │   fpr = 0.1727644088246259
+    # │   fdr = 0.6126408084090456
+    # │   shd = 577.1
+    # │   prec = 0.38735919159095444
+    # └   recall = 0.5019395303062226
+    #
+    # 541800 params
+    model = eq_model(5, 300)
+    model = gpu(model)
     param_count(model)          # 28
 
     # run on X
     model(X)
+
+    model(X[:,:,1,1])
+    cpu(model)(cpu(X))
     size(X)
 
     sup_graph_metrics(cpu(model(X)), cpu(Y))
@@ -92,6 +135,7 @@ function test_eq()
 
     # test gradient
     gradient(()->sum(model(X)), params(model))
+    # gradient(()->sum(cpu(model)(cpu(X))), params(cpu(model)))
 
     # really train
     opt = ADAM(1e-5)

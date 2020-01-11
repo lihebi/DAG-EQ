@@ -42,10 +42,10 @@ function (l::Tanh)(input)
     tanh.(input)
 end
 
-struct Equivariant
-    λ::AbstractArray{Float64}
-    γ::AbstractArray{Float64}
-    w::AbstractArray{Float64}
+struct Equivariant{T}
+    λ::AbstractArray{T}
+    γ::AbstractArray{T}
+    w::AbstractArray{T}
     # FIXME how Flux decides ch is not a trainable parameter?
     ch::Pair{<:Integer,<:Integer}
 end
@@ -65,7 +65,14 @@ end
 
 function eqfn(X::AbstractArray, λ::AbstractArray, w::AbstractArray, γ::AbstractArray)
     d = size(X,1)
-    one = ones(d, d)
+    # convert to Float32, move this to GPU
+    # FIXME performance
+    one = ones(Float32, d, d)
+    # support CPU as well
+    # FIXME performance
+    if typeof(X) <: CuArray
+        one = gpu(one)
+    end
     # FIXME CUTENSOR_STATUS_ARCH_MISMATCH error: cutensor only supports RTX20
     # series (with compute capability 7.0+) see:
     # https://developer.nvidia.com/cuda-gpus
@@ -79,12 +86,18 @@ end
 # from https://github.com/mcabbott/TensorGrad.jl
 Zygote.@adjoint function eqfn(X::AbstractArray, λ::AbstractArray, w::AbstractArray, γ::AbstractArray)
     d = size(X,1)
-    one = ones(d, d)
-    # δ = Diagonal(ones(size(d,1)))
+    one = ones(Float32, d, d)
+    if typeof(X) <: CuArray
+        one = gpu(one)
+    end
     eqfn(X, λ, w, γ), function (ΔY)
         # ΔY is FillArray.Fill, and this is not handled in @tensor. Convert it
         # to normal array here. FIXME performance
-        ΔY = Array(ΔY)
+        # ΔY = Array(ΔY)
+        #
+        # FIXME However, this will change CuArray to regular Array. Removing
+        # this would work for CuArray, but not on CPU. I probably won't
+        # calculate gradient on CPU anyway.
         @tensor ΔX1[a,b,ch1,batch] := ΔY[a,b,ch2,batch] * λ[ch1,ch2]
         @tensor ΔX2[a,c,ch1,batch] := one[a,b] * ΔY[b,c,ch2,batch] * w[ch1,ch2]
         @tensor ΔX3[a,c,ch1,batch] := ΔY[a,b,ch2,batch] * one[b,c] * w[ch1,ch2]
