@@ -52,17 +52,13 @@ function eq_model(d, z)
     model = Chain(
         x->reshape(x, d, d, 1, :),
         Equivariant(1=>z),
-        LeakyReLU(),
+        ReLU(),
         Equivariant(z=>z),
-        LeakyReLU(),
+        ReLU(),
         Equivariant(z=>z),
-        LeakyReLU(),
-        # Equivariant(z=>z),
-        # LeakyReLU(),
-        # Equivariant(z=>z),
-        # LeakyReLU(),
-        # Equivariant(z=>z),
-        # Equivariant(z=>z),
+        ReLU(),
+        Equivariant(z=>z),
+        ReLU(),
         Equivariant(z=>1),
         # IMPORTANT drop the second-to-last dim 1
         x->reshape(x, d, d, :)
@@ -113,8 +109,9 @@ function test_eq()
     # │   prec = 0.38735919159095444
     # └   recall = 0.5019395303062226
     #
-    # 541800 params
+    # 541,800 params
     model = eq_model(5, 300)
+    model = eq_model(5, 1024)
     model = gpu(model)
     param_count(model)          # 28
 

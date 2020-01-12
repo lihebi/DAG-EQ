@@ -77,6 +77,7 @@ function eqfn(X::AbstractArray, λ::AbstractArray, w::AbstractArray, γ::Abstrac
     # series (with compute capability 7.0+) see:
     # https://developer.nvidia.com/cuda-gpus
     @tensor X1[a,b,ch2,batch] := X[a,b,ch1,batch] * λ[ch1,ch2]
+    # TODO how to do max pooling?
     @tensor X2[a,c,ch2,batch] := one[a,b] * X[b,c,ch1,batch] * w[ch1,ch2]
     @tensor X3[a,c,ch2,batch] := X[a,b,ch1,batch] * one[b,c] * w[ch1,ch2]
     @tensor X4[a,d,ch2,batch] := one[a,b] * X[b,c,ch1,batch] * one[c,d] * γ[ch1,ch2]
@@ -113,8 +114,8 @@ Zygote.@adjoint function eqfn(X::AbstractArray, λ::AbstractArray, w::AbstractAr
     end
 end
 
-function (l::Equivariant)(input)
-    X = input[:,:,:,:]
+function (l::Equivariant)(X)
+    # X = X[:,:,:,:]
     eqfn(X, l.λ, l.w, l.γ)
 end
 

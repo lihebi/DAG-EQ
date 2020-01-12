@@ -3,13 +3,32 @@
 
 * TODO-List
 
-** TODO supervised learning with equivariant model
-*** TODO gpu
-*** TODO more data points
-*** TODO init function
+** CANCELED supervised learning with equivariant model
+CLOSED: [2020-01-12 Sun 12:40]
+
+Does not work.
+
+*** TODO large n
+*** TODO verify gradient computation
+*** TODO add bias
+*** TODO use max-pool
+*** TODO normalization & regularization
+
+*** DONE gpu
+CLOSED: [2020-01-12 Sun 11:55]
+*** DONE more data points
+CLOSED: [2020-01-12 Sun 11:55]
+Does not help.
+
+*** DONE init function
+CLOSED: [2020-01-12 Sun 12:40]
 simply 0
 
 This does not work, the model parameters does not change at all.
+
+*** DONE compare parameters
+CLOSED: [2020-01-12 Sun 12:39]
+
 *** DONE try previous MLP
 CLOSED: [2020-01-10 Fri 13:01]
 
