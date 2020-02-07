@@ -51,14 +51,36 @@ function eq_model(d, z)
     # TODO put on GPU, I probably need to write GPU kernel for this
     model = Chain(
         x->reshape(x, d, d, 1, :),
+
         Equivariant(1=>z),
-        ReLU(),
+        LeakyReLU(),
+        # FIXME whether this is the correct drop
+        Dropout(0.5),
+        # BatchNorm(z),
+
         Equivariant(z=>z),
-        ReLU(),
+        LeakyReLU(),
+        Dropout(0.5),
+        # BatchNorm(z),
+
         Equivariant(z=>z),
-        ReLU(),
+        LeakyReLU(),
+        Dropout(0.5),
+
         Equivariant(z=>z),
-        ReLU(),
+        LeakyReLU(),
+        Dropout(0.5),
+
+        Equivariant(z=>z),
+        LeakyReLU(),
+        Dropout(0.5),
+        # BatchNorm(z),
+
+        Equivariant(z=>z),
+        LeakyReLU(),
+        Dropout(0.5),
+        # BatchNorm(z),
+
         Equivariant(z=>1),
         # IMPORTANT drop the second-to-last dim 1
         x->reshape(x, d, d, :)
@@ -131,7 +153,12 @@ function test_eq()
     cpu(model)(X)
 
     # test gradient
-    gradient(()->sum(model(X)), params(model))
+    gs = gradient(()->sum(model(X)), params(model))
+    gs[model[2].b]
+    gs[model[2].w]
+    gs[model[2].λ]
+    gs[model[2].γ]
+    
     # gradient(()->sum(cpu(model)(cpu(X))), params(cpu(model)))
 
     # really train
@@ -153,10 +180,17 @@ function exp_sup(d; ng=10000, N=10, train_steps=1e5)
 
     ds, test_ds = gen_sup_ds_cached(ng=ng, N=N, d=d, batch_size=100)
     # ds, test_ds = gen_sup_ds_cached_diff(ng=ng, N=N, d=d, batch_size=100)
-    x, y = next_batch!(test_ds)
+    x, y = next_batch!(test_ds) |> gpu
 
     # FIXME parameterize the model
-    model = sup_model(d) |> gpu
+    # model = sup_model(d) |> gpu
+    model = eq_model(d, 300) |> gpu
+
+    @info "warming up model with x .."
+    model(x)
+    @info "warming up gradient .."
+    gradient(()->sum(model(x)), params(model))
+
     # TODO lr decay
     opt = ADAM(1e-4)
 
@@ -167,6 +201,8 @@ function exp_sup(d; ng=10000, N=10, train_steps=1e5)
 
     print_cb = Flux.throttle(sup_create_print_cb(logger), 1)
     test_cb = Flux.throttle(sup_create_test_cb(model, test_ds, "test_ds", logger=test_logger), 10)
+
+    @info "training .."
 
     sup_train!(model, opt, ds, test_ds,
                print_cb=print_cb,
@@ -201,6 +237,9 @@ function test()
     exp_sup(10, ng=1e4, N=100, train_steps=5e5) # prec=0.83, recall=0.87
     exp_sup(10, ng=1e5, N=50, train_steps=5e5)  # prec=0.85, recall=0.88
     exp_sup(15, ng=1e4, N=100, train_steps=5e5) # prec=0.68, recall=0.72
+
+    exp_sup(15, ng=1e4, N=50, train_steps=5e5)
+
     exp_sup(20, ng=1e4, N=100, train_steps=5e5)
     exp_sup(20, ng=1e5, N=50, train_steps=5e5)
 end
