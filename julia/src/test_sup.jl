@@ -1,3 +1,6 @@
+# I must always load config first
+include("config.jl")
+
 using Statistics
 using Dates: now
 try
@@ -13,6 +16,7 @@ end
 include("data_graph.jl")
 include("model.jl")
 
+import CuArrays
 CuArrays.has_cutensor()
 
 include("train.jl")
