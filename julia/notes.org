@@ -3,6 +3,11 @@
 
 * TODO-List
 
+** China
+*** use cross entropy
+*** figure out how to make it run faster
+*** precision is low, but recall is high
+
 ** CANCELED supervised learning with equivariant model
 CLOSED: [2020-01-12 Sun 12:40]
 

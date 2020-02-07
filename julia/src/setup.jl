@@ -1,5 +1,7 @@
 using Pkg
 
+Pkg.build(verbose=true)
+
 Pkg.add("Distributions")
 Pkg.add("Arpack")
 Pkg.add("CausalInference")
@@ -46,6 +48,7 @@ Pkg.add("FillArrays")
 
 
 # Flux
+Pkg.add("CuArrays")
 Pkg.add("CUDAnative")
 Pkg.rm("CUDAnative")
 Pkg.rm("CuArrays")
@@ -84,6 +87,7 @@ Pkg.pin(PackageSpec(name="Flux", version="0.9"))
 Pkg.add("Tracker")
 Pkg.add("Distributions")
 
+Pkg.Registry.update()
 
 Pkg.instantiate()
 
