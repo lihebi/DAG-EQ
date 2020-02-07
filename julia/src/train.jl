@@ -347,6 +347,27 @@ end
 #     @show x[1]
 # end
 
+# https://github.com/FluxML/Flux.jl/issues/160
+function weight_params(m::Chain, ps=Flux.Params())
+    map((l)->weight_params(l, ps), m.layers)
+    ps
+end
+weight_params(m::Dense, ps=Flux.Params()) = push!(ps, m.W)
+weight_params(m::Conv, ps=Flux.Params()) = push!(ps, m.weight)
+weight_params(m::ConvTranspose, ps=Flux.Params()) = push!(ps, m.weight)
+function weight_params(m::Equivariant, ps=Flux.Params())
+    push!(ps, m.λ)
+    push!(ps, m.w)
+    push!(ps, m.γ)
+    push!(ps, m.b)
+end
+weight_params(m, ps=Flux.Params()) = ps
+
+function test_weight_params()
+    # get model
+    weight_params(model)
+end
+
 
 # TODO add tensorboard logger
 # TODO better GPU utilization
@@ -377,7 +398,11 @@ function sup_train!(model, opt, ds, test_ds;
 
         gs = gradient(ps) do
             out = model(x)
-            loss = Flux.mse(out, y)
+            loss_mse = Flux.mse(out, y)
+            # add a weight decay
+            l2 = sum((x)->sum(x.^2), ps)
+            # show l2?
+            loss = loss_mse + 1e-5 * l2
 
             add!(loss_metric, loss)
 

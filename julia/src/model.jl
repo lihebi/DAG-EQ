@@ -46,6 +46,7 @@ struct Equivariant{T}
     λ::AbstractArray{T}
     γ::AbstractArray{T}
     w::AbstractArray{T}
+    b::AbstractArray{T}
     # FIXME how Flux decides ch is not a trainable parameter?
     ch::Pair{<:Integer,<:Integer}
 end
@@ -60,10 +61,11 @@ function Equivariant(ch::Pair{<:Integer,<:Integer})
         my_glorot_uniform(ch[1],ch[2]),
         my_glorot_uniform(ch[1],ch[2]),
         my_glorot_uniform(ch[1],ch[2]),
+        Float32.(zeros(ch[2])),
         ch)
 end
 
-function eqfn(X::AbstractArray, λ::AbstractArray, w::AbstractArray, γ::AbstractArray)
+function eqfn(X::AbstractArray, λ::AbstractArray, w::AbstractArray, γ::AbstractArray, b::AbstractArray)
     d = size(X,1)
     # convert to Float32, move this to GPU
     # FIXME performance
@@ -81,17 +83,27 @@ function eqfn(X::AbstractArray, λ::AbstractArray, w::AbstractArray, γ::Abstrac
     @tensor X2[a,c,ch2,batch] := one[a,b] * X[b,c,ch1,batch] * w[ch1,ch2]
     @tensor X3[a,c,ch2,batch] := X[a,b,ch1,batch] * one[b,c] * w[ch1,ch2]
     @tensor X4[a,d,ch2,batch] := one[a,b] * X[b,c,ch1,batch] * one[c,d] * γ[ch1,ch2]
-    Y = X1 + X2 ./ d + X3 ./ d + X4 ./ (d * d)
+    @tensor X5[a,b,ch2] := one[a,b] * b[ch2]
+    # broadcasting X5
+    Y = X1 + X2 ./ d + X3 ./ d + X4 ./ (d * d) .+ X5
+end
+
+function test()
+    a = randn(5,2,3)
+    b = randn(5,2)
+    # assert the following equal
+    a .+ b
+    a + repeat(b[:,:,:], 1, 1, 3)
 end
 
 # from https://github.com/mcabbott/TensorGrad.jl
-Zygote.@adjoint function eqfn(X::AbstractArray, λ::AbstractArray, w::AbstractArray, γ::AbstractArray)
+Zygote.@adjoint function eqfn(X::AbstractArray, λ::AbstractArray, w::AbstractArray, γ::AbstractArray, b::AbstractArray)
     d = size(X,1)
     one = ones(Float32, d, d)
     if typeof(X) <: CuArray
         one = gpu(one)
     end
-    eqfn(X, λ, w, γ), function (ΔY)
+    eqfn(X, λ, w, γ, b), function (ΔY)
         # ΔY is FillArray.Fill, and this is not handled in @tensor. Convert it
         # to normal array here. FIXME performance
         # ΔY = Array(ΔY)
@@ -103,20 +115,26 @@ Zygote.@adjoint function eqfn(X::AbstractArray, λ::AbstractArray, w::AbstractAr
         @tensor ΔX2[a,c,ch1,batch] := one[a,b] * ΔY[b,c,ch2,batch] * w[ch1,ch2]
         @tensor ΔX3[a,c,ch1,batch] := ΔY[a,b,ch2,batch] * one[b,c] * w[ch1,ch2]
         @tensor ΔX4[a,d,ch1,batch] := one[a,b] * ΔY[b,c,ch2,batch] * one[c,d] * γ[ch1,ch2]
+        # ΔX5 is 0
         @tensor Δλ[ch1,ch2] := X[a,b,ch1,batch] * ΔY[a,b,ch2,batch]
         @tensor Δw1[ch1,ch2] := one[a,b] * X[b,c,ch1,batch] * ΔY[a,c,ch2,batch]
         @tensor Δw2[ch1,ch2] := X[a,b,ch1,batch] * one[b,c] * ΔY[a,c,ch2,batch]
         @tensor Δγ[ch1,ch2] := one[a,b] * X[b,c,ch1,batch] * one[c,d] * ΔY[a,d,ch2,batch]
+        # FIXME should I normalize Δb?
+        @tensor Δb[ch2,batch] := one[a,b] * ΔY[a,b,ch2,batch]
+        # FIXME can I just do a mean here?
+        Δb = dropdims(mean(Δb, dims=2), dims=2)
         return (ΔX1 + ΔX2 ./ d + ΔX3 ./ d + ΔX4 ./ (d*d),
                 Δλ,
                 (Δw1+Δw2) ./ d,
-                Δγ ./ (d*d))
+                Δγ ./ (d*d),
+                Δb)
     end
 end
 
 function (l::Equivariant)(X)
     # X = X[:,:,:,:]
-    eqfn(X, l.λ, l.w, l.γ)
+    eqfn(X, l.λ, l.w, l.γ, l.b)
 end
 
 function generator()
