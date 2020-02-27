@@ -321,3 +321,16 @@ function test_eq()
     Equivariant(1=>2).w
 end
 
+function test_xent()
+    Flux.crossentropy([0.2, 0.8], [0, 1])
+
+    Flux.crossentropy(softmax([0.2, 0.8]), [0, 1])
+    Flux.logitcrossentropy([0.2, 0.8], [0, 1])
+    -sum([0, 1] .* logsoftmax([0.2, 0.8]))
+
+    Flux.binarycrossentropy.([0.2, 0.8], [0, 1])
+
+    Flux.binarycrossentropy.(sigmoid.([0.2, 0.8]), [0, 1])
+    Flux.logitbinarycrossentropy.([0.2, 0.8], [0, 1])
+    Flux.binarycrossentropy.(softmax([0.2, 0.8]), [0, 1])
+end

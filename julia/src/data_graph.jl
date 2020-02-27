@@ -399,9 +399,9 @@ function gen_sup_data(g, N)
     d = nv(g)
     ds = map(1:N) do i
         # DEBUG different weights
-        # W = gen_weights(g)
+        W = gen_weights(g)
         # W = gen_weights(g, ()->((rand() + 0.5) * rand([1,-1])))
-        W = gen_weights(g, ()->((rand() * 1.5 + 0.5) * rand([1,-1])))
+        # W = gen_weights(g, ()->((rand() * 1.5 + 0.5) * rand([1,-1])))
         # X = gen_data(g, W, N)
 
         # compute from generated data
@@ -457,6 +457,8 @@ dscache = Dict()
 # catch the datasets to avoid generation
 function gen_sup_ds_cached(;ng, N, d, batch_size)
     ID = "$ng, $N, $d, $batch_size"
+    # 1e4 is float
+    ng = convert(Int, ng)
     if ! haskey(dscache, ID)
         # generate graphs first
         graphs = gen_graphs_hard(d, ng)
@@ -466,7 +468,9 @@ function gen_sup_ds_cached(;ng, N, d, batch_size)
         test_gs = graphs[index:end]
 
         # TODO use different graphs for ds and test
+        @info "generating training ds .."
         ds = gen_sup_ds_with_graph(N, train_gs, batch_size=batch_size)
+        @info  "generating testing ds .."
         test_ds = gen_sup_ds_with_graph(N, test_gs, batch_size=batch_size)
 
         # ds, test_ds = gen_sup_ds(ng=ng, N=N, d=d, batch_size=100)
