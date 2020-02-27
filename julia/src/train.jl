@@ -261,6 +261,7 @@ function sup_graph_metrics(out, y)
     d = size(y,1)
     # FIXME threshold value
     mat(y) = threshold(reshape(y, d, d, :), 0.3, true)
+
     mout = mat(out)
     my = mat(y)
     nnz = sum(mout .!= 0)
@@ -285,7 +286,13 @@ function sup_graph_metrics(out, y)
     GraphMetric(nnz, nny, tpr, fpr, fdr, shd, prec, recall)
 end
 
-function sup_create_test_cb(model, test_ds, msg; logger=nothing, use_gpu=true)
+function myσxent(logŷ, y)
+    # FIXME performance the gradient of this cost a tons of time, and seems to
+    # be moving data around
+    sum(Flux.logitbinarycrossentropy.(logŷ, y)) * 1 // size(y, 2)
+end
+
+function sup_create_test_cb(model, test_ds, msg; logger=nothing)
     function test_cb(step)
         test_run_steps = 20
 
@@ -296,16 +303,14 @@ function sup_create_test_cb(model, test_ds, msg; logger=nothing, use_gpu=true)
 
         # FIXME testmode!
         @showprogress 0.1 "Inner testing..." for i in 1:test_run_steps
-            x, y = next_batch!(test_ds)
-            if use_gpu
-                x = gpu(x)
-                y = gpu(y)
-            end
+            x, y = next_batch!(test_ds) |> gpu
             out = model(x)
 
+            # loss = Flux.mse(σ.(out), y)
+            loss = myσxent(out, y)
+
             # FIXME performance on CPU
-            metric = sup_graph_metrics(cpu(out), cpu(y))
-            loss = Flux.mse(out, y)
+            metric = sup_graph_metrics(cpu(σ.(out)), cpu(y))
 
             add!(gm, metric)
             add!(loss_metric, loss)
@@ -374,35 +379,41 @@ end
 function sup_train!(model, opt, ds, test_ds;
                     train_steps=ds.nbatch,
                     print_cb=(i, m)->(),
-                    test_cb=(i)->(),
-                    use_gpu=true)
+                    test_cb=(i)->())
     ps=Flux.params(model)
+
+    # weight decay or all params decay?
+    weights = weight_params(model)
+
     loss_metric = MeanMetric{Float64}()
     gm = MeanMetric{GraphMetric}()
 
     @info "training for $(train_steps) steps .."
     @showprogress 0.1 "Training..." for step in 1:train_steps
-        x, y = next_batch!(ds)
-        if use_gpu
-            x = gpu(x)
-            y = gpu(y)
-        end
+        # CAUTION this actually cost half of the computing time.
+        x, y = next_batch!(ds) |> gpu
 
         # FIXME evaluating this too frequently might be inefficient
         #
         # FIXME and it turns out I cannot do this here, otherwise Zygote
         # complains. But now I have to run one more forward pass to get the
         # data.
-        metric = sup_graph_metrics(cpu(model(x)), cpu(y))
-        add!(gm, metric)
+        #
+        # FIXME performance hell!
+        # metric = sup_graph_metrics(cpu(σ.(model(x))), cpu(y))
+        # add!(gm, metric)
 
         gs = gradient(ps) do
             out = model(x)
-            loss_mse = Flux.mse(out, y)
+            # use cross entropy loss
+            # loss_mse = Flux.mse(out, y)
             # add a weight decay
-            l2 = sum((x)->sum(x.^2), ps)
+            # l2 = sum((x)->sum(x.^2), weights)
             # show l2?
-            loss = loss_mse + 1e-5 * l2
+            # loss = loss_mse + 1e-5 * l2
+
+            # loss = Flux.mse(σ.(out), y)
+            loss = myσxent(out, y)
 
             add!(loss_metric, loss)
 
