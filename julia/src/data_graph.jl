@@ -419,6 +419,16 @@ function gen_sup_data(g, N)
     cat(input..., dims=3), cat(output..., dims=3)
 end
 
+function mycat(aoa)
+    # array of array
+    arr = similar(aoa[1], size(aoa[1])..., length(aoa))
+    for i in 1:length(aoa)
+        arr[:,:,:,i] = aoa[i]
+    end
+    # combine the last two dims FIXME the order unchanged?
+    reshape(arr, size(arr)[1:end-2]..., :)
+end
+
 function gen_sup_data_all_with_graph(N, gs)
     # train data
     ds = @showprogress 0.1 "Generating.." map(gs) do g
@@ -426,7 +436,16 @@ function gen_sup_data_all_with_graph(N, gs)
     end
     input = map(ds) do x x[1] end
     output = map(ds) do x x[2] end
-    cat(input..., dims=3), cat(output..., dims=3)
+
+    # FIXME this splat is too much and cause stack overflow. But looks like I
+    # have only the way of cat() ..
+    #
+    # cat(input..., dims=3), cat(output..., dims=3)
+
+    # instead I'm going to pre-allocate an array and fill
+    mycat(input), mycat(output)
+    # This repo might be an alternative:
+    # https://github.com/JuliaDiffEq/RecursiveArrayTools.jl
 end
 
 function gen_sup_ds_with_graph(N, gs; batch_size)
