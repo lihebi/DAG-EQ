@@ -361,10 +361,11 @@ weight_params(m::Dense, ps=Flux.Params()) = push!(ps, m.W)
 weight_params(m::Conv, ps=Flux.Params()) = push!(ps, m.weight)
 weight_params(m::ConvTranspose, ps=Flux.Params()) = push!(ps, m.weight)
 function weight_params(m::Equivariant, ps=Flux.Params())
-    push!(ps, m.λ)
-    push!(ps, m.w)
-    push!(ps, m.γ)
-    push!(ps, m.b)
+    push!(ps, m.w1)
+    push!(ps, m.w2)
+    push!(ps, m.w3)
+    push!(ps, m.w4)
+    push!(ps, m.w5)
 end
 weight_params(m, ps=Flux.Params()) = ps
 

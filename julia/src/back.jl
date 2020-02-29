@@ -33,3 +33,22 @@ function test()
     end
     Flux.Optimise.update!(opt, ps, gs)
 end
+
+function test()
+    a = randn(5,2,3)
+    b = randn(5,2)
+    # assert the following equal
+    a .+ b
+    a + repeat(b[:,:,:], 1, 1, 3)
+    # test eqfn
+    eq = Equivariant(1=>1)
+    a = randn(5,5,1,10)
+    reshape(eq(a), 5,5,:)
+    eq = eq_model(5, 100)
+    σ.(eq(a))
+    σ.(cpu(model)(a))
+    size(x)
+    size(a)
+
+    σ.(reshape(Equivariant(1=>1)(randn(5,5,1,10)),5,5,10))
+end
