@@ -3,9 +3,57 @@
 
 * TODO-List
 
+** collect data and compare
+Now I fixed the equivariant model problems:
+1. running time
+2. convergence: w2=w3 problem
+
+I need to start to run different settings, collect data, and compare with other
+methods.
+
+
+Data:
+- unit data (W=1)
+- [-2,-0.5] data
+- non-univariance data
+- non-linear model
+
+Real data:
+- pairwise?
+- non-pairwise but sparse?
+
+
+Loss:
+- cross entropy vs. MSE
+
+Network setting:
+- dropout batchnorm vs. none
+- network depth
+- network width
+- simple FC
+  - running time
+  - convergence
+  - # of parameters
+
+Other settings:
+- threshold
+- batch size
+
+Compare:
+- pairwise supervised model
+- unsupervised model
+  - NOTEARS
+  - PC
+
+
 ** China
-*** use cross entropy
-*** figure out how to make it run faster
+*** TODO Look for other potential bugs in equivariant model
+Mostly the correcteness of gradient calculation and broadcasting.
+
+*** DONE use cross entropy
+CLOSED: [2020-02-29 六 17:36]
+*** DONE figure out how to make it run faster
+CLOSED: [2020-02-29 六 17:36]
 *** precision is low, but recall is high
 
 ** CANCELED supervised learning with equivariant model
