@@ -52,3 +52,27 @@ function test()
 
     σ.(reshape(Equivariant(1=>1)(randn(5,5,1,10)),5,5,10))
 end
+
+
+
+function test()
+    # test sum performance
+    Profile.clear()
+    data = randn(100,100,1000);
+    @time sum(data)
+    data_on_gpu = cu(data);
+    @time sum(data_on_gpu)
+    # gradient
+    @time gradient(()->sum(data_on_gpu))
+    @time gradient(()->sum(cu(data)))
+    @time cu(data);
+
+    Profile.clear()
+    d1 = gpu(randn(100,100,100000));
+    d2 = gpu(ones(100,100,100000));
+    @profile gradient(()->sum(Flux.logitbinarycrossentropy.(d1, d2)))
+    Profile.print()
+    open("/tmp/prof2.txt", "w") do s
+        Profile.print(IOContext(s, :displaysize => (24, 200)), mincount=10)
+    end
+end
