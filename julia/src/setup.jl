@@ -13,7 +13,8 @@ Pkg.add("LightGraphs")
 Pkg.add("GraphPlot")
 # a compatibility bug with Cairo
 # https://github.com/GiovineItalia/Compose.jl/pull/360
-Pkg.add(PackageSpec(name="Compose", rev="master"))
+# Pkg.add(PackageSpec(name="Compose", rev="master"))
+Pkg.add("Compose")
 Pkg.add("Cairo")
 # Pkg.add("Fontconfig")
 Pkg.add("MetaGraphs")
@@ -43,8 +44,18 @@ Pkg.add(Pkg.PackageSpec(name="TensorOperations", rev="master"))
 Pkg.add(Pkg.PackageSpec(url="https://github.com/mcabbott/TensorGrad.jl", rev="master"))
 Pkg.free("TensorOperations")
 Pkg.status()
+Pkg.update()
+Pkg.build("CuArrays")
+Pkg.rm("Zygote")
+Pkg.add("Zygote")
+Pkg.build()
+using CuArrays
+import GPUArrays
 Pkg.add(Pkg.PackageSpec(name="CuArrays", rev="master"))
 Pkg.add("FillArrays")
+Pkg.rm("CUDAapi")
+Pkg.rm("CuArrays")
+Pkg.add("GPUArrays")
 
 
 # Flux
@@ -53,6 +64,7 @@ Pkg.add("CUDAnative")
 Pkg.rm("CUDAnative")
 Pkg.rm("CuArrays")
 Pkg.add("CUDAdrv")
+Pkg.rm("CUDAdrv")
 Pkg.add("CUDAapi")
 
 #!!!
@@ -63,6 +75,11 @@ Pkg.add("Distributions")
 Pkg.add("Colors")
 Pkg.add("BenchmarkTools")
 Pkg.add("GPUArrays")
+
+Pkg.develop("Zygote")
+Pkg.update()
+Pkg.status()
+Pkg.build(verbose=true)
 
 
 ##############################
