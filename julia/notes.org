@@ -38,12 +38,33 @@ Network setting:
 Other settings:
 - threshold
 - batch size
+- learning rate (decay)
 
 Compare:
 - pairwise supervised model
 - unsupervised model
   - NOTEARS
   - PC
+
+*** TODO performance of FC models
+Why it is slow bad now? Probably:
+- data generating with [0.5,2]
+- threshold
+- sigmoid activation
+- MSE loss
+
+** TODO persistence
+
+*** profiling
+If profiling is not costly, I can probably record for each run
+*** saved model
+- save at multiple points
+*** continue training
+with unique ID support
+
+*** seed and averaging
+
+** TODO Results and Plotting
 
 
 ** China

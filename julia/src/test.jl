@@ -334,3 +334,43 @@ function test_xent()
     Flux.logitbinarycrossentropy.([0.2, 0.8], [0, 1])
     Flux.binarycrossentropy.(softmax([0.2, 0.8]), [0, 1])
 end
+
+function test()
+    ds, test_ds = gen_sup_ds_cached(ng=5e3, N=20, d=5, batch_size=100)
+    x, y = next_batch!(test_ds) |> gpu
+
+    x, y = next_batch!(ds)
+    x = next_batch!(ds)
+
+    model_fn = (d)->sup_model(d)
+    eq_model_fn = (d)->eq_model(d, 300)
+    model = model_fn(5) |> gpu
+    model = eq_model_fn(5) |> gpu
+    param_count(model)
+
+    param_count(model_fn(5))
+    param_count(eq_model_fn(5))
+
+    # warm up the model
+    model(x)
+
+    @btime gradient(()->myσxent(model(x), y))
+    @time gradient(()->myσxent(model(x), y))
+    gradient(()->myσxent(model(x), y))
+
+    gradient(()->sum(model(x)), params(model))
+    gradient(()->sum(model(x)))
+    σ.(model(x))
+
+    model(gpu(randn(5,5,100)))
+
+    # actually training
+    opt = ADAM(1e-4)
+    print_cb = Flux.throttle(sup_create_print_cb(), 1)
+    test_cb = Flux.throttle(sup_create_test_cb(model, test_ds, "test_ds"), 10)
+
+    sup_train!(model, opt, ds, test_ds,
+               print_cb=print_cb,
+               test_cb=test_cb,
+               train_steps=1e4)
+end

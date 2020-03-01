@@ -260,7 +260,9 @@ function sup_graph_metrics(out, y)
     # d = convert(Int, sqrt(size(y,1)))
     d = size(y,1)
     # FIXME threshold value
-    mat(y) = threshold(reshape(y, d, d, :), 0.3, true)
+    #
+    # this should be 0.5 for binary sigmoid xent results
+    mat(y) = threshold(reshape(y, d, d, :), 0.5, true)
 
     mout = mat(out)
     my = mat(y)
@@ -289,10 +291,17 @@ end
 function myσxent(logŷ, y)
     # FIXME performance the gradient of this cost a tons of time, and seems to
     # be moving data around
-    sum(Flux.logitbinarycrossentropy.(logŷ, y)) * 1 // size(y, 2)
+    #
+    # Related:
+    # https://github.com/JuliaGPU/CuArrays.jl/issues/611
+    # https://github.com/JuliaGPU/CuArrays.jl/pull/602
+    # https://github.com/JuliaGPU/CuArrays.jl/issues/141
+    xent = Flux.logitbinarycrossentropy.(logŷ, y)
+    loss = sum(xent)
+    return loss * 1 // size(y, 2)
 end
 
-function sup_create_test_cb(model, test_ds, msg; logger=nothing)
+function create_test_cb(model, test_ds, msg; logger=nothing)
     function test_cb(step)
         test_run_steps = 20
 
@@ -331,22 +340,22 @@ function sup_create_test_cb(model, test_ds, msg; logger=nothing)
     # Flux.throttle(test_cb, 10)
 end
 
-function sup_create_print_cb(logger=nothing)
+function create_print_cb(;logger=nothing)
     function f(step, ms)
         println()
         # evaluate to extract from metrics. This will only call every seconds
         values = map(ms) do x
             x[1]=>get!(x[2])
-        end |> Dict
-        # @info "data" values["loss"] to_named_tuple(values["graph"])...
-        @info "data" values["loss"]
+        end # |> Dict
+        @info "data" values
         if typeof(logger) <: TBLogger
-            # FIXME hard coded data names
-            log_value(logger, "loss", values["loss"], step=step)
-            log_value(logger, "graph", values["graph"], step=step)
+            for value in values
+                log_value(logger, value[1], value[2], step=step)
+            end
         end
     end
 end
+
 
 # for x in ("hel"=>1, "wo"=>2)
 #     @show x[1]
@@ -423,7 +432,8 @@ function sup_train!(model, opt, ds, test_ds;
 
         Flux.Optimise.update!(opt, ps, gs)
 
-        print_cb(step, ("loss"=>loss_metric, "graph"=>gm))
+        # "graph"=>gm
+        print_cb(step, ["loss"=>loss_metric])
 
         test_cb(step)
     end
