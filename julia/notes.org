@@ -1,16 +1,27 @@
 #+TITLE: Implementation notes
 
+* References
+** Code from papers
+- https://github.com/GoudetOlivier/CGNN, good quality, heavy in OO, also a copy in CDT
+- CausalDiscoveryToolbox
+  https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox has an
+  implementation of NCC.
+- https://github.com/Diviyan-Kalainathan/SAM
+- NOTEARS https://github.com/xunzheng/notears
+- DAG-GNN https://github.com/fishmoon1234/DAG-GNN, good quality
+- GraN-DAG https://github.com/kurowasan/GraN-DAG
+- meta-transfer: https://github.com/ec6dde01667145e58de60f864e05a4/CausalOptimizationAnon
 
-* TODO-List
+* Supervised full DAG TODO
 
-** collect data and compare
-Now I fixed the equivariant model problems:
-1. running time
-2. convergence: w2=w3 problem
+** TODO performance of FC models
+Why it is slow bad now? Probably:
+- data generating with [0.5,2]
+- threshold
+- sigmoid activation
+- MSE loss
 
-I need to start to run different settings, collect data, and compare with other
-methods.
-
+** data
 
 Data:
 - unit data (W=1)
@@ -18,14 +29,15 @@ Data:
 - non-univariance data
 - non-linear model
 
-Real data:
+** Real data
 - pairwise?
 - non-pairwise but sparse?
 
-
+** loss
 Loss:
 - cross entropy vs. MSE
 
+** setting
 Network setting:
 - dropout batchnorm vs. none
 - network depth
@@ -40,18 +52,11 @@ Other settings:
 - batch size
 - learning rate (decay)
 
-Compare:
+** Compare
 - pairwise supervised model
 - unsupervised model
   - NOTEARS
   - PC
-
-*** TODO performance of FC models
-Why it is slow bad now? Probably:
-- data generating with [0.5,2]
-- threshold
-- sigmoid activation
-- MSE loss
 
 ** TODO persistence
 
@@ -66,49 +71,7 @@ with unique ID support
 
 ** TODO Results and Plotting
 
-
-** China
-*** TODO Look for other potential bugs in equivariant model
-Mostly the correcteness of gradient calculation and broadcasting.
-
-*** DONE use cross entropy
-CLOSED: [2020-02-29 六 17:36]
-*** DONE figure out how to make it run faster
-CLOSED: [2020-02-29 六 17:36]
-*** precision is low, but recall is high
-
-** CANCELED supervised learning with equivariant model
-CLOSED: [2020-01-12 Sun 12:40]
-
-Does not work.
-
-*** TODO large n
-*** TODO verify gradient computation
-*** TODO add bias
-*** TODO use max-pool
-*** TODO normalization & regularization
-
-*** DONE gpu
-CLOSED: [2020-01-12 Sun 11:55]
-*** DONE more data points
-CLOSED: [2020-01-12 Sun 11:55]
-Does not help.
-
-*** DONE init function
-CLOSED: [2020-01-12 Sun 12:40]
-simply 0
-
-This does not work, the model parameters does not change at all.
-
-*** DONE compare parameters
-CLOSED: [2020-01-12 Sun 12:39]
-
-*** DONE try previous MLP
-CLOSED: [2020-01-10 Fri 13:01]
-
-Delta debuggging what is wrong
-
-It is the 1 dim (5,5,1,100)
+* Do-loss TODO
 
 ** New round
 *** CANCELED use mixture multi-variant Gaussian to fit the data
@@ -403,14 +366,49 @@ For generalizing to other number of variables
 - using data other than statistics
 
 
-* References
-** Code from papers
-- https://github.com/GoudetOlivier/CGNN, good quality, heavy in OO, also a copy in CDT
-- CausalDiscoveryToolbox
-  https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox has an
-  implementation of NCC.
-- https://github.com/Diviyan-Kalainathan/SAM
-- NOTEARS https://github.com/xunzheng/notears
-- DAG-GNN https://github.com/fishmoon1234/DAG-GNN, good quality
-- GraN-DAG https://github.com/kurowasan/GraN-DAG
-- meta-transfer: https://github.com/ec6dde01667145e58de60f864e05a4/CausalOptimizationAnon
+* Supervised full DAG DONE
+
+** China
+*** DONE Look for other potential bugs in equivariant model
+CLOSED: [2020-03-01 日 14:03]
+Mostly the correcteness of gradient calculation and broadcasting.
+
+*** DONE use cross entropy
+CLOSED: [2020-02-29 六 17:36]
+*** DONE figure out how to make it run faster
+CLOSED: [2020-02-29 六 17:36]
+*** CANCELED precision is low, but recall is high
+CLOSED: [2020-03-01 日 14:00]
+** CANCELED supervised learning with equivariant model
+CLOSED: [2020-01-12 Sun 12:40]
+
+Does not work.
+
+*** large n
+*** verify gradient computation
+*** add bias
+*** use max-pool
+*** normalization & regularization
+
+*** DONE gpu
+CLOSED: [2020-01-12 Sun 11:55]
+*** DONE more data points
+CLOSED: [2020-01-12 Sun 11:55]
+Does not help.
+
+*** DONE init function
+CLOSED: [2020-01-12 Sun 12:40]
+simply 0
+
+This does not work, the model parameters does not change at all.
+
+*** DONE compare parameters
+CLOSED: [2020-01-12 Sun 12:39]
+
+*** DONE try previous MLP
+CLOSED: [2020-01-10 Fri 13:01]
+
+Delta debuggging what is wrong
+
+It is the 1 dim (5,5,1,100)
+

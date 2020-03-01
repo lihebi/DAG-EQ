@@ -1,4 +1,9 @@
-include("model.jl")
+using Flux
+import Zygote
+using CuArrays
+using TensorOperations
+
+include("../model_utils.jl")
 
 struct Equivariant{T}
     w1::AbstractArray{T}
