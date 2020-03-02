@@ -148,109 +148,42 @@ function (l::Equivariant)(X)
     eqfn(X, l.w1, l.w2, l.w3, l.w4, l.w5)
 end
 
+function fc_model(; d, hidden_size=1024, reg=false, nlayer=3)
+    nlayer >= 2 || error("nlayer must be >= 2")
 
-function fc_model(d)
-    # first reshape
-    Chain(
-        x -> reshape(x, d * d, :),
+    layers = []
 
-        Dense(d*d, 1024, relu),
-        # Dropout(0.5),
-        # BatchNorm(1024),
+    push!(layers, Dense(d * d, hidden_size, relu))
+    if reg push!(layers, Dropout(0.5)) end
+    for i in 1:(nlayer-2)
+        push!(layers, Dense(hidden_size, hidden_size, relu))
+        if reg push!(layers, Dropout(0.5)) end
+    end
+    push!(layers, Dense(hidden_size, d * d))
 
-        Dense(1024, 1024, relu),
-        # Dropout(0.5),
-        # BatchNorm(1024),
-
-        Dense(1024, d*d),
-        # reshape back
-        x -> reshape(x, d, d, :),
-    )
+    Chain(x -> reshape(x, d * d, :),
+          layers...,
+          x -> reshape(x, d, d, :))
 end
 
-function fc_model_deep(d)
-    # first reshape
-    Chain(
-        x -> reshape(x, d * d, :),
+function eq_model(; d, z=300, reg=false, nlayer=3)
+    nlayer >= 2 || error("nlayer must be >= 2")
 
-        Dense(d*d, 1024, relu),
-        # Dropout(0.5),
-        # BatchNorm(1024),
+    layers = []
 
-        Dense(1024, 1024, relu),
-        # Dropout(0.5),
-        # BatchNorm(1024),
-        Dense(1024, 1024, relu),
-        # Dropout(0.5),
-        # BatchNorm(1024),
-        Dense(1024, 1024, relu),
-        # Dropout(0.5),
-        # BatchNorm(1024),
-        Dense(1024, 1024, relu),
-        # Dropout(0.5),
-        # BatchNorm(1024),
-
-        Dense(1024, d*d),
-        # reshape back
-        x -> reshape(x, d, d, :),
-    )
-end
-
-function eq_model(d, z)
-    # eq model
-    # TODO put on GPU, I probably need to write GPU kernel for this
-    model = Chain(
-        x->reshape(x, d, d, 1, :),
-
-        Equivariant(1=>z),
-        LeakyReLU(),
+    push!(layers, Equivariant(1=>z))
+    if reg push!(layers, Dropout(0.5)) end
+    for i in 1:(nlayer-2)
+        push!(layers, Equivariant(z=>z))
+        push!(layers, LeakyReLU())
         # FIXME whether this is the correct drop
-        Dropout(0.5),
-        # BatchNorm(z),
+        if reg push!(layers, Dropout(0.5)) end
+    end
+    push!(layers, Equivariant(z=>1))
 
-        Equivariant(z=>z),
-        LeakyReLU(),
-        Dropout(0.5),
-        # BatchNorm(z),
-
-        Equivariant(z=>1),
-        # IMPORTANT drop the second-to-last dim 1
-        x->reshape(x, d, d, :)
-    )
+    Chain(x->reshape(x, d, d, 1, :),
+          layers...,
+          # IMPORTANT drop the second-to-last dim 1
+          x->reshape(x, d, d, :))
 end
 
-
-function eq_model_deep(d, z)
-    # eq model
-    # TODO put on GPU, I probably need to write GPU kernel for this
-    model = Chain(
-        x->reshape(x, d, d, 1, :),
-
-        Equivariant(1=>z),
-        LeakyReLU(),
-        # FIXME whether this is the correct drop
-        Dropout(0.5),
-        # BatchNorm(z),
-
-        Equivariant(z=>z),
-        LeakyReLU(),
-        Dropout(0.5),
-        # BatchNorm(z),
-        Equivariant(z=>z),
-        LeakyReLU(),
-        Dropout(0.5),
-        # BatchNorm(z),
-        Equivariant(z=>z),
-        LeakyReLU(),
-        Dropout(0.5),
-        # BatchNorm(z),
-        Equivariant(z=>z),
-        LeakyReLU(),
-        Dropout(0.5),
-        # BatchNorm(z),
-
-        Equivariant(z=>1),
-        # IMPORTANT drop the second-to-last dim 1
-        x->reshape(x, d, d, :)
-    )
-end
