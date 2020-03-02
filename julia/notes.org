@@ -12,7 +12,66 @@
 - GraN-DAG https://github.com/kurowasan/GraN-DAG
 - meta-transfer: https://github.com/ec6dde01667145e58de60f864e05a4/CausalOptimizationAnon
 
+* Supervised Results
+
+Several points:
+1. training time: increase linear with model depth, but increase less than
+   linear for graph size =d=, almost stay the same. This is because the hidden
+   layer does not scale with =d=, remains the same
+2. FC model with dropout is hard to fit
+3. FC model is not scalable to large graphs
+4. FC model generally converge at 150k
+
+For EQ models:
+1. training time
+   - increases linear with model depth
+   - increases more than linear with graph size =d=. That is because of two
+     parts: the input/output size, as well as in each layer: the hidden layer
+     computation cost is linear to =d=
+2. It is much easier to fit
+3. EQ models generally converge at 30k
+4. deep EQ models performs very well
+
+| model   |  d |               prec |                 recall | nsteps | time                  |
+|---------+----+--------------------+------------------------+--------+-----------------------|
+| FC      |  5 |               0.81 |                        | 150k   | 2m50s                 |
+|         |  7 |               0.71 |                        | 150k   | 3m                    |
+|         | 10 |               0.67 |                        | 150k   | 3m                    |
+|         | 15 |               0.56 |                        | 200k   | 4m40s                 |
+|         | 20 | 0.45 (hard to fit) |                        | 300k   | 8m11s                 |
+|         | 25 |                  0 |                        | 300k   | 9m31s                 |
+|         | 30 |                  0 |                        | 300k   | 11m33s                |
+|---------+----+--------------------+------------------------+--------+-----------------------|
+| deep FC |  5 |               0.92 |                        | 150k   | 8m40s                 |
+|         |  7 |               0.83 |                        | 150k   | 8m50s                 |
+|         | 10 |               0.64 |                        | 150k   | 9m1s                  |
+|         | 15 |                  0 |                        | 300k   | 18m22s                |
+|---------+----+--------------------+------------------------+--------+-----------------------|
+| EQ      |  5 |                    |                   0.79 | 30k    | 16m                   |
+|         |  7 |                    |                   0.75 | 30k    | 26m                   |
+|         | 10 |                    | 0.68 (est 0.72 at 30k) | 20k    | 26m  (est 40m at 30k) |
+|         | 15 |                    |                        | 30k    | (est 1h20m)           |
+|         | 20 |                    |                        | 30k    | (est 2h)              |
+|         | 25 |                    |                        |        |                       |
+|---------+----+--------------------+------------------------+--------+-----------------------|
+| deep-EQ |  5 |               0.89 |                        | 30k    | 43m                   |
+|         | 10 |               0.81 |                        | 30k    | 1h46m                 |
+|         | 15 |               0.76 |                        | 30k    | 3h40m                 |
+|         | 20 |               0.76 |                        | 30k    | 6h51m                 |
+|         | 25 |                    |                        |        |                       |
+|         | 30 |                    |                        |        |                       |
+
+
 * Supervised full DAG TODO
+
+** TODO exp model setting
+
+- dropout, batchnorm or None
+- nlayer
+- depth
+- width
+- activation
+- learning rate
 
 ** TODO performance of FC models
 Why it is slow bad now? Probably:
@@ -20,6 +79,8 @@ Why it is slow bad now? Probably:
 - threshold
 - sigmoid activation
 - MSE loss
+
+Looks like dropout is not working
 
 ** data
 
