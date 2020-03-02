@@ -95,7 +95,8 @@ function next_batch!(ds::CuDataSetIterator)
     if ds.index > ds.nbatch
         ds.index = 1
     end
-    return ds.gpu_x[ds.index], ds.gpu_y[ds.index]
+    ds.index += 1
+    return ds.gpu_x[ds.index-1], ds.gpu_y[ds.index-1]
 end
 
 """
