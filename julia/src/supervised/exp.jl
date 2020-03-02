@@ -16,6 +16,9 @@ using Profile
 using BenchmarkTools: @btime
 
 function exp_sup(d, model_fn; prefix="", ng=10000, N=10, train_steps=1e5)
+    expID = "$prefix-d=$d-ng=$ng-N=$N"
+    @show expID
+
     ng = convert(Int, ng)
 
     ds, test_ds = gen_sup_ds_cached(ng=ng, N=N, d=d, batch_size=100)
@@ -32,7 +35,6 @@ function exp_sup(d, model_fn; prefix="", ng=10000, N=10, train_steps=1e5)
     # TODO lr decay
     opt = ADAM(1e-4)
 
-    expID = "$prefix-d=$d-ng=$ng-N=$N"
 
     logger = TBLogger("tensorboard_logs/train-$expID-$(now())", tb_append, min_level=Logging.Info)
     test_logger = TBLogger("tensorboard_logs/test-$expID-$(now())", tb_append, min_level=Logging.Info)

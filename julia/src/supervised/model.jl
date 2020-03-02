@@ -5,6 +5,23 @@ using TensorOperations
 
 include("../model_utils.jl")
 
+# https://github.com/FluxML/Flux.jl/issues/160
+function weight_params(m::Chain, ps=Flux.Params())
+    map((l)->weight_params(l, ps), m.layers)
+    ps
+end
+weight_params(m::Dense, ps=Flux.Params()) = push!(ps, m.W)
+weight_params(m::Conv, ps=Flux.Params()) = push!(ps, m.weight)
+weight_params(m::ConvTranspose, ps=Flux.Params()) = push!(ps, m.weight)
+weight_params(m, ps=Flux.Params()) = ps
+
+function test_weight_params()
+    # get model
+    weight_params(model)
+end
+
+
+
 struct Equivariant{T}
     w1::AbstractArray{T}
     w2::AbstractArray{T}
@@ -16,6 +33,13 @@ struct Equivariant{T}
 end
 Flux.@functor Equivariant
 
+function weight_params(m::Equivariant, ps=Flux.Params())
+    push!(ps, m.w1)
+    push!(ps, m.w2)
+    push!(ps, m.w3)
+    push!(ps, m.w4)
+    push!(ps, m.w5)
+end
 
 mynfan(dims...) = prod(dims[1:end-2]) .* (dims[end-1], dims[end])
 my_glorot_uniform(dims...) = (rand(Float32, dims...) .- 0.5f0) .* sqrt(24.0f0 / sum(mynfan(dims...)))
@@ -125,17 +149,45 @@ function (l::Equivariant)(X)
 end
 
 
-function sup_model(d)
+function fc_model(d)
     # first reshape
     Chain(
         x -> reshape(x, d * d, :),
 
         Dense(d*d, 1024, relu),
-        Dropout(0.5),
+        # Dropout(0.5),
         # BatchNorm(1024),
 
         Dense(1024, 1024, relu),
-        Dropout(0.5),
+        # Dropout(0.5),
+        # BatchNorm(1024),
+
+        Dense(1024, d*d),
+        # reshape back
+        x -> reshape(x, d, d, :),
+    )
+end
+
+function fc_model_deep(d)
+    # first reshape
+    Chain(
+        x -> reshape(x, d * d, :),
+
+        Dense(d*d, 1024, relu),
+        # Dropout(0.5),
+        # BatchNorm(1024),
+
+        Dense(1024, 1024, relu),
+        # Dropout(0.5),
+        # BatchNorm(1024),
+        Dense(1024, 1024, relu),
+        # Dropout(0.5),
+        # BatchNorm(1024),
+        Dense(1024, 1024, relu),
+        # Dropout(0.5),
+        # BatchNorm(1024),
+        Dense(1024, 1024, relu),
+        # Dropout(0.5),
         # BatchNorm(1024),
 
         Dense(1024, d*d),

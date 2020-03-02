@@ -54,7 +54,7 @@ function test_eq()
     size(X)
 
     # the previous sup model
-    model = sup_model(5) |> gpu
+    model = fc_model(5) |> gpu
     param_count(model)             # 1,106,969
 
     # model = eq_model(100) |> gpu
@@ -151,7 +151,7 @@ function exp_sup(d; ng=10000, N=10, train_steps=1e5)
     x, y = next_batch!(test_ds) |> gpu
 
     # FIXME parameterize the model
-    # model = sup_model(d) |> gpu
+    # model = fc_model(d) |> gpu
     model = eq_model(d, 300) |> gpu
 
     @info "warming up model with x .."

@@ -30,30 +30,49 @@ function sup_graph_metrics(out, y)
     # FIXME threshold value
     #
     # this should be 0.5 for binary sigmoid xent results
-    mat(y) = threshold(reshape(y, d, d, :), 0.5, true)
+    mat(y) = threshold(reshape(y, d, d, :), 0.3, true)
 
     mout = mat(out)
     my = mat(y)
     nnz = sum(mout .!= 0)
     nny = sum(my .!= 0)
 
-    tp = sum(mout[mout .== my] .== 1)
-    fp = sum(mout[mout .== 1] .!= my[mout .== 1])
+    # tp = sum(mout[mout .== my] .== 1)
+    # fp = sum(mout[mout .== 1] .!= my[mout .== 1])
+    tp = sum(mout[my .== 1] .== 1)
+    fp = sum(mout[my .== 0] .== 1)
     tt = sum(my .== 1)
     ff = sum(my .== 0)
 
-    prec = tp / (tp + fp)
-    recall = tp / tt
+    mydiv(a,b) = if a == 0 0 else a / b end
 
-    tpr = tp / sum(my .== 1)
+    prec = mydiv(tp, tp+fp)
+    recall = mydiv(tp, tt)
 
-    fpr = fp / sum(my .== 0)
-    # FIXME devide by 0, ???
-    fdr = fp / sum(mout .== 1)
+    tpr = mydiv(tp, tt)
+    fpr = mydiv(fp, ff)
+    fdr = mydiv(fp, sum(mout .== 1))
 
     shd = sum(my .!= mout)
 
     GraphMetric(nnz, nny, tpr, fpr, fdr, shd, prec, recall)
+end
+
+
+function create_print_cb(;logger=nothing)
+    function f(step, ms)
+        println()
+        # evaluate to extract from metrics. This will only call every seconds
+        values = map(ms) do x
+            x[1]=>get!(x[2])
+        end # |> Dict
+        @info "data" values
+        if typeof(logger) <: TBLogger
+            for value in values
+                log_value(logger, value[1], value[2], step=step)
+            end
+        end
+    end
 end
 
 function myσxent(logŷ, y)
@@ -83,11 +102,13 @@ function create_test_cb(model, test_ds, msg; logger=nothing)
             x, y = next_batch!(test_ds) |> gpu
             out = model(x)
 
+            loss = Flux.mse(out, y)
             # loss = Flux.mse(σ.(out), y)
-            loss = myσxent(out, y)
+            # loss = myσxent(out, y)
 
             # FIXME performance on CPU
-            metric = sup_graph_metrics(cpu(σ.(out)), cpu(y))
+            # metric = sup_graph_metrics(cpu(σ.(out)), cpu(y))
+            metric = sup_graph_metrics(cpu(out), cpu(y))
 
             add!(gm, metric)
             add!(loss_metric, loss)
@@ -108,52 +129,7 @@ function create_test_cb(model, test_ds, msg; logger=nothing)
     # Flux.throttle(test_cb, 10)
 end
 
-function create_print_cb(;logger=nothing)
-    function f(step, ms)
-        println()
-        # evaluate to extract from metrics. This will only call every seconds
-        values = map(ms) do x
-            x[1]=>get!(x[2])
-        end # |> Dict
-        @info "data" values
-        if typeof(logger) <: TBLogger
-            for value in values
-                log_value(logger, value[1], value[2], step=step)
-            end
-        end
-    end
-end
 
-
-# for x in ("hel"=>1, "wo"=>2)
-#     @show x[1]
-# end
-
-# https://github.com/FluxML/Flux.jl/issues/160
-function weight_params(m::Chain, ps=Flux.Params())
-    map((l)->weight_params(l, ps), m.layers)
-    ps
-end
-weight_params(m::Dense, ps=Flux.Params()) = push!(ps, m.W)
-weight_params(m::Conv, ps=Flux.Params()) = push!(ps, m.weight)
-weight_params(m::ConvTranspose, ps=Flux.Params()) = push!(ps, m.weight)
-function weight_params(m::Equivariant, ps=Flux.Params())
-    push!(ps, m.w1)
-    push!(ps, m.w2)
-    push!(ps, m.w3)
-    push!(ps, m.w4)
-    push!(ps, m.w5)
-end
-weight_params(m, ps=Flux.Params()) = ps
-
-function test_weight_params()
-    # get model
-    weight_params(model)
-end
-
-
-# TODO add tensorboard logger
-# TODO better GPU utilization
 function sup_train!(model, opt, ds, test_ds;
                     train_steps=ds.nbatch,
                     print_cb=(i, m)->(),
@@ -185,14 +161,15 @@ function sup_train!(model, opt, ds, test_ds;
             out = model(x)
             # use cross entropy loss
             # loss_mse = Flux.mse(out, y)
+
+            # loss = Flux.mse(σ.(out), y)
+            loss = Flux.mse(out, y)
+            # loss = myσxent(out, y)
+
             # add a weight decay
             # l2 = sum((x)->sum(x.^2), weights)
             # show l2?
-            # loss = loss_mse + 1e-5 * l2
-
-            # loss = Flux.mse(σ.(out), y)
-            loss = myσxent(out, y)
-
+            # loss = loss + 1e-5 * l2
             add!(loss_metric, loss)
 
             loss

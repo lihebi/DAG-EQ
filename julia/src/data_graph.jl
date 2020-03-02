@@ -399,9 +399,9 @@ function gen_sup_data(g, N)
     d = nv(g)
     ds = map(1:N) do i
         # DEBUG different weights
-        W = gen_weights(g)
+        # W = gen_weights(g)
         # W = gen_weights(g, ()->((rand() + 0.5) * rand([1,-1])))
-        # W = gen_weights(g, ()->((rand() * 1.5 + 0.5) * rand([1,-1])))
+        W = gen_weights(g, ()->((rand() * 1.5 + 0.5) * rand([1,-1])))
         # X = gen_data(g, W, N)
 
         # compute from generated data

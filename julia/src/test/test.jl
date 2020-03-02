@@ -342,7 +342,7 @@ function test()
     x, y = next_batch!(ds)
     x = next_batch!(ds)
 
-    model_fn = (d)->sup_model(d)
+    model_fn = (d)->fc_model(d)
     eq_model_fn = (d)->eq_model(d, 300)
     model = model_fn(5) |> gpu
     model = eq_model_fn(5) |> gpu
