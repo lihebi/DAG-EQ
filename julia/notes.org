@@ -32,105 +32,230 @@ For EQ models:
 3. EQ models generally converge at 30k
 4. deep EQ models performs very well
 
-| model   |  d |               prec |                 recall | nsteps | time                  |
-|---------+----+--------------------+------------------------+--------+-----------------------|
-| FC      |  5 |               0.81 |                        | 150k   | 2m50s                 |
-|         |  7 |               0.71 |                        | 150k   | 3m                    |
-|         | 10 |               0.67 |                        | 150k   | 3m                    |
-|         | 15 |               0.56 |                        | 200k   | 4m40s                 |
-|         | 20 | 0.45 (hard to fit) |                        | 300k   | 8m11s                 |
-|         | 25 |                  0 |                        | 300k   | 9m31s                 |
-|         | 30 |                  0 |                        | 300k   | 11m33s                |
-|---------+----+--------------------+------------------------+--------+-----------------------|
-| deep FC |  5 |               0.92 |                        | 150k   | 8m40s                 |
-|         |  7 |               0.83 |                        | 150k   | 8m50s                 |
-|         | 10 |               0.64 |                        | 150k   | 9m1s                  |
-|         | 15 |                  0 |                        | 300k   | 18m22s                |
-|---------+----+--------------------+------------------------+--------+-----------------------|
-| EQ      |  5 |                    |                   0.79 | 30k    | 16m                   |
-|         |  7 |                    |                   0.75 | 30k    | 26m                   |
-|         | 10 |                    | 0.68 (est 0.72 at 30k) | 20k    | 26m  (est 40m at 30k) |
-|         | 15 |                    |                        | 30k    | (est 1h20m)           |
-|         | 20 |                    |                        | 30k    | (est 2h)              |
-|         | 25 |                    |                        |        |                       |
-|---------+----+--------------------+------------------------+--------+-----------------------|
-| deep-EQ |  5 |               0.89 |                        | 30k    | 43m                   |
-|         | 10 |               0.81 |                        | 30k    | 1h46m                 |
-|         | 15 |               0.76 |                        | 30k    | 3h40m                 |
-|         | 20 |               0.76 |                        | 30k    | 6h51m                 |
-|         | 25 |                    |                        |        |                       |
-|         | 30 |                    |                        |        |                       |
+| model   |  d | loss | prec | recall | nsteps | time        | step/s | time / 10k | comment      |
+|---------+----+------+------+--------+--------+-------------+--------+------------+--------------|
+| FC      |  5 |      | 0.81 |        | 150k   | 2m50s       |        |            |              |
+|         |  7 |      | 0.71 |        | 150k   | 3m          |        |            |              |
+|         | 10 |      | 0.67 |        | 150k   | 3m          |        |            |              |
+|         | 15 |      | 0.56 |        | 200k   | 4m40s       |        |            |              |
+|         | 20 |      | 0.45 |        | 300k   | 8m11s       |        |            | not converge |
+|         | 25 |      |    0 |        | 300k   | 9m31s       |        |            |              |
+|         | 30 |      |    0 |        | 300k   | 11m33s      |        |            |              |
+|---------+----+------+------+--------+--------+-------------+--------+------------+--------------|
+| deep FC |  5 |      | 0.92 |        | 150k   | 8m40s       |        |            |              |
+|         |  7 |      | 0.83 |        | 150k   | 8m50s       |        |            |              |
+|         | 10 |      | 0.64 |        | 150k   | 9m1s        |        |            |              |
+|         | 15 |      |    0 |        | 300k   | 18m22s      |        |            |              |
+|---------+----+------+------+--------+--------+-------------+--------+------------+--------------|
+| EQ      |  5 |      |      |   0.79 | 30k    | 16m         |        |            |              |
+|         |  7 |      |      |   0.75 | 30k    | 26m         |        |            |              |
+|         | 10 |      |      |   0.69 | 30k    | 38m         |        |            |              |
+|         | 15 |      |      |        | 30k    | (est 1h20m) |        |            |              |
+|         | 20 |      |      |        | 30k    | (est 2h)    |        |            |              |
+|         | 25 |      |      |        |        |             |        |            |              |
+|---------+----+------+------+--------+--------+-------------+--------+------------+--------------|
+| deep-EQ |  5 |      | 0.89 |        | 30k    | 43m         |        |            |              |
+|         | 10 |      | 0.81 |        | 30k    | 1h46m       |        |            |              |
+|         | 15 |      | 0.76 |        | 30k    | 3h40m       |        |            |              |
+|         | 20 |      | 0.76 |        | 30k    | 6h51m       |        |            |              |
+|         | 25 |      |      |        |        |             |        |            |              |
+|         | 30 |      |      |        |        |             |        |            |              |
 
 
 * Supervised full DAG TODO
 
-** TODO exp model setting
+** TODO debug EQ performance
+Not matching previous. Maybe previous result is binary C=1? Try it, and write
+exp option for this.
 
-- dropout, batchnorm or None
-- nlayer
-- depth
-- width
-- activation
-- learning rate
+Actually the deep model seems to preserve the performance.
 
-** TODO performance of FC models
-Why it is slow bad now? Probably:
-- data generating with [0.5,2]
-- threshold
-- sigmoid activation
-- MSE loss
+** TODO persistence
+*** TODO integrate with reading tensorboard logs
 
-Looks like dropout is not working
+**** Reading from python: table and plot design
 
-** data
 
-Data:
-- unit data (W=1)
-- [-2,-0.5] data
-- non-univariance data
-- non-linear model
+**** references
+- The [[https://www.tensorflow.org/tensorboard/migrate][migrate guide from v1 to v2]] should be a good quick resource.
+- [[https://github.com/tensorflow/tensorboard][tensorflow/tensorboard]]
 
-** Real data
-- pairwise?
-- non-pairwise but sparse?
+**** Reading back in Julia
+[[https://github.com/PhilipVinc/TensorBoardLogger.jl][PhilipVinc/TensorBoardLogger.jl]] supports [[https://philipvinc.github.io/TensorBoardLogger.jl/dev/deserialization/][deserialization]], using
+[[https://github.com/JuliaML/ValueHistories.jl][JuliaML/ValueHistories.jl]]. Example:
 
-** loss
-Loss:
-- cross entropy vs. MSE
+#+BEGIN_SRC julia
+using TensorBoardLogger, ValueHistories
 
-** setting
-Network setting:
-- dropout batchnorm vs. none
-- network depth
-- network width
-- simple FC
-  - running time
-  - convergence
-  - # of parameters
+tb_logger = TBLogger("testlog", tb_overwrite)
 
-Other settings:
-- threshold
-- batch size
-- learning rate (decay)
+with_logger(tb_logger) do
+    for i=1:5
+        @info "test" val=i b=i*2 mat=i.*ones(3) mat2=10 .*i.*ones(3,2)
+    end
+end
 
-** Compare
-- pairwise supervised model
-- unsupervised model
+hist = convert(MVHistory, tb_logger)
+#+END_SRC
+
+But it can NOT directly read a tf.event file. The creation options for TBLogger
+are:
+- =tb_increment=: default, create a new folder
+- =tb_overwrite=: delete and overwrite
+- =tb_append=: create a new FILE in the folder
+
+Thus none of them reads back.
+
+
+**** TODO as tensorboard plugins
+
+So the data visualization should be tightly integrated with
+tensorboard. Manually write matplotlib is painful, let alone extracting from
+tensorboard event logs.
+
+The current tensorboard front-end is not ideal because:
+- download data button does not download all data, but a single run. Then you
+  need to click around a lot.
+- the image is not ideal: it lacks legends, the color assignment cannot be
+  changed, and it turns out to conflict a lot
+
+I need a plugin that supports:
+- better color assignment
+- show legends
+
+That's not a lot. Let's see how tensorboard plugin works.
+- [[https://github.com/tensorflow/tensorboard/blob/master/ADDING_A_PLUGIN.md][ADDING_A_PLUGIN.md]]: this is the official tutorial
+- [[https://github.com/tensorflow/tensorboard/tree/master/tensorboard/examples/plugins/example_basic][tensorboard/examples/plugins/example_basic]]: an example (HEBI: TODO)
+- [[https://github.com/tensorflow/tensorboard/tree/master/tensorboard/examples/plugins/example_raw_scalars][tensorboard/examples/plugins/example_raw_scalars]]: another more interesting
+  example (still no figures) (HEBI: TODO)
+
+
+How Tensorboard discovers plugins? looks like you install the plugin, and it
+discovers itself?
+
+Looks like we need the following pieces:
+- optional data writer. In my case I just use the default writer (in Julia)
+- post-process the data in backend in python: maybe this is optional as well?
+  But I probably need to:
+  - read tf event data here
+  - pass the data to the front-end
+- render it in JS: maybe I just draw the figure in JS?
+  - looks like I have to draw figure in JS
+
+About front-end:
+#+begin_quote
+TensorBoard does not impose any framework/tool requirements for building a
+frontend—you can use React, Vue.js, jQuery, DOM API, or any new famous
+frameworks and use, for example, Webpack to create a JavaScript
+bundle. TensorBoard only requires an [[https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/][ES Module]] that is an entry point to your
+frontend (example ES module). Do note that all frontend resources have to be
+served by the plugin backend (example backend).
+#+end_quote
+
+So (HEBI: TODO):
+- react
+- vue.js
+- new [[https://webpack.js.org/][Webpack]]?
+- jquery
+- raw DOM
+
+I'll write typescript of course.
+
+Probably the next step is to read the source of tensorboard, see how the default
+scalar figures are drawn. (HEBI: TODO)
+
+**** Other tensorboard related packages:
+
+- [[https://github.com/lanpa/tensorboardX][lanpa/tensorboardX]]: log tensorboard via pytorch (and others). This does not
+  read back.
+- The what-if-tool (WIT) is pretty complex:
+  - on tensorboard page: https://www.tensorflow.org/tensorboard/what_if_tool
+  - web: https://pair-code.github.io/what-if-tool/
+  - source: https://github.com/pair-code/what-if-tool
+  This seems not a tensorboard plugin, but a separate app, it consumes a tf
+  Serving saved model and TFRecord dataset.
+
+- [[https://github.com/tensorflow/tensorboard/tree/master/tensorboard/plugins/custom_scalar][custom_scalar plugin]]: progmatically specify the *layout* (see [[https://github.com/tensorflow/tensorboard/blob/799c5cf6ae1f5f8d78a09382689dcb9d0ec5f561/tensorboard/plugins/custom_scalar/custom_scalar_demo.py#L67-L117][this example
+  code]]). Thus not very useful for me.
+
+**** Read tensorboard event logs
+Looks like pretty easy.
+
+- [[https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/train/summary_iterator][tf.train.summary_iterator]]: this is tf1.x API, but you can access it via
+  =tf.compat.v1.train.summary_iterator=
+
+#+BEGIN_SRC python
+# This example supposes that the events file contains summaries with a
+# summary value tag 'loss'.  These could have been added by calling
+# `add_summary()`, passing the output of a scalar summary op created with
+# with: `tf.compat.v1.summary.scalar('loss', loss_tensor)`.
+for e in tf.compat.v1.train.summary_iterator('path to events file'):
+    for v in e.summary.value:
+        if v.tag == 'loss':
+            print(v.simple_value)
+#+END_SRC
+
+- [[https://stackoverflow.com/questions/37304461/tensorflow-importing-data-from-a-tensorboard-tfevent-file][this stackoverflow post]]: has a tf2 version:
+
+#+BEGIN_SRC python
+from tensorflow.python.summary.summary_iterator import summary_iterator
+#+END_SRC
+
+
+*** TODO saved model
+- save at multiple points: not very urgent
+
+For synthetic data, not very useful, because tensorboard already logs the loss
+and accuracy metrics.
+
+For real data this is necessary.
+
+*** CANCELED continue training
+CLOSED: [2020-03-02 一 19:36]
+with unique ID support
+
+This might not make sense, because
+1. I need to implement logic of resuming
+2. I need to implement logic for restoring "step" count
+3. the time metrics would be wrong
+
+A lot of overhead.
+
+*** CANCELED seed and averaging
+CLOSED: [2020-03-02 一 19:36]
+
+Not very urgent.
+*** CANCELED profiling
+CLOSED: [2020-03-02 一 17:50]
+If profiling is not costly, I can probably record for each run
+
+** TODO Compare
+*** TODO pairwise supervised model
+*** TODO unsupervised model
   - NOTEARS
   - PC
 
-** TODO persistence
+** TODO Real data
+- pairwise?
+- non-pairwise but sparse?
+- different graph type in synthetic data
 
-*** profiling
-If profiling is not costly, I can probably record for each run
-*** saved model
-- save at multiple points
-*** continue training
-with unique ID support
+** Synthetic data
+- table for different models and settings
+  - network settings:
+    - dropout batchnorm vs. none
+    - network depth
+    - network width
+    - FC vs. EQ
+  - metrics
+    - accuracy and recall
+    - # iterations
+    - time
+    - # parameters
+- plot AUC for different threshold
+- plot training process
 
-*** seed and averaging
 
-** TODO Results and Plotting
 
 * Do-loss TODO
 
@@ -473,3 +598,42 @@ Delta debuggging what is wrong
 
 It is the 1 dim (5,5,1,100)
 
+
+** DONE exp model setting
+CLOSED: [2020-03-02 一 17:34]
+
+- dropout, batchnorm or None
+  - looks like dropout is not working
+- nlayer
+- depth
+- width
+- activation
+- learning rate
+
+** DONE performance of FC models
+CLOSED: [2020-03-02 一 17:34]
+Why it is slow bad now? Probably:
+- data generating with [0.5,2]
+- threshold
+- sigmoid activation
+- MSE loss
+
+
+** DONE data
+CLOSED: [2020-03-02 一 17:34]
+
+Data:
+- unit data (W=1)
+- [-2,-0.5] data
+- non-univariance data
+- non-linear model
+
+** DONE loss
+CLOSED: [2020-03-02 一 17:34]
+Loss:
+- cross entropy vs. MSE
+
+use MSE, because they seems to perform similarly, and xent only supports binary
+classification.
+
+** CANCELED learning rate (decay)
