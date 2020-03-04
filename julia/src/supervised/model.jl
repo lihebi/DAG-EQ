@@ -172,6 +172,7 @@ function eq_model(; d, z=300, reg=false, nlayer=3)
     layers = []
 
     push!(layers, Equivariant(1=>z))
+    push!(layers, LeakyReLU())
     if reg push!(layers, Dropout(0.5)) end
     for i in 1:(nlayer-2)
         push!(layers, Equivariant(z=>z))
