@@ -148,18 +148,18 @@ function (l::Equivariant)(X)
     eqfn(X, l.w1, l.w2, l.w3, l.w4, l.w5)
 end
 
-function fc_model(; d, hidden_size=1024, reg=false, nlayer=3)
+function fc_model(; d, z=1024, reg=false, nlayer=3)
     nlayer >= 2 || error("nlayer must be >= 2")
 
     layers = []
 
-    push!(layers, Dense(d * d, hidden_size, relu))
+    push!(layers, Dense(d * d, z, relu))
     if reg push!(layers, Dropout(0.5)) end
     for i in 1:(nlayer-2)
-        push!(layers, Dense(hidden_size, hidden_size, relu))
+        push!(layers, Dense(z, z, relu))
         if reg push!(layers, Dropout(0.5)) end
     end
-    push!(layers, Dense(hidden_size, d * d))
+    push!(layers, Dense(z, d * d))
 
     Chain(x -> reshape(x, d * d, :),
           layers...,
@@ -180,6 +180,10 @@ function eq_model(; d, z=300, reg=false, nlayer=3)
         # FIXME whether this is the correct drop
         if reg push!(layers, Dropout(0.5)) end
     end
+    # FIXME since all previous layer has LeakyReLU activation, the output is
+    # largely positive. This layer does not have ReLU. But is this one alone
+    # sufficient for producing many negative values? Should I use multiple
+    # layers?
     push!(layers, Equivariant(z=>1))
 
     Chain(x->reshape(x, d, d, 1, :),

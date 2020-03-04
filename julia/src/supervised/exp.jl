@@ -15,11 +15,11 @@ include("train.jl")
 using Profile
 using BenchmarkTools: @btime
 
-function exp_sup(d, model_fn; prefix="", ng=10000, N=10, train_steps=1e5)
+function exp_sup(d, model_fn; prefix="", ng=1e4, N=10, train_steps=1e5, test_throttle=10)
+    ng = convert(Int, ng)
+
     expID = "$prefix-d=$d-ng=$ng-N=$N"
     @show expID
-
-    ng = convert(Int, ng)
 
     ds, test_ds = gen_sup_ds_cached(ng=ng, N=N, d=d, batch_size=100)
     # ds, test_ds = gen_sup_ds_cached_diff(ng=ng, N=N, d=d, batch_size=100)
@@ -40,7 +40,8 @@ function exp_sup(d, model_fn; prefix="", ng=10000, N=10, train_steps=1e5)
     test_logger = TBLogger("tensorboard_logs/test-$expID-$(now())", tb_append, min_level=Logging.Info)
 
     print_cb = Flux.throttle(create_print_cb(logger=logger), 1)
-    test_cb = Flux.throttle(create_test_cb(model, test_ds, "test_ds", logger=test_logger), 10)
+    test_cb = Flux.throttle(create_test_cb(model, test_ds, "test_ds", logger=test_logger),
+                            test_throttle)
 
     @info "training .."
 

@@ -66,7 +66,8 @@ function create_print_cb(;logger=nothing)
         values = map(ms) do x
             x[1]=>get!(x[2])
         end # |> Dict
-        @info "data" values
+        # DEBUG removing stdout data logging
+        # @info "data" values
         if typeof(logger) <: TBLogger
             for value in values
                 log_value(logger, value[1], value[2], step=step)
@@ -93,7 +94,7 @@ function create_test_cb(model, test_ds, msg; logger=nothing)
         test_run_steps = 20
 
         println()
-        @info "testing for $test_run_steps steps .."
+        # @info "testing for $test_run_steps steps .."
         gm = MeanMetric{GraphMetric}()
         loss_metric = MeanMetric{Float64}()
 
@@ -116,7 +117,7 @@ function create_test_cb(model, test_ds, msg; logger=nothing)
 
         g_v = get!(gm)
         loss_v = get!(loss_metric)
-        @info msg loss_v to_named_tuple(g_v)...
+        # @info msg loss_v to_named_tuple(g_v)...
         if typeof(logger) <: TBLogger
             # log_value(logger, "graphM/" * msg, value, step=step)
             # DEBUG using tuple
