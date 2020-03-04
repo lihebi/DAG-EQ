@@ -27,6 +27,7 @@ function sup_graph_metrics(out, y)
     # TODO try enforce some of this metrics in loss?
     # d = convert(Int, sqrt(size(y,1)))
     d = size(y,1)
+    nbatch = size(y, 3)
     # FIXME threshold value
     #
     # this should be 0.5 for binary sigmoid xent results
@@ -34,8 +35,8 @@ function sup_graph_metrics(out, y)
 
     mout = mat(out)
     my = mat(y)
-    nnz = sum(mout .!= 0)
-    nny = sum(my .!= 0)
+    nnz = sum(mout .!= 0) / nbatch
+    nny = sum(my .!= 0) / nbatch
 
     # tp = sum(mout[mout .== my] .== 1)
     # fp = sum(mout[mout .== 1] .!= my[mout .== 1])
@@ -53,7 +54,7 @@ function sup_graph_metrics(out, y)
     fpr = mydiv(fp, ff)
     fdr = mydiv(fp, sum(mout .== 1))
 
-    shd = sum(my .!= mout)
+    shd = sum(my .!= mout) / nbatch
 
     GraphMetric(nnz, nny, tpr, fpr, fdr, shd, prec, recall)
 end
