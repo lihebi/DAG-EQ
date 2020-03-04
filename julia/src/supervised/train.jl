@@ -3,6 +3,7 @@ using CuArrays: allowscalar
 using Flux: @epochs, onecold
 # ???
 using Statistics: mean
+using BSON: @save, @load
 
 # FIXME dir structure?
 include("../train_utils.jl")
