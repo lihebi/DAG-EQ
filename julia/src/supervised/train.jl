@@ -63,7 +63,7 @@ end
 
 function create_print_cb(;logger=nothing)
     function f(step, ms)
-        println()
+        # println()
         # evaluate to extract from metrics. This will only call every seconds
         values = map(ms) do x
             x[1]=>get!(x[2])
@@ -95,13 +95,14 @@ function create_test_cb(model, test_ds, msg; logger=nothing)
     function test_cb(step)
         test_run_steps = 20
 
-        println()
+        # println()
         # @info "testing for $test_run_steps steps .."
         gm = MeanMetric{GraphMetric}()
         loss_metric = MeanMetric{Float64}()
 
         # FIXME testmode!
-        @showprogress 0.1 "Inner testing..." for i in 1:test_run_steps
+        # @showprogress 0.1 "Inner testing..."
+        for i in 1:test_run_steps
             x, y = next_batch!(test_ds) |> gpu
             out = model(x)
 
