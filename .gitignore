@@ -13,3 +13,5 @@ training_checkpoints
 *.tar.gz
 
 events.out.tfevents.*
+
+*.bson
