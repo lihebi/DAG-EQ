@@ -26,15 +26,15 @@ end
 
 function main_eq()
     ds = [5,7,10,15,20,25,30]
-    # exp_sup(5, eq_model_fn, prefix="EQ", ng=5e3, N=20, train_steps=3e4)
+    # exp_sup(5, eq_model_fn, prefix="EQ", ng=1e4, N=20, train_steps=3e4)
     # exp_sup(7, eq_model_fn, prefix="EQ", ng=1e4, N=20, train_steps=3e4)
     for d in ds
         exp_sup(d, eq_model_fn, prefix="EQ", ng=1e4, N=20, train_steps=3e4,
                 test_throttle=20)
         # exp_sup(d, eq_dropout_model_fn, prefix="EQ-reg", ng=1e4, N=20, train_steps=3e4)
-        exp_sup(d, deep_eq_model_fn, prefix="EQ-deep", ng=5e3, N=20,
+        exp_sup(d, deep_eq_model_fn, prefix="EQ-deep", ng=1e4, N=20,
                 train_steps=3e4, test_throttle=20)
-        # exp_sup(d, deep_eq_dropout_model_fn, prefix="EQ-deep-reg", ng=5e3, N=20, train_steps=3e4)
+        # exp_sup(d, deep_eq_dropout_model_fn, prefix="EQ-deep-reg", ng=1e4, N=20, train_steps=3e4)
     end
 end
 
@@ -69,7 +69,7 @@ function main()
     end
     for d in [5,10,15,20,25,30]
         exp_sup(d, eq_model_fn, prefix="NEW-EQ", ng=1e4, N=20, train_steps=3e4, test_throttle=20)
-        exp_sup(d, deep_eq_model_fn, prefix="NEW-EQ-deep", ng=5e3, N=20,
+        exp_sup(d, deep_eq_model_fn, prefix="NEW-EQ-deep", ng=1e4, N=20,
                 train_steps=3e4, test_throttle=20)
     end
 end
