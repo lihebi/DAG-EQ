@@ -6,7 +6,10 @@ import re
 import csv
 from collections import defaultdict
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
+# for smoothing
+from scipy.interpolate import make_interp_spline, BSpline
 
 
 
@@ -28,7 +31,7 @@ def read_tfevent_last_values(event_file):
     # First, the exp setting
     #
     # HACK (?:.0)? is for 10000.0, make it consistent
-    m = re.match('.*/test-(.*)-d=(\d+)-ng=(\d+)(?:.0)?-N=(\d+)-.*', event_file)
+    m = re.match('.*/test-NEW-(.*)-d=(\d+)-ng=(\d+)(?:.0)?-N=(\d+)-.*', event_file)
     assert m
     m.groups()
     model, d, ng, N = m.groups()
@@ -116,8 +119,6 @@ def plot_lines(data, models, ds, ax, key):
     ax.set_xticks(x)
     ax.set_xticklabels(ds)
     ax.legend()
-    # plt.savefig('b.pdf')
-    # plt.close()
 
 def plot_bars(data, models, ds, ax, key):
     # fig, ax = plt.subplots()
@@ -136,8 +137,6 @@ def plot_bars(data, models, ds, ax, key):
     ax.set_xticks(x)
     ax.set_xticklabels(ds)
     ax.legend()
-    # plt.savefig('a.pdf')
-    # plt.close()
 
 def plot_all(data, models, ds):
     fig, axs = plt.subplots(2,2, figsize=(10,10))
@@ -145,7 +144,7 @@ def plot_all(data, models, ds):
     plot_lines(data, models, ds, axs[0,1], 'recalls')
     plot_bars(data, models, ds, axs[1,0], 'precs')
     plot_bars(data, models, ds, axs[1,1], 'recalls')
-    plt.savefig('a.pdf')
+    plt.savefig('bar.pdf')
     plt.close()
 
 def tfevent_to_plot_data(logdir, models, ds):
@@ -186,3 +185,133 @@ def test_barplot():
     plot_lines(data, models, ds)
     plot_all(data, models, ds)
 
+def read_tfevent_process_values(event_file):
+    # read event file for results
+    it = tf.compat.v1.train.summary_iterator(event_file)
+    res = {}
+
+    # First, the exp setting
+    #
+    # HACK (?:.0)? is for 10000.0, make it consistent
+    #
+    # CAUTION hard-coded NEW- prefix
+    m = re.match('.*/test-NEW-(.*)-d=(\d+)-ng=(\d+)(?:.0)?-N=(\d+)-.*', event_file)
+    assert m
+    m.groups()
+    model, d, ng, N = m.groups()
+    # FIXME the d=10 case is strange: it does not match -dropout version
+    # TODO load into csv
+    res['model'] = model
+    res['d'] = int(d)
+    res['ng'] = int(ng)
+    res['N'] = int(N)
+    steps = []
+    # FIXME for train data, only losses are available. I'm currently not
+    # plotting loss, only precs and recalls, and not considering training data
+    #
+    # losses = []
+    precs = []
+    recalls = []
+
+    # read the data
+    first = next(it)
+    # the first seems to be a placeholder
+    assert first.step == 0
+    assert len(first.summary.value) == 0
+    # but I need  the time
+    start_wall = first.wall_time
+    for e in it:
+        # seems each summary contains exactly one value (for scalar logs)
+        assert len(e.summary.value) == 1
+        v = e.summary.value[0]
+        if v.tag == 'graph/prec':
+            # NOTE: steps only push here, not on recall
+            steps.append(e.step)
+            precs.append(v.simple_value)
+        elif v.tag == 'graph/recall':
+            recalls.append(v.simple_value)
+        else:
+            pass
+    res['steps'] = np.array(steps)
+    res['precs'] = np.array(precs)
+    res['recalls'] = np.array(recalls)
+    assert len(res['steps']) == len(res['precs'])
+    assert len(res['steps']) == len(res['recalls'])
+    return res
+
+def tfevent_to_process_data(logdir):
+    os.listdir(logdir)
+    # 1. read all values
+    rows = []
+    for folder in os.listdir(logdir):
+        tmp = os.path.join(logdir, folder)
+        # assume only one file in each folder
+        assert len(os.listdir(tmp)) == 1
+        event_file = os.path.join(tmp, os.listdir(tmp)[0])
+        row = read_tfevent_process_values(event_file)
+        rows.append(row)
+    # plot one figure for EQ and EQ-deep, one figure for FC and FC-deep, because
+    # they have different X-axis
+    EQ_rows = [row for row in rows if row['model'] in ['EQ', 'EQ-deep']]
+    FC_rows = [row for row in rows if row['model'] in ['FC', 'FC-deep']]
+    return EQ_rows, FC_rows
+
+# consistent coloring for the same d
+def my_color_map(model, d):
+    res = {5: 'r',
+           10: 'g',
+           15: 'b',
+           20: 'y',
+           25: 'c',
+           30: 'm'}[d]
+    res += {'EQ': '--',
+            'FC': '--',
+            'EQ-deep': '-',
+            'FC-deep': '-'}[model]
+    return res
+
+def plot_process_sub(rows, ax, which):
+    # sort rows based on its last value
+    rows = sorted(rows, key=lambda x: x[which][-1], reverse=True)
+
+    for row in rows:
+        # print(row['model'], row['d'], which)
+        # print('{}-{}-{}'.format(row['model'], row['d'], which))
+
+        y = row[which]
+        x = row['steps']
+        # smoothing
+        # 300 represents number of points to make between T.min and T.max
+        # ratio = 0.2 if 'EQ' in row['model'] else 1
+        # xnew = np.linspace(x.min(), x.max(), int(len(x) * ratio))
+        xnew = np.linspace(x.min(), x.max(), 50)
+        spl = make_interp_spline(x, y, k=3)  # type: BSpline
+        ynew = spl(xnew)
+
+        ax.plot(xnew, ynew, my_color_map(row['model'], row['d']),
+                label='{}-{}'.format(row['model'], row['d']))
+        ax.set_ylabel(which)
+        ax.set_xlabel('steps')
+        ax.set_title(which)
+        ax.set_ylim(0,1)
+        ax.xaxis.set_major_formatter(
+            matplotlib.ticker.FuncFormatter(lambda x, p: '{}k'.format(int(x/1000))))
+
+        # ax.set_xticks(x)
+        # ax.set_xticklabels(ds)
+        ax.legend()
+
+def plot_process(EQ_rows, FC_rows):
+    fig, axs = plt.subplots(2,2, figsize=(10,10))
+    plot_process_sub(EQ_rows, axs[0,0], 'precs')
+    plot_process_sub(EQ_rows, axs[1,0], 'recalls')
+    plot_process_sub(FC_rows, axs[0,1], 'precs')
+    plot_process_sub(FC_rows, axs[1,1], 'recalls')
+    plt.savefig('process.pdf')
+    plt.close()
+
+def test_plot_train_process():
+    logdir = './final_logs'
+    # this should be the entire training process
+    EQ_rows, FC_rows = tfevent_to_process_data(logdir)
+    plot_process(EQ_rows, FC_rows)
