@@ -13,6 +13,17 @@ eq_dropout_model_fn(d) = eq_model(d=d, z=300, reg=true, nlayer=3)
 deep_eq_model_fn(d) = eq_model(d=d, z=300, reg=false, nlayer=6)
 deep_eq_dropout_model_fn(d) = eq_model(d=d, z=300, reg=true, nlayer=6)
 
+function test_size()
+    # model size
+    for d in [5,10,15,20,25,30]
+        @info("data", d,
+              param_count(fc_model_fn(d)) / 1e5,
+              param_count(deep_fc_model_fn(d)) / 1e5,
+              param_count(eq_model_fn(d)) / 1e5,
+              param_count(deep_eq_model_fn(d)) / 1e5)
+    end
+end
+
 function main_eq()
     ds = [5,7,10,15,20,25,30]
     # exp_sup(5, eq_model_fn, prefix="EQ", ng=5e3, N=20, train_steps=3e4)
