@@ -113,10 +113,11 @@ def test_table():
 def plot_lines(data, models, ds, ax, key):
     # fig, ax = plt.subplots()
     for model in models:
-        ax.plot(data[model][key], label=model)
+        ax.plot(data[model][key], 'o-', label=model)
     ax.set_ylabel(key)
-    ax.set_title(key)
-    ax.set_xticks(x)
+    ax.set_xlabel('graph size')
+    # ax.set_title(key)
+    # ax.set_xticks(x)
     ax.set_xticklabels(ds)
     ax.legend()
 
@@ -125,25 +126,21 @@ def plot_bars(data, models, ds, ax, key):
     x = np.arange(len(ds)) * 2  # the label locations
     width = 0.35  # the width of the bars
     for i, model in enumerate(models):
-        print(x)
         locs = x - width * len(models) / 2 + i * width + width / 2
-        print(locs)
         ax.bar(locs, data[model][key], width, label=model)
-        # I also want to plot the line
-        # UPDATE this does not look good
-        # ax.plot(locs, data[model][0], 'o-')
     ax.set_ylabel(key)
-    ax.set_title(key)
+    ax.set_xlabel('graph size')
+    # ax.set_title(key)
     ax.set_xticks(x)
     ax.set_xticklabels(ds)
     ax.legend()
 
 def plot_all(data, models, ds):
-    fig, axs = plt.subplots(2,2, figsize=(10,10))
-    plot_lines(data, models, ds, axs[0,0], 'precs')
-    plot_lines(data, models, ds, axs[0,1], 'recalls')
-    plot_bars(data, models, ds, axs[1,0], 'precs')
-    plot_bars(data, models, ds, axs[1,1], 'recalls')
+    fig, axs = plt.subplots(1,2, figsize=(10,5))
+    plot_bars(data, models, ds, axs[0], 'precs')
+    plot_bars(data, models, ds, axs[1], 'recalls')
+    # plot_lines(data, models, ds, axs[1,0], 'precs')
+    # plot_lines(data, models, ds, axs[1,1], 'recalls')
     plt.savefig('bar.pdf')
     plt.close()
 
@@ -178,11 +175,11 @@ def tfevent_to_plot_data(logdir, models, ds):
 def test_barplot():
     logdir = './final_logs'
     models = ['FC', 'FC-deep', 'EQ', 'EQ-deep']
-    ds = [5,7,10,15,20,25,30]
+    ds = [5,10,15,20,25,30]
     data = tfevent_to_plot_data(logdir, models, ds)
     # plot it
-    plot_bars(data, models, ds)
-    plot_lines(data, models, ds)
+    # plot_bars(data, models, ds)
+    # plot_lines(data, models, ds)
     plot_all(data, models, ds)
 
 def read_tfevent_process_values(event_file):
@@ -292,7 +289,7 @@ def plot_process_sub(rows, ax, which):
                 label='{}-{}'.format(row['model'], row['d']))
         ax.set_ylabel(which)
         ax.set_xlabel('steps')
-        ax.set_title(which)
+        # ax.set_title(which)
         ax.set_ylim(0,1)
         ax.xaxis.set_major_formatter(
             matplotlib.ticker.FuncFormatter(lambda x, p: '{}k'.format(int(x/1000))))
