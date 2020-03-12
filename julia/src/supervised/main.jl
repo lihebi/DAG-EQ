@@ -2,13 +2,18 @@ include("exp.jl")
 
 function test_size()
     # model size
+    @info "FC model"
     for d in [5,10,15,20,25,30]
-        @info("data", d,
-              param_count(fc_model_fn(d)) / 1e5,
-              param_count(deep_fc_model_fn(d)) / 1e5,
-              param_count(eq_model_fn(d)) / 1e5,
-              param_count(deep_eq_model_fn(d)) / 1e5)
+        Printf.@printf "%.2f\n" param_count(fc_model_fn(d)) / 1e6
     end
+    @info "FC deep model"
+    for d in [5,10,15,20,25,30]
+        Printf.@printf "%.2f\n" param_count(deep_fc_model_fn(d)) / 1e6
+    end
+    # EQ models is independent of input size
+    @info "EQ model"
+    Printf.@printf "%.2f\n" param_count(eq_model_fn(10)) / 1e6
+    Printf.@printf "%.2f\n" param_count(deep_eq_model_fn(10)) / 1e6
 end
 
 function main_eq()
