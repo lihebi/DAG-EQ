@@ -22,6 +22,14 @@ mutable struct CuDataSetIterator
     nbatch::Int
 end
 
+function Base.convert(::Type{CuDataSetIterator}, ds::DataSetIterator)
+    CuDataSetIterator(ds.raw_x, ds.raw_y, ds.batch_size)
+end
+
+function CuDataSetIterator(ds::DataSetIterator)
+    CuDataSetIterator(ds.raw_x, ds.raw_y, ds.batch_size)
+end
+
 function CuDataSetIterator(x,y,batch_size)
     xdims = collect(repeated(:, length(size(x)) - 1))
     ydims = collect(repeated(:, length(size(y)) - 1))

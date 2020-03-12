@@ -450,10 +450,7 @@ end
 
 function gen_sup_ds_with_graph(N, gs; batch_size)
     x, y = gen_sup_data_all_with_graph(N, gs)
-    # DataSetIterator(x, y, batch_size)
-
-    # DEBUG testing Cu datasets
-    CuDataSetIterator(x, y, batch_size)
+    DataSetIterator(x, y, batch_size)
 end
 
 dscache = Dict()

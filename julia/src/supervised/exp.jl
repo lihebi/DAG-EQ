@@ -32,8 +32,8 @@ function exp_sup(d, model_fn; prefix="", ng=1e4, N=10, train_steps=1e5, test_thr
         end
     end
 
-
     ds, test_ds = gen_sup_ds_cached(ng=ng, N=N, d=d, batch_size=100)
+    ds, test_ds = ds, test_ds |> CuDataSetIterator
     # ds, test_ds = gen_sup_ds_cached_diff(ng=ng, N=N, d=d, batch_size=100)
     x, y = next_batch!(test_ds) |> gpu
 
