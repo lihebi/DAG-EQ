@@ -64,10 +64,40 @@ For EQ models:
 
 * Supervised full DAG TODO
 
-** STARTED verify performance
-Wait for all runs and see:
-- debug dropout performance
-- debug FC vs. EQ and -deep version performance
+** universal EQ model
+
+Note that EQ model parameters does not depend on d. Each layer has exactly 5
+weights, no matter the size of graph.
+
+Thus it may be possible to train a universal EQ model that works on different
+graph. I can approach this in several ways:
+1. directly transfer
+   2. fine tune some layer?
+3. train on different size graphs
+
+Looks like the direct transfer works.
+
+*** STARTED train on different size graphs
+
+** STARTED continual training
+
+1. choose a larger save steps, e.g. 1k
+2. save the model as modelID-1000.bson
+3. when continual training, check if model loadable. Choose the most recent, and
+   set current steps accordingly
+
+NOTE: the tensorboard logs must be kept consistent, and only do append
+
+The only downside would be the time will be inaccurate. Maybe I should (HEBI:
+record time as well in filename) (HEBI: record time as well in filename ...),
+together with steps. After all, these are the only two thing I need.
+
+
+
+*** STARTED continual training debug
+*** DONE cudatasetiterator convert debug
+CLOSED: [2020-03-12 四 11:04]
+
 
 ** TODO debug EQ performance
 Not matching previous. Maybe previous result is binary C=1? Try it, and write
@@ -517,3 +547,10 @@ Not very urgent.
 *** CANCELED profiling
 CLOSED: [2020-03-02 一 17:50]
 If profiling is not costly, I can probably record for each run
+
+** DONE verify performance
+CLOSED: [2020-03-06 五 12:24]
+Wait for all runs and see:
+- debug dropout performance
+- debug FC vs. EQ and -deep version performance
+
