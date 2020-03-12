@@ -5,4 +5,4 @@ if [ ! -d back ]; then
 fi
 
 # TODO add archive message
-tar zcvf back/archive-$(date +%m.%d.%y-%H.%M.%S).tar.gz tensorboard_logs/ trained_models
+tar zcvf back/archive-$(date +%m.%d.%y-%H.%M.%S).tar.gz tensorboard_logs/ saved_models
