@@ -15,29 +15,61 @@ include("train.jl")
 using Profile
 using BenchmarkTools: @btime
 
-function exp_sup(d, model_fn; prefix="", ng=1e4, N=10, train_steps=1e5, test_throttle=10)
-    ng = convert(Int, ng)
+function load_most_recent(model_dir)
+    if !isdir(model_dir) return nothing, 1 end
+    # get the most recent one
+    files = readdir(model_dir)
+    if length(files) == 0 return nothing, 1 end
 
-    expID = "$prefix-d=$d-ng=$ng-N=$N"
+    # step-1000.bson
+    steps = map(files) do fname
+        step_str = match(r"step-(\d+).bson", fname).captures[1]
+        parse(Int, step_str)
+    end
+    max_step = maximum(steps)
+    most_recent = files[argmax(steps)]
+    @load joinpath(model_dir, most_recent) model
+    return model, max_step
+end
+
+function test()
+    model, steps = load_most_recent("saved_models/FC-d=7-ng=10000-N=10-")
+    gpu(model)
+    ds, test_ds = gen_sup_ds_cached(ng=1000, N=20, d=7, batch_size=100)
+    x, y = next_batch!(ds)
+    gpu(model)(gpu(x))
+end
+
+function exp_sup(d, model_fn;
+                 prefix="", suffix="$(now())",
+                 ng=1e4, N=10, train_steps=1e5, test_throttle=10)
+    ng = Int(ng)
+    train_steps=Int(train_steps)
+
+    expID = join([prefix, "d=$d", "ng=$ng", "N=$N", suffix], "-")
     @show expID
 
+    model_dir = joinpath("saved_models", expID)
 
-    # detect if the expID already tested
+    # FIXME load model if already trained
+    most_recent_model, from_step = load_most_recent(model_dir)
+    if !isnothing(most_recent_model)
+        @info "using trained model, starting at step $from_step"
+        model = most_recent_model |> gpu
+    else
+        model = model_fn(d) |> gpu
+        from_step = 1
+    end
 
-    for dir in readdir("tensorboard_logs")
-        # occursin("EQ-d=5-ng=10000-N=20", "test-EQ-d=5-ng=10000-N=20-2020-03-01T16:32:34.56")
-        if occursin(expID, dir)
-            @info "Already trained in $dir"
-            return
-        end
+    if from_step >= train_steps
+        @info "already trained"
+        return
     end
 
     ds, test_ds = gen_sup_ds_cached(ng=ng, N=N, d=d, batch_size=100)
     ds, test_ds = ds, test_ds |> CuDataSetIterator
     # ds, test_ds = gen_sup_ds_cached_diff(ng=ng, N=N, d=d, batch_size=100)
     x, y = next_batch!(test_ds) |> gpu
-
-    model = model_fn(d) |> gpu
 
     @info "warming up model with x .."
     model(x)
@@ -47,32 +79,38 @@ function exp_sup(d, model_fn; prefix="", ng=1e4, N=10, train_steps=1e5, test_thr
     # TODO lr decay
     opt = ADAM(1e-4)
 
+    # when continual training, new files are created
+    # CAUTION there will be some overlapping
+    logger = TBLogger("tensorboard_logs/train-$expID", tb_append, min_level=Logging.Info)
+    test_logger = TBLogger("tensorboard_logs/test-$expID", tb_append, min_level=Logging.Info)
 
-    logger = TBLogger("tensorboard_logs/train-$expID-$(now())", tb_append, min_level=Logging.Info)
-    test_logger = TBLogger("tensorboard_logs/test-$expID-$(now())", tb_append, min_level=Logging.Info)
-
-    print_cb = Flux.throttle(create_print_cb(logger=logger), 1)
-    test_cb = Flux.throttle(create_test_cb(model, test_ds, "test_ds", logger=test_logger),
-                            test_throttle)
+    print_cb = create_print_cb(logger=logger)
+    test_cb = create_test_cb(model, test_ds, "test_ds", logger=test_logger)
+    save_cb = create_save_cb("saved_models/$expID", model)
 
     @info "training .."
 
     sup_train!(model, opt, ds, test_ds,
-               print_cb=print_cb,
-               test_cb=test_cb,
+               # print tensorboard logs every 1 second
+               print_cb=Flux.throttle(print_cb, 1),
+               # test throttle = 10
+               test_cb=Flux.throttle(test_cb, test_throttle),
+               # save every 20 seconds TODO use a ultra large number
+               # I'll save all the model during training, if that's too large, I'll consider:
+               # 1. delete old ones, i.e. rotating
+               # 2. use a larger interval
+               save_cb=Flux.throttle(save_cb, 10),
+               from_step=from_step,
                train_steps=train_steps)
 
-    @info "Saving model .."
-    if !isdir("trained_model") mkdir("trained_model") end
-    @time @save "trained_model/$expID-$(now()).bson" model=cpu(model)
+    # final save and test
+    test_cb(train_steps)
+    save_cb(train_steps)
 
-    # TODO enforcing sparsity, and increase the loss weight of 1 edges, because
-    # there are much more 0s, and they can take control of loss and make 1s not
-    # significant. As an extreme case, the model may simply report 0 everywhere
 
-    # do the inference
-    # x, y = next_batch!(test_ds)
-    # sup_view(model, x[:,8], y[:,8])
+    # @info "Saving model .."
+    # if !isdir("trained_models") mkdir("trained_models") end
+    # @time @save "trained_models/$expID.bson" model=cpu(model)
 end
 
 

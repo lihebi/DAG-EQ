@@ -99,3 +99,24 @@ function eq_model_deep(d, z)
         x->reshape(x, d, d, :)
     )
 end
+    # TODO enforcing sparsity, and increase the loss weight of 1 edges, because
+    # there are much more 0s, and they can take control of loss and make 1s not
+    # significant. As an extreme case, the model may simply report 0 everywhere
+
+function test()
+    ds, test_ds = gen_sup_ds_cached(ng=1000, N=20, d=5, batch_size=100)
+    ds, test_ds |> (x)->convert(CuDataSetIterator, x)
+    ds, test_ds |> CuDataSetIterator
+    convert(CuDataSetIterator, ds)
+    ds |> (x)->convert(CuDataSetIterator, x)
+end
+function test()
+    # detect if the expID already tested
+    if !isdir("tensorboard_logs") mkdir("tensorboard_logs") end
+    for dir in readdir("tensorboard_logs")
+        if occursin(expID, dir)
+            @info "Already trained in $dir"
+            return
+        end
+    end
+end

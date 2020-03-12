@@ -43,6 +43,16 @@ function main_fc()
     end
 end
 
+function test()
+    # saving cost 0.05
+    exp_sup(7, fc_model_fn, prefix="FC", suffix="")
+    # saving cost 0.05
+    exp_sup(7, eq_model_fn, prefix="EQ", suffix="", train_steps=3e4)
+    exp_sup(10, eq_model_fn, prefix="EQ", suffix="", train_steps=3e4)
+    # deep EQ model, saving cost 0.2
+    exp_sup(10, deep_eq_model_fn, prefix="EQ-deep", suffix="", train_steps=3e4)
+end
+
 function main()
     # 15/20 is already 0
     for d in [5,10,15,20]

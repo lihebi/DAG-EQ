@@ -60,6 +60,19 @@ function sup_graph_metrics(out, y)
     GraphMetric(nnz, nny, tpr, fpr, fdr, shd, prec, recall)
 end
 
+function create_save_cb(model_dir, model)
+    if !isdir(model_dir) mkpath(model_dir) end
+    function save_cb(step)
+        model_file = joinpath(model_dir, "step-"*string(step)*".bson")
+        # @info "saving .."
+        # sometimes user interrupt would crash the file, I'm saving it as
+        # xxx-tmp, and perform move afterwards, hopefully fix this.
+        @save model_file model=cpu(model)
+        # CAUTION monitor saving time for potential performance issue
+        # @time
+    end
+end
+
 
 function create_print_cb(;logger=nothing)
     function f(step, ms)
@@ -135,11 +148,14 @@ end
 
 
 function sup_train!(model, opt, ds, test_ds;
+                    from_step=1,
                     train_steps=ds.nbatch,
                     print_cb=(i, m)->(),
+                    save_cb=(i)->(),
                     test_cb=(i)->())
-    ps=Flux.params(model)
+    train_steps = convert(Int, train_steps)
 
+    ps=Flux.params(model)
     # weight decay or all params decay?
     weights = weight_params(model)
 
@@ -147,7 +163,7 @@ function sup_train!(model, opt, ds, test_ds;
     gm = MeanMetric{GraphMetric}()
 
     @info "training for $(train_steps) steps .."
-    @showprogress 0.1 "Training..." for step in 1:train_steps
+    @showprogress 0.1 "Training..." for step in from_step:train_steps
         # CAUTION this actually cost half of the computing time.
         x, y = next_batch!(ds) |> gpu
 
@@ -185,5 +201,6 @@ function sup_train!(model, opt, ds, test_ds;
         print_cb(step, ["loss"=>loss_metric])
 
         test_cb(step)
+        save_cb(step)
     end
 end

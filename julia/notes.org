@@ -79,7 +79,10 @@ Looks like the direct transfer works.
 
 *** STARTED train on different size graphs
 
-** STARTED continual training
+- [X] remove d in model, make it general
+
+** DONE continual training
+CLOSED: [2020-03-12 四 12:36]
 
 1. choose a larger save steps, e.g. 1k
 2. save the model as modelID-1000.bson
@@ -94,7 +97,8 @@ together with steps. After all, these are the only two thing I need.
 
 
 
-*** STARTED continual training debug
+*** DONE continual training debug
+CLOSED: [2020-03-12 四 12:36]
 *** DONE cudatasetiterator convert debug
 CLOSED: [2020-03-12 四 11:04]
 
