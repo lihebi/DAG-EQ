@@ -90,19 +90,23 @@ function log_value(logger::TBLogger, name::AbstractString, value::GraphMetric; s
     # FIXME it turns out the order is random, but at least the prefix works
     #
     # I want to control the order of the fields
-    log_value(logger, name*"/tpr", value.tpr, step=step)
-    log_value(logger, name*"/fpr", value.fpr, step=step)
-    log_value(logger, name*"/fdr", value.fdr, step=step)
+
+    # log_value(logger, name*"/tpr", value.tpr, step=step)
+    # log_value(logger, name*"/fpr", value.fpr, step=step)
+    # log_value(logger, name*"/fdr", value.fdr, step=step)
     log_value(logger, name*"/prec", value.prec, step=step)
     log_value(logger, name*"/recall", value.recall, step=step)
+
     # tfboard has good support to log scale something near 0
-    log_value(logger, name*"/1-prec", 1-value.prec, step=step)
-    log_value(logger, name*"/1-recall", 1-value.recall, step=step)
+    # log_value(logger, name*"/1-prec", 1-value.prec, step=step)
+    # log_value(logger, name*"/1-recall", 1-value.recall, step=step)
+
     # use a different prefix
     log_value(logger, name*"/v/shd", value.shd, step=step)
+
     # FIXME I want to plot nnz and nny in the same plot
-    log_value(logger, name*"/v/nnz", value.nnz, step=step)
-    log_value(logger, name*"/v/nny", value.nny, step=step)
+    # log_value(logger, name*"/v/nnz", value.nnz, step=step)
+    # log_value(logger, name*"/v/nny", value.nny, step=step)
 end
 
 function test()
