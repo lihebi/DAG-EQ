@@ -148,6 +148,15 @@ function (l::Equivariant)(X)
     eqfn(X, l.w1, l.w2, l.w3, l.w4, l.w5)
 end
 
+
+struct Reshape
+    target
+end
+
+function (l::Reshape)(x)
+    reshape(x, l.target...)
+end
+
 function fc_model(; d, z=1024, reg=false, nlayer=3)
     nlayer >= 2 || error("nlayer must be >= 2")
 
@@ -161,12 +170,22 @@ function fc_model(; d, z=1024, reg=false, nlayer=3)
     end
     push!(layers, Dense(z, d * d))
 
-    Chain(x -> reshape(x, d * d, :),
+    Chain(Reshape([d*d, :]),
           layers...,
-          x -> reshape(x, d, d, :))
+          Reshape([d,d,:]))
 end
 
-function eq_model(; d, z=300, reg=false, nlayer=3)
+struct DimAdd end
+function (l::DimAdd)(x)
+    reshape(x, size(x)[1:end-1]...,1,size(x)[end])
+end
+struct DimDrop end
+function (l::DimDrop)(x)
+    # reshape(x, size(x)[1:end-2]...,size(x)[end])
+    dropdims(x, dims=3)
+end
+
+function eq_model(; z=300, reg=false, nlayer=3)
     nlayer >= 2 || error("nlayer must be >= 2")
 
     layers = []
@@ -186,13 +205,12 @@ function eq_model(; d, z=300, reg=false, nlayer=3)
     # layers?
     push!(layers, Equivariant(z=>1))
 
-    Chain(x->reshape(x, d, d, 1, :),
-          layers...,
-          # IMPORTANT drop the second-to-last dim 1
-          x->reshape(x, d, d, :))
+    Chain(
+        DimAdd(),
+        layers...,
+        # IMPORTANT drop the second-to-last dim 1
+        DimDrop())
 end
-
-
 
 fc_model_fn(d) = fc_model(d=d, z=1024, nlayer=3)
 fc_dropout_model_fn(d) = fc_model(d=d, z=1024, reg=true, nlayer=3)
@@ -200,10 +218,9 @@ fc_dropout_model_fn(d) = fc_model(d=d, z=1024, reg=true, nlayer=3)
 deep_fc_model_fn(d) = fc_model(d=d, z=1024, nlayer=6)
 deep_fc_dropout_model_fn(d) = fc_model(d=d, z=1024, reg=true, nlayer=6)
 
-eq_model_fn(d) = eq_model(d=d, z=300, reg=false, nlayer=3)
-eq_dropout_model_fn(d) = eq_model(d=d, z=300, reg=true, nlayer=3)
+eq_model_fn(_) = eq_model(z=300, reg=false, nlayer=3)
+eq_dropout_model_fn(_) = eq_model(z=300, reg=true, nlayer=3)
 
 # TODO wide model
-deep_eq_model_fn(d) = eq_model(d=d, z=300, reg=false, nlayer=6)
-deep_eq_dropout_model_fn(d) = eq_model(d=d, z=300, reg=true, nlayer=6)
-
+deep_eq_model_fn(_) = eq_model(z=300, reg=false, nlayer=6)
+deep_eq_dropout_model_fn(_) = eq_model(z=300, reg=true, nlayer=6)
