@@ -147,7 +147,7 @@ function create_test_cb(model, test_ds, msg; logger=nothing)
 end
 
 
-function sup_train!(model, opt, ds, test_ds;
+function sup_train!(model, opt, ds;
                     from_step=1,
                     train_steps=ds.nbatch,
                     print_cb=(i, m)->(),
@@ -198,6 +198,86 @@ function sup_train!(model, opt, ds, test_ds;
         Flux.Optimise.update!(opt, ps, gs)
 
         # "graph"=>gm
+        print_cb(step, ["loss"=>loss_metric])
+
+        test_cb(step)
+        save_cb(step)
+    end
+end
+
+function next_batch!(dses::Array{T, N}
+                     where T<:Union{DataSetIterator, CuDataSetIterator}
+                     where N,
+                     step)
+    next_batch!(dses[step % length(dses) + 1])
+end
+
+function create_test_cb_mixed(model,
+                              test_dses::Array{T, N}
+                              where T<:Union{DataSetIterator, CuDataSetIterator} where N,
+                              msg; logger=nothing)
+    function test_cb(step)
+        test_run_steps = 20
+
+        gm = MeanMetric{GraphMetric}()
+        loss_metric = MeanMetric{Float64}()
+
+        for i in 1:test_run_steps
+            # FIXME I probably want to record performance for different d
+            x, y = next_batch!(test_dses, i) |> gpu
+            out = model(x)
+
+            loss = Flux.mse(out, y)
+            metric = sup_graph_metrics(cpu(out), cpu(y))
+
+            add!(gm, metric)
+            add!(loss_metric, loss)
+        end
+
+        g_v = get!(gm)
+        loss_v = get!(loss_metric)
+        if typeof(logger) <: TBLogger
+            log_value(logger, "loss", loss_v, step=step)
+            log_value(logger, "graph", g_v, step=step)
+        end
+    end
+end
+
+# OK, this is correct, length(A) IS prod(size(A))
+#
+# mymse(ŷ, y) = sum((ŷ .- y).^2) * 1 // length(y)
+# mymse2d(ŷ, y) = sum((ŷ .- y).^2) * 1 // prod(size(y))
+
+function mixed_sup_train!(model, opt,
+                          dses::Array{<:Union{DataSetIterator, CuDataSetIterator}, N} where N;
+                          from_step=1,
+                          train_steps=ds.nbatch,
+                          print_cb=(i, m)->(),
+                          save_cb=(i)->(),
+                          test_cb=(i)->())
+    train_steps = convert(Int, train_steps)
+
+    ps=Flux.params(model)
+    # weight decay or all params decay?
+    weights = weight_params(model)
+
+    loss_metric = MeanMetric{Float64}()
+    gm = MeanMetric{GraphMetric}()
+
+    @info "training for $(train_steps) steps .."
+    @showprogress 0.1 "Training..." for step in from_step:train_steps
+        # CAUTION this actually cost half of the computing time.
+        x, y = next_batch!(dses, step) |> gpu
+
+        gs = gradient(ps) do
+            out = model(x)
+            loss = Flux.mse(out, y)
+            add!(loss_metric, loss)
+            loss
+        end
+
+        Flux.Optimise.update!(opt, ps, gs)
+
         print_cb(step, ["loss"=>loss_metric])
 
         test_cb(step)
