@@ -192,3 +192,18 @@ function eq_model(; d, z=300, reg=false, nlayer=3)
           x->reshape(x, d, d, :))
 end
 
+
+
+fc_model_fn(d) = fc_model(d=d, z=1024, nlayer=3)
+fc_dropout_model_fn(d) = fc_model(d=d, z=1024, reg=true, nlayer=3)
+
+deep_fc_model_fn(d) = fc_model(d=d, z=1024, nlayer=6)
+deep_fc_dropout_model_fn(d) = fc_model(d=d, z=1024, reg=true, nlayer=6)
+
+eq_model_fn(d) = eq_model(d=d, z=300, reg=false, nlayer=3)
+eq_dropout_model_fn(d) = eq_model(d=d, z=300, reg=true, nlayer=3)
+
+# TODO wide model
+deep_eq_model_fn(d) = eq_model(d=d, z=300, reg=false, nlayer=6)
+deep_eq_dropout_model_fn(d) = eq_model(d=d, z=300, reg=true, nlayer=6)
+
