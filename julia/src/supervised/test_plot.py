@@ -296,7 +296,7 @@ def plot_process_sub(rows, ax, which):
 
         # ax.set_xticks(x)
         # ax.set_xticklabels(ds)
-        ax.legend()
+        ax.legend(fontsize='medium', ncol=2)
 
 def plot_process(EQ_rows, FC_rows):
     fig, axs = plt.subplots(2,2, figsize=(10,10))
@@ -304,11 +304,51 @@ def plot_process(EQ_rows, FC_rows):
     plot_process_sub(EQ_rows, axs[1,0], 'recalls')
     plot_process_sub(FC_rows, axs[0,1], 'precs')
     plot_process_sub(FC_rows, axs[1,1], 'recalls')
-    plt.savefig('process.pdf')
+    plt.savefig('results/process.pdf')
     plt.close()
 
-def test_plot_train_process():
+def gen_plot_train_process():
     logdir = './final_logs'
     # this should be the entire training process
     EQ_rows, FC_rows = tfevent_to_process_data(logdir)
     plot_process(EQ_rows, FC_rows)
+
+def gen_universal_plot():
+    xs = []
+    precs = []
+    recalls = []
+    with open("results/tmp.csv") as f:
+        reader = csv.reader(f)
+        for row in reader:
+            xs.append(int(row[0]))
+            precs.append(round(float(row[1]), ndigits=3))
+            recalls.append(round(float(row[2]), ndigits=3))
+    # do with xs, precs, recalls
+    xs
+    precs
+    recalls
+    # print each
+    print('xs', xs)
+    print('precs', precs)
+    print('recalls', recalls)
+    # bar plot
+    fig = plt.figure(dpi=600)
+
+    width = 0.35
+    index = np.arange(len(xs))
+
+    plt.bar(index-width/2, precs, width, label="prec")
+    plt.bar(index+width/2, recalls, width, label="recall")
+    # plt.xticks(index+width/2, xs)
+    plt.xticks(index, xs)
+    plt.xlabel('test graph size')
+    plt.title('universal model')
+    plt.legend()
+    plt.savefig("results/universal.pdf")
+    plt.close()
+
+def main():
+    gen_barplot()
+    gen_plot_train_process()
+    gen_table()
+    gen_universal_plot()
