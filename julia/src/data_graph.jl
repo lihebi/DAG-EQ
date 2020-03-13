@@ -410,7 +410,7 @@ function gen_sup_data(g, N)
 
         # compute the μ and σ analytically
         μ = zeros(d)
-        Σ = inv(myeye(d) - W) * inv((myeye(d) - W)')
+        Σ = inv(transpose(myeye(d) - W)) * inv(myeye(d) - W)
 
         Σ, W
     end
