@@ -10,7 +10,7 @@ import matplotlib
 import numpy as np
 # for smoothing
 from scipy.interpolate import make_interp_spline, BSpline
-
+from scipy.ndimage.filters import gaussian_filter1d
 
 
 # FIXME smoothing
@@ -83,7 +83,7 @@ def tfevent_to_table_row(event_file):
     row['step'] = '{}k'.format(row['step'] // 1000)
     return row
 
-def test_table():
+def gen_table():
     # generate a table
     # final loss dir
     logdir = './final_logs'
@@ -141,7 +141,7 @@ def plot_all(data, models, ds):
     plot_bars(data, models, ds, axs[1], 'recalls')
     # plot_lines(data, models, ds, axs[1,0], 'precs')
     # plot_lines(data, models, ds, axs[1,1], 'recalls')
-    plt.savefig('bar.pdf')
+    plt.savefig('results/bar.pdf')
     plt.close()
 
 def tfevent_to_plot_data(logdir, models, ds):
@@ -172,9 +172,9 @@ def tfevent_to_plot_data(logdir, models, ds):
         data[model]['precs'] = precs
         data[model]['recalls'] = recalls
     return data
-def test_barplot():
+def gen_barplot():
     logdir = './final_logs'
-    models = ['FC', 'FC-deep', 'EQ', 'EQ-deep']
+    models = ['EQ', 'EQ-deep', 'FC', 'FC-deep']
     ds = [5,10,15,20,25,30]
     data = tfevent_to_plot_data(logdir, models, ds)
     # plot it
@@ -281,9 +281,17 @@ def plot_process_sub(rows, ax, which):
         # 300 represents number of points to make between T.min and T.max
         # ratio = 0.2 if 'EQ' in row['model'] else 1
         # xnew = np.linspace(x.min(), x.max(), int(len(x) * ratio))
-        xnew = np.linspace(x.min(), x.max(), 50)
+        xnew = np.linspace(x.min(), x.max(), 20)
         spl = make_interp_spline(x, y, k=3)  # type: BSpline
         ynew = spl(xnew)
+
+        # this seems to look smoother
+        xnew = x
+        if 'EQ' in row['model']:
+            ynew = gaussian_filter1d(y, sigma=2)
+            # ynew = y
+        else:
+            ynew = y
 
         ax.plot(xnew, ynew, my_color_map(row['model'], row['d']),
                 label='{}-{}'.format(row['model'], row['d']))
