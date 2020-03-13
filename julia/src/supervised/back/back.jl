@@ -120,3 +120,13 @@ function test()
         end
     end
 end
+
+
+function test()
+    model, steps = load_most_recent("saved_models/FC-d=7-ng=10000-N=10-")
+    gpu(model)
+    ds, test_ds = gen_sup_ds_cached(ng=1000, N=20, d=7, batch_size=100)
+    x, y = next_batch!(ds)
+    gpu(model)(gpu(x))
+    ds, test_ds = gen_sup_ds_cached_mixed(ng=1000, N=20, dddd=[7,10,15], batch_size=100)
+end

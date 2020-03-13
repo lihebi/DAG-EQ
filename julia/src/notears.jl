@@ -25,6 +25,7 @@ function h_fn(W)
 end
 
 function adj_fn(v)
+    # FIXME length or size(v,1)?
     d = convert(Int, sqrt(length(v)/2))
     # NOTE: positive and negative part
     reshape(v[1:d*d] - v[d*d+1:end], d, d)

@@ -68,12 +68,14 @@ For EQ models:
 - [ ] train on 13, 17, etc
 - [ ] train on 25, 30, 35, 40, in smaller amount of steps
 
+
 ** STARTED Real data
 - pairwise?
 - non-pairwise but sparse?
 - different graph type in synthetic data
 
 ** TODO Compare
+
 *** TODO pairwise supervised model
 Featurization:
 - kernel mean embedding
@@ -90,6 +92,8 @@ I'm probably just use a MLP
 *** TODO traditional unsupervised model
 - NOTEARS
 - PC
+
+- [ ] show concrete inference time
 
 ** TODO real evaluation: X -> sigma
 Instead of starting from sigma, the real evaluation should:
