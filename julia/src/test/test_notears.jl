@@ -235,6 +235,7 @@ function test_notears()
     @info "Results:"
     @show W
     @show sparse(threshold(Ŵ, 0.3))
+    DiGraph(threshold(Ŵ, 0.3))
 
     @info "Evaluating .."
     graphical_metrics(W, threshold(Ŵ, 0.3))

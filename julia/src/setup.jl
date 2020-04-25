@@ -57,6 +57,8 @@ Pkg.rm("CUDAapi")
 Pkg.rm("CuArrays")
 Pkg.add("GPUArrays")
 
+Pkg.add("DataFrames")
+
 
 # Flux
 Pkg.add("CuArrays")

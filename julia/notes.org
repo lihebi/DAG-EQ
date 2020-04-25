@@ -94,6 +94,7 @@ I'm probably just use a MLP
 - PC
 
 - [ ] show concrete inference time
+- [ ] generate simulated data from my julia code and try traditional algorithms
 
 ** TODO real evaluation: X -> sigma
 Instead of starting from sigma, the real evaluation should:

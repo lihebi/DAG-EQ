@@ -48,6 +48,7 @@ function Base.display(d::EmacsDisplay, mime::MIME"image/png", x::AbstractGraph)
     # default: spring_layout, which is random
     draw(PNG(path), gplot(x,
                           layout=circular_layout,
+                          # TODO pass optional label
                           nodelabel=1:nv(x),
                           NODELABELSIZE = 4.0 * 2,
                           # nodelabeldist=2,
@@ -57,6 +58,17 @@ function Base.display(d::EmacsDisplay, mime::MIME"image/png", x::AbstractGraph)
     # loc_x, loc_y = layout_spring_adj(x)
     # draw_layout_adj(x, loc_x, loc_y, filename=path)
 
+    println("$(path)")
+    println("#<Image: $(path)>")
+end
+
+function display_graph_with_label(x::AbstractGraph, labels)
+    path = tempname() * ".png"
+    draw(PNG(path), gplot(x,
+                          layout=circular_layout,
+                          nodelabel=labels,
+                          NODELABELSIZE = 4.0 * 1,
+                          arrowlengthfrac = is_directed(x) ? 0.15 : 0.0))
     println("$(path)")
     println("#<Image: $(path)>")
 end
@@ -402,17 +414,27 @@ function gen_sup_data(g, N)
         # W = gen_weights(g)
         # W = gen_weights(g, ()->((rand() + 0.5) * rand([1,-1])))
         W = gen_weights(g, ()->((rand() * 1.5 + 0.5) * rand([1,-1])))
-        # X = gen_data(g, W, N)
+        # this is slow, but still doable ..
+        # FIXME use analytical solution
+        # FIXME is 1000 data enough? This actually has pros, i.e. adding noise
+        #
+        # DEBUG gen X and compute Σ
+        # gen_data/2 runs the same amount of time
+        # X = gen_data(g, W, 1000)
+        X = gen_data2(W, 1000)
+        # cor(X), W
+        cov(X), W
 
         # compute from generated data
         # μ = mean(X, dims=1)
         # σ = var(X, dims=1)
 
         # compute the μ and σ analytically
-        μ = zeros(d)
-        Σ = inv(transpose(myeye(d) - W)) * inv(myeye(d) - W)
+        # μ = zeros(d)
+        # Σ = inv(transpose(myeye(d) - W)) * inv(myeye(d) - W)
+        # How to compute correlation analytically?
 
-        Σ, W
+        # Σ, W
     end
     input = map(ds) do x x[1] end
     output = map(ds) do x x[2] end
@@ -461,7 +483,8 @@ function gen_sup_ds_cached(;ng, N, d, batch_size)
     ng = convert(Int, ng)
     if ! haskey(dscache, ID)
         # generate graphs first
-        graphs = gen_graphs_hard(d, ng)
+        # DEBUG SF graph
+        graphs = gen_graphs_hard(d, ng, :SF)
         # ratio
         index = convert(Int, round(length(graphs) * 4 / 5))
         train_gs = graphs[1:index]

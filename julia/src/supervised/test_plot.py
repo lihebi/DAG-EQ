@@ -325,7 +325,7 @@ def gen_universal_plot():
     xs = []
     precs = []
     recalls = []
-    with open("results/tmp.csv") as f:
+    with open("results/sf.csv") as f:
         reader = csv.reader(f)
         for row in reader:
             xs.append(int(row[0]))

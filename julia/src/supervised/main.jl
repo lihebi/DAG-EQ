@@ -35,7 +35,7 @@ function main()
 end
 
 function main_mixed()
-    exp_mixed(deep_eq_model_fn, prefix="EQ-deep", suffix="ONE", train_steps=1e5)
+    exp_mixed(deep_eq_model_fn, prefix="EQ-deep", suffix="COV", train_steps=5e4)
     # exp_mixed(eq_model_fn, prefix="EQ", suffix="ONE", train_steps=3e4)
 end
 
