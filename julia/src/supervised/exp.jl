@@ -32,13 +32,32 @@ function load_most_recent(model_dir)
     return model, max_step
 end
 
-function exp_sup(d, model_fn;
-                 prefix="", suffix="$(now())",
-                 ng=1e4, N=10, train_steps=1e5, test_throttle=10)
+function spec_ds_fn(spec)
+    create_sup_data(spec)
+    ds, test_ds = load_sup_ds(spec, batch_size)
+    ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
+    return ds, test_ds
+end
+
+function mixed_ds_fn(specs)
+    for spec in specs
+        create_sup_data(spec)
+    end
+    dses = for spec in spec
+        ds, test_ds = load_sup_ds(spec)
+        ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
+    end
+    return [ds[1] for ds in dses], [ds[2] for ds in dses]
+end
+
+function exp_train(ds_fn, model_fn;
+                   expID,
+                   prefix="", suffix="$(now())",
+                   train_steps=1e5, test_throttle=10)
     ng = Int(ng)
     train_steps=Int(train_steps)
 
-    expID = join([prefix, "d=$d", "ng=$ng", "N=$N", suffix], "-")
+    expID = join([prefix, expID, suffix], "-")
     @show expID
 
     model_dir = joinpath("saved_models", expID)
@@ -49,7 +68,7 @@ function exp_sup(d, model_fn;
         @info "using trained model, starting at step $from_step"
         model = most_recent_model |> gpu
     else
-        model = model_fn(d) |> gpu
+        model = model_fn() |> gpu
         from_step = 1
     end
 
@@ -58,16 +77,13 @@ function exp_sup(d, model_fn;
         return
     end
 
-    ds, test_ds = gen_sup_ds_cached(ng=ng, N=N, d=d, batch_size=100)
-    # FIXME .|>
-    ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
-    # ds, test_ds = gen_sup_ds_cached_diff(ng=ng, N=N, d=d, batch_size=100)
+    ds, test_ds = ds_fn()
     x, y = next_batch!(test_ds) |> gpu
 
     @info "warming up model with x .."
     model(x)
     @info "warming up gradient .."
-    gradient(()->sum(model(x)), params(model))
+    gradient(()->sum(model(x)), Flux.params(model))
 
     # TODO lr decay
     opt = ADAM(1e-4)
@@ -101,73 +117,14 @@ function exp_sup(d, model_fn;
     save_cb(train_steps)
 end
 
-
-function exp_mixed(model_fn; prefix="", suffix="$(now())", train_steps=3e4)
-    train_steps = Int(train_steps)
-    # expID = "TMP-$(now())"
-    expID = "$prefix-mixed-d=[10,15,20]-$suffix"
-
-    model_dir = joinpath("saved_models", expID)
-
-    # FIXME load model if already trained
-    most_recent_model, from_step = load_most_recent(model_dir)
-    if !isnothing(most_recent_model)
-        @info "using trained model, starting at step $from_step"
-        model = most_recent_model |> gpu
-    else
-        # 100 is not used here
-        model = model_fn(100) |> gpu
-        from_step = 1
-    end
-
-    if from_step >= train_steps
-        @info "already trained"
-        return
-    end
-
-    # FIXME enough memory?
-    # looks like the memory garbage collection is going to consume a lot of time
-    ds10, test_ds10 = gen_sup_ds_cached(ng=10000, N=20, d=10, batch_size=100) .|> CuDataSetIterator
-    ds15, test_ds15 = gen_sup_ds_cached(ng=10000, N=20, d=15, batch_size=100) .|> CuDataSetIterator
-    ds20, test_ds20 = gen_sup_ds_cached(ng=10000, N=20, d=20, batch_size=100) .|> CuDataSetIterator
-
-    # testing the data
-    x10, y10 = next_batch!(ds10) |> gpu;
-    x15, y15 = next_batch!(ds15) |> gpu;
-    x20, y20 = next_batch!(ds20) |> gpu;
-    model(x10)
-    model(x15)
-    model(x20)
-
-    # TODO different lr for different data?
-    opt = ADAM(1e-4)
-
-    logger = TBLogger("tensorboard_logs/train-$expID", tb_append, min_level=Logging.Info)
-    test_logger = TBLogger("tensorboard_logs/test-$expID", tb_append, min_level=Logging.Info)
-
-    print_cb = create_print_cb(logger=logger)
-    # NOTE different function
-    test_cb = create_test_cb_mixed(model,
-                                   [test_ds10, test_ds15, test_ds20],
-                                   "test_ds", logger=test_logger)
-    save_cb = create_save_cb("saved_models/$expID", model)
-
-    @info "training .."
-    # NOTE different function
-    mixed_sup_train!(model, opt, [ds10, ds15, ds20],
-                     # print every 1 second
-                     print_cb=Flux.throttle(print_cb, 1),
-                     # test every 20 seconds
-                     test_cb=Flux.throttle(test_cb, 20),
-                     # save every 10 minutes
-                     save_cb=Flux.throttle(save_cb, 600),
-                     from_step=from_step,
-                     train_steps=train_steps)
-
-    # final save and test
-    test_cb(train_steps)
-    save_cb(train_steps)
+function exp_test(expID, ds_fn)
+    model_dir = joinpath("saved_models", )
+    model, _ = load_most_recent(model_dir)
+    model = gpu(model)
+    test_cb = create_test_cb(model, test_ds, "test_ds", logger=test_logger)
+    test_cb()
 end
+
 
 function test_profile()
     Profile.clear()

@@ -1,4 +1,6 @@
 import Printf
+import CSV, DataFrames
+import CSV
 
 include("exp.jl")
 
@@ -119,7 +121,6 @@ function test_syn()
 end
 
 
-import CSV, DataFrames
 
 function test_save()
     # generate and save as csv file
@@ -132,8 +133,6 @@ function test_save()
     df = DataFrames.DataFrame(X)
     CSV.write("g100.csv", df)
 end
-
-import CSV
 
 function named_graph(names)
     g = MetaDiGraph(length(names))
@@ -188,10 +187,16 @@ function Sachs_ground_truth()
     return greal
 end
 
+function inf_one(model, x)
+    # assume x is (dim, dim), no batch
+    reshape(model(reshape(x, size(x)..., 1)), size(x)...)
+end
+
 function test_real()
     # cite:2005-Science-Sachs-Causal
     df = CSV.read("/home/hebi/Downloads/tmp/Sachs/csv/1.cd3cd28.csv")
     names(df)
+
     SachsG = Sachs_ground_truth()
     display_named_graph(SachsG)
     # 853, 11
@@ -212,22 +217,26 @@ function test_real()
     @load "saved_models/EQ-deep-mixed-d=[10,15,20]-ONE/step-100000.bson" model
     @load "saved_models/EQ-deep-mixed-d=[10,15,20]-ONE/step-17671.bson" model
     @load "saved_models/EQ-deep-mixed-d=[10,15,20]-CORR/step-41438.bson" model
+
     @load "saved_models/EQ-deep-mixed-d=[10,15,20]-COV/step-47208.bson" model
-    out = inf_one(model, cov(SachsX))
+    @load "saved_models/EQ-deep-mixed-d=[10,15,20]-COV/step-47208.bson" model
+    @load "saved_models/EQ-2020-05-11T15:47:10.908-d=10-ng=10000-N=20-TEST/step-30000.bson" model
+    @load "saved_models/EQ-deep-mixed-d=[10,15,20]-COR2-2020-05-11T22:09:56.734/step-40000.bson" model
+    # out = inf_one(model, cov(SachsX))
     out = inf_one(model, cor(SachsX))
     # visualize the graph
-    Wout = threshold(out, 0.3, true)
-    Wout = threshold(out, 25, true)
+    Wout = threshold(σ.(out), 0.5, true)
+    # Wout = threshold(out, 25, true)
     # no, this is all 0
     display_graph_with_label(DiGraph(Wout), names(df))
     display_graph_with_label(SachsG, names(df))
     # call notears
+
+    # metrics
+    ytrue = Matrix(gen_weights(SachsG))
+    sup_graph_metrics(Wout, ytrue)
 end
 
-function inf_one(model, x)
-    # assume x is (dim, dim), no batch
-    reshape(model(reshape(x, size(x)..., 1)), size(x)...)
-end
 
 function test_notears()
     include("../notears.jl")

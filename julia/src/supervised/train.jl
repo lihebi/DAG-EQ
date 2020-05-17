@@ -1,7 +1,6 @@
 using ProgressMeter
 using CuArrays: allowscalar
 using Flux: @epochs, onecold
-# ???
 using Statistics: mean
 using BSON: @save, @load
 
@@ -101,7 +100,7 @@ function myσxent(logŷ, y)
     # https://github.com/JuliaGPU/CuArrays.jl/issues/141
     xent = Flux.logitbinarycrossentropy.(logŷ, y)
     loss = sum(xent)
-    return loss * 1 // size(y, 2)
+    return loss * 1 // size(y)[end]
 end
 
 function create_test_cb(model, test_ds, msg; logger=nothing)
@@ -119,13 +118,10 @@ function create_test_cb(model, test_ds, msg; logger=nothing)
             x, y = next_batch!(test_ds) |> gpu
             out = model(x)
 
-            loss = Flux.mse(out, y)
-            # loss = Flux.mse(σ.(out), y)
-            # loss = myσxent(out, y)
+            loss = myσxent(out, y)
 
             # FIXME performance on CPU
-            # metric = sup_graph_metrics(cpu(σ.(out)), cpu(y))
-            metric = sup_graph_metrics(cpu(out), cpu(y))
+            metric = sup_graph_metrics(cpu(σ.(out)), cpu(y))
 
             add!(gm, metric)
             add!(loss_metric, loss)
@@ -179,12 +175,7 @@ function sup_train!(model, opt, ds;
 
         gs = gradient(ps) do
             out = model(x)
-            # use cross entropy loss
-            # loss_mse = Flux.mse(out, y)
-
-            # loss = Flux.mse(σ.(out), y)
-            loss = Flux.mse(out, y)
-            # loss = myσxent(out, y)
+            loss = myσxent(out, y)
 
             # add a weight decay
             # l2 = sum((x)->sum(x.^2), weights)
@@ -205,13 +196,6 @@ function sup_train!(model, opt, ds;
     end
 end
 
-function next_batch!(dses::Array{T, N}
-                     where T<:Union{DataSetIterator, CuDataSetIterator}
-                     where N,
-                     step)
-    next_batch!(dses[step % length(dses) + 1])
-end
-
 function create_test_cb_mixed(model,
                               test_dses::Array{T, N}
                               where T<:Union{DataSetIterator, CuDataSetIterator} where N,
@@ -227,8 +211,8 @@ function create_test_cb_mixed(model,
             x, y = next_batch!(test_dses, i) |> gpu
             out = model(x)
 
-            loss = Flux.mse(out, y)
-            metric = sup_graph_metrics(cpu(out), cpu(y))
+            loss = myσxent(out, y)
+            metric = sup_graph_metrics(cpu(σ.(out)), cpu(y))
 
             add!(gm, metric)
             add!(loss_metric, loss)
@@ -262,7 +246,6 @@ function mixed_sup_train!(model, opt,
     weights = weight_params(model)
 
     loss_metric = MeanMetric{Float64}()
-    gm = MeanMetric{GraphMetric}()
 
     @info "training for $(train_steps) steps .."
     @showprogress 0.1 "Training..." for step in from_step:train_steps
@@ -271,7 +254,7 @@ function mixed_sup_train!(model, opt,
 
         gs = gradient(ps) do
             out = model(x)
-            loss = Flux.mse(out, y)
+            loss = myσxent(out, y)
             add!(loss_metric, loss)
             loss
         end
