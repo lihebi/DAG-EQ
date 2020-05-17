@@ -3,7 +3,7 @@ import Zygote
 using CuArrays
 using TensorOperations
 
-include("../model_utils.jl")
+include("model_utils.jl")
 
 # https://github.com/FluxML/Flux.jl/issues/160
 function weight_params(m::Chain, ps=Flux.Params())

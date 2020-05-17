@@ -44,22 +44,24 @@ end
 
 function main_train_EQ()
     # I'll be training just one EQ model on SF graph with d=10,15,20
-    specs = for d in [10, 15, 20]
+    specs = map([10, 15, 20]) do d
         DataSpec(d=d, k=1, gtype=:ER, noise=:Gaussian)
     end
     exp_train(()->mixed_ds_fn(specs),
               deep_eq_model_fn,
-              expID="deep-EQ", suffix="NIPS", train_steps=3e4)
+              expID="deep-EQ", train_steps=3e4)
+    # TODO train on individual graph size, instead of mixed
+    # TODO train on SF and test on ER
+    # TODO mixed training of different noise models
 end
 
+
 function main_test_EQ()
-    # load the trained model
-    #
-    # test on different types of data
-    exp_test("deep-EQ-NIPS",
-             ()->spec_ds_fn(DataSpec(d=25, k=1, gtype=:ER, noise=:Gaussian)))
-    exp_test("deep-EQ-NIPS",
-             ()->spec_ds_fn(DataSpec(d=18, k=1, gtype=:SF, noise=:Poisson)))
+    # TODO test on different types of data
+    exp_test("deep-EQ",
+             ()->spec_ds_fn(DataSpec(d=20, k=1, gtype=:ER, noise=:Gaussian)))
+    exp_test("deep-EQ",
+             ()->spec_ds_fn(DataSpec(d=15, k=1, gtype=:SF, noise=:Poisson)))
 end
 
 function main_train_FC()
@@ -68,13 +70,13 @@ function main_train_FC()
         spec = DataSpec(d=d, k=1, gtype=:ER, noise=:Gaussian)
         exp_train(()->spec_ds_fn(spec),
                   ()->deep_fc_model_fn(d),
-                  expID="deep-FC-$d", suffix="NIPS", train_steps=1e5)
+                  expID="deep-FC-d=$d", train_steps=1e5)
     end
 end
 
 function main_test_FC()
     for d in [10, 15, 20]
-        exp_test("deep-FC-$d-NIPS",
+        exp_test("deep-FC-$d",
                  ()->spec_ds_fn(DataSpec(d=d, k=1, gtype=:SF, noise=:Poisson)))
     end
 end
@@ -82,3 +84,5 @@ end
 main_gen_data()
 main_train_EQ()
 main_test_EQ()
+main_train_FC()
+main_test_FC()

@@ -239,7 +239,7 @@ end
 
 
 function test_notears()
-    include("../notears.jl")
+    include("notears.jl")
     Ŵ = notears(X)
 end
 

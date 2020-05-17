@@ -38,6 +38,13 @@ struct GraphMetric
     # GraphMetric() = new(0,0,0,0,0,0)
 end
 
+function show(io::IO, gm::GraphMetric)
+    prec = round(gm.prec, digits=2)
+    recall = round(gm.recall, digits=2)
+    shd = round(gm.shd, digits=2)
+    print(io, "GraphMetric: prec: $(prec), recall: $(recall), shd: $(shd)")
+end
+
 # FIXME this only custom @show and REPL, but does not affect logger like @info
 # function Base.show(io::IO, ::MIME"text/plain", m::GraphMetric)
 #     for fname in fieldnames(typeof(m))

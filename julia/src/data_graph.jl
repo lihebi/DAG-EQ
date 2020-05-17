@@ -189,6 +189,7 @@ function gen_data2(W, noise, n)
             # DEBUG this should only be called once
             @info "generating poisson distribution"
             # FIXME but this does not seem to make it faster
+            # FIXME fixed hyper-parameter \lambda
             poisson_d = Poisson(1)
         end
         noise_fn = n->rand(poisson_d,n)

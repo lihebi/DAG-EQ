@@ -1,10 +1,10 @@
 # I must always load config first
-include("../config.jl")
+include("config.jl")
 
 using Statistics
 using Dates: now
 
-include("../data_graph.jl")
+include("data_graph.jl")
 include("model.jl")
 
 import CuArrays
@@ -28,13 +28,14 @@ function load_most_recent(model_dir)
     end
     max_step = maximum(steps)
     most_recent = files[argmax(steps)]
+    @info "Loading $most_recent .."
     @load joinpath(model_dir, most_recent) model
     return model, max_step
 end
 
 function spec_ds_fn(spec)
     create_sup_data(spec)
-    ds, test_ds = load_sup_ds(spec, batch_size)
+    ds, test_ds = load_sup_ds(spec, 100)
     ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
     return ds, test_ds
 end
@@ -43,8 +44,8 @@ function mixed_ds_fn(specs)
     for spec in specs
         create_sup_data(spec)
     end
-    dses = for spec in spec
-        ds, test_ds = load_sup_ds(spec)
+    dses = map(specs) do spec
+        ds, test_ds = load_sup_ds(spec, 100)
         ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
     end
     return [ds[1] for ds in dses], [ds[2] for ds in dses]
@@ -52,13 +53,8 @@ end
 
 function exp_train(ds_fn, model_fn;
                    expID,
-                   prefix="", suffix="$(now())",
                    train_steps=1e5, test_throttle=10)
-    ng = Int(ng)
     train_steps=Int(train_steps)
-
-    expID = join([prefix, expID, suffix], "-")
-    @show expID
 
     model_dir = joinpath("saved_models", expID)
 
@@ -66,6 +62,7 @@ function exp_train(ds_fn, model_fn;
     most_recent_model, from_step = load_most_recent(model_dir)
     if !isnothing(most_recent_model)
         @info "using trained model, starting at step $from_step"
+        # FIXME it does not seem to be smooth at the resume point
         model = most_recent_model |> gpu
     else
         model = model_fn() |> gpu
@@ -118,11 +115,12 @@ function exp_train(ds_fn, model_fn;
 end
 
 function exp_test(expID, ds_fn)
-    model_dir = joinpath("saved_models", )
+    model_dir = joinpath("saved_models", expID)
     model, _ = load_most_recent(model_dir)
     model = gpu(model)
-    test_cb = create_test_cb(model, test_ds, "test_ds", logger=test_logger)
-    test_cb()
+    ds, test_ds = ds_fn()
+
+    sup_test(model, test_ds)
 end
 
 

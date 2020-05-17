@@ -107,12 +107,14 @@ function next_batch!(ds::CuDataSetIterator)
     return ds.gpu_x[ds.index-1], ds.gpu_y[ds.index-1]
 end
 
-
+_next_batch_step = 0
 function next_batch!(dses::Array{T, N}
                      where T<:Union{DataSetIterator, CuDataSetIterator}
-                     where N,
-                     step)
-    next_batch!(dses[step % length(dses) + 1])
+                     where N)
+    # keep an internal step?
+    global _next_batch_step
+    _next_batch_step += 1
+    next_batch!(dses[_next_batch_step % length(dses) + 1])
 end
 
 """

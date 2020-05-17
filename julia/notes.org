@@ -23,6 +23,7 @@ CLOSED: [2020-05-17 Sun 20:53]
 - [X] noise model: Gaussian, TODO
 
 *** TODO the experiment code
+*** TODO the result parsing code
 
 ** implement approaches to compare
 
