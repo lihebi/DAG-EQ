@@ -12,6 +12,61 @@
 - GraN-DAG https://github.com/kurowasan/GraN-DAG
 - meta-transfer: https://github.com/ec6dde01667145e58de60f864e05a4/CausalOptimizationAnon
 
+* [Paper] improve existing experiment
+
+** real data experiment
+More real data
+
+** TODO different types of graphs: ER vs. SF vs. some others
+
+
+** TODO different weight matrix range
+
+weights range [0.5, 1.5*k] for k=1/3, 1/2, 1, 2, 3, ..., ?
+
+
+** TODO different noise model
+
+(and other noise models in Notears paper if you don't want to restrict to
+Gaussian noise model).
+
+* [Paper] missing components
+
+** TODO compare with pairwise supervised learning
+\cite{2019-JMLR-Hill-Causal} and \cite{2015-ICML-Lopez-Paz-Towards}
+
+** TODO Compare with graphical and optimization approaches
+
+- constraint-based methods, PC~\cite{2000-Book-Spirtes-Causation} and
+  FCI~\cite{2000-Book-Spirtes-Causation}
+- score-based methods, GES~\cite{2002-JMLR-Chickering-Learning} (the fast
+  implementation, FGS~\cite{2017-Journal-Ramsey-Million}), and
+- optimization based method, NOTEARS~\cite{2018-NIPS-Zheng-Dags}
+
+** TODO comparison with traditional constraint and score based methods, and latest methods
+
+Need to compare with FGS, Notears, and latest algorithms: DAG-GNN in icml-19,
+RL-BIC (CAUSAL DISCOVERY WITH REINFORCEMENT LEARNING, ICLR 2020), GraN-DAG
+(GRADIENT-BASED NEURAL DAG LEARNING, ICLR 2020). Among them, RL-BIC is limited
+to d<=30. All others work for larger d. It'd be important if this algorithm can
+work for larger d. If you need computation power, do you think LAS ResearchIT
+GPU clusters "pronto" could be useful for you?
+
+** advantage
+The major advantage of ours is:
+- data driven full-DAG discovery
+- fast inference. Although training effort is significant compared to other
+  causal discovery methods, our model has significantly lower inference time,
+  and can be easily batched for parallel discovery.
+
+** DONE real data experiment
+CLOSED: [2020-05-15 Fri 15:54]
+
+** DONE cross graph type evaluation?
+CLOSED: [2020-05-15 Fri 15:54]
+
+
+
 * Supervised Results
 
 Several points:
@@ -63,9 +118,10 @@ For EQ models:
 
 
 * Supervised full DAG TODO
-** universal model
-- [ ] test on d=10-40
-- [ ] train on 13, 17, etc
+** DONE universal model
+CLOSED: [2020-05-11 Mon 09:52]
+- [X] test on d=10-40
+- [X] train on 13, 17, etc
 - [ ] train on 25, 30, 35, 40, in smaller amount of steps
 
 
