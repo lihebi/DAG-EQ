@@ -106,6 +106,9 @@ Pkg.pin(PackageSpec(name="Flux", version="0.9"))
 Pkg.add("Tracker")
 Pkg.add("Distributions")
 
+Pkg.add("HDF5")
+Pkg.build("HDF5")
+
 Pkg.Registry.update()
 
 Pkg.instantiate()

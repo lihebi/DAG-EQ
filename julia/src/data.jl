@@ -107,6 +107,14 @@ function next_batch!(ds::CuDataSetIterator)
     return ds.gpu_x[ds.index-1], ds.gpu_y[ds.index-1]
 end
 
+
+function next_batch!(dses::Array{T, N}
+                     where T<:Union{DataSetIterator, CuDataSetIterator}
+                     where N,
+                     step)
+    next_batch!(dses[step % length(dses) + 1])
+end
+
 """
 1. shuffle and divide *all* data into batches
 2. move *all* data to GPU

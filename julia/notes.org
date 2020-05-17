@@ -12,6 +12,28 @@
 - GraN-DAG https://github.com/kurowasan/GraN-DAG
 - meta-transfer: https://github.com/ec6dde01667145e58de60f864e05a4/CausalOptimizationAnon
 
+* TODO NeurIPS 2020
+
+** DONE generate data beforehand
+CLOSED: [2020-05-17 Sun 20:53]
+- [X] graph size d
+- [X] weight matrix range
+  - weights range [0.5, 1.5*k] for k=1/3, 1/2, 1, 2, 3, ..., ?
+- [X] graph type: ER, SF
+- [X] noise model: Gaussian, TODO
+
+*** TODO the experiment code
+
+** implement approaches to compare
+
+- [ ] pairwise supervised model cite:2015-ICML-Lopez-Paz-Towards
+- [ ] PC, FCI
+- [ ] FGS
+- [ ] Notears: cite:2018-NIPS-Zheng-Dags
+- [ ] DAG-GNN
+- [ ] RL-BIC: (CAUSAL DISCOVERY WITH REINFORCEMENT LEARNING, ICLR 2020)
+- [ ] GraN-DAG: (GRADIENT-BASED NEURAL DAG LEARNING, ICLR 2020)
+
 * [Paper] improve existing experiment
 
 ** real data experiment
