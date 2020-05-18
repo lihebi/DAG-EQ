@@ -208,7 +208,7 @@ function gen_data2(W, noise, n)
 end
 
 # TODO more variables
-function gen_sup_data(g, spec)
+function gen_sup_data_internal(g, spec)
     d = nv(g)
     ds = map(1:spec.N) do i
         # DEBUG different weights
@@ -218,6 +218,7 @@ function gen_sup_data(g, spec)
         W = gen_weights(g, ()->((rand() * (0.5+spec.k) + 0.5) * rand([1,-1])))
         # W = gen_weights(g, ()->((rand() * 1.5 + 0.5)))
 
+        # FIXME the number of data points generated
         X = gen_data2(W, spec.noise, 1000)
         # cor(X), W
         # DEBUG one-hot encoding
@@ -244,10 +245,10 @@ function mycat(aoa)
     reshape(arr, size(arr)[1:end-2]..., :)
 end
 
-function gen_sup_data_with_graph(spec, gs)
+function gen_sup_data_with_graphs(spec, gs)
     # train data
     ds = @showprogress 0.1 "Generating.." map(gs) do g
-        x, y = gen_sup_data(g, spec)
+        x, y = gen_sup_data_internal(g, spec)
     end
     input = map(ds) do x x[1] end
     output = map(ds) do x x[2] end
@@ -263,6 +264,26 @@ function gen_sup_data_with_graph(spec, gs)
     # https://github.com/JuliaDiffEq/RecursiveArrayTools.jl
 end
 
+function gen_raw_data_with_graphs(spec, gs)
+    ds = @showprogress 0.1 "Generating raw XY .." map(gs) do g
+        d = nv(g)
+        W = gen_weights(g, ()->((rand() * (0.5+spec.k) + 0.5) * rand([1,-1])))
+        X = gen_data2(W, spec.noise, 1000)
+        W[W .> 0] .= 1
+        W[W .< 0] .= 1
+        X, W
+    end
+    input = map(ds) do x x[1] end
+    output = map(ds) do x x[2] end
+    @show typeof(input)
+    @show size(input)
+    # mycat(input), mycat(output)
+    # input, output
+    # FIXME mycat is not robust enough for this
+    cat(input..., dims=3), cat(output..., dims=3)
+end
+
+
 # catch the datasets to avoid generation
 function gen_sup_data(spec)
     # generate graphs first
@@ -275,11 +296,14 @@ function gen_sup_data(spec)
 
     # TODO use different graphs for ds and test
     @info "generating training ds .."
-    train_x, train_y = gen_sup_data_with_graph(spec, train_gs)
+    train_x, train_y = gen_sup_data_with_graphs(spec, train_gs)
     @info  "generating testing ds .."
-    test_x, test_y = gen_sup_data_with_graph(spec, test_gs)
+    test_x, test_y = gen_sup_data_with_graphs(spec, test_gs)
 
-    train_x, train_y, test_x, test_y
+    # generate raw data for use with other methods
+    raw_x, raw_y = gen_raw_data_with_graphs(spec, test_gs)
+
+    train_x, train_y, test_x, test_y, raw_x, raw_y
 end
 
 struct DataSpec
@@ -310,22 +334,31 @@ end
 
 function test()
     dataspec_to_id(DataSpec(d=10, k=1, gtype=:SF, noise=:Gaussian))
+    x,y,x2,y2,x3,y3 = gen_sup_data(DataSpec(d=11, k=1, ng=100, gtype=:SF, noise=:Gaussian))
+    size(x)
+    typeof(x)
+    size(x3)
+    typeof(x3)
 end
 
 """create data into file
 """
 function create_sup_data(spec)
+    # create "data/" folder is not already there
+    if !isdir("data") mkdir("data") end
     fname = "data/" * dataspec_to_id(spec) * ".hdf5"
     if ispath(fname)
         @info "Data already exist: $fname"
         return
     end
-    train_x, train_y, test_x, test_y = gen_sup_data(spec)
+    train_x, train_y, test_x, test_y, raw_x, raw_y = gen_sup_data(spec)
     h5open(fname, "w") do file
         write(file, "train_x", train_x)
         write(file, "train_y", train_y)
         write(file, "test_x", test_x)
         write(file, "test_y", test_y)
+        write(file, "raw_x", raw_x)
+        write(file, "raw_y", raw_y)
     end
     @info "Saved to $fname"
 end
@@ -339,6 +372,14 @@ function load_sup_ds(spec, batch_size)
     test_y = h5read(fname, "test_y")
     return (DataSetIterator(train_x, train_y, batch_size),
             DataSetIterator(test_x, test_y, batch_size))
+end
+
+# DEBUG
+function load_sup_raw(spec)
+    fname = "data/" * dataspec_to_id(spec) * ".hdf5"
+    raw_x = h5read(fname, "raw_x")
+    raw_y = h5read(fname, "raw_y")
+    raw_x, raw_y
 end
 
 

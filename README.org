@@ -1,2 +1,3 @@
-#+TITLE: Interventional loss
+#+TITLE: Supervised Full DAG Causal Discovery
 
+This is the implementation of our paper [[https://example.com][Supervised Full DAG Causal Discovery]]. 

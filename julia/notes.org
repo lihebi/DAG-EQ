@@ -13,6 +13,26 @@
 - meta-transfer: https://github.com/ec6dde01667145e58de60f864e05a4/CausalOptimizationAnon
 
 * TODO NeurIPS 2020
+** Real data
+*** cite:2005-Science-Sachs-Causal Causal protein-signaling networks derived from multiparameter single-cell data
+Sachs 2005 dataset
+
+- http://www.sciencemag.org/content/suppl/2005/04/21/308.5721.523.DC1/Sachs.SOM.Datasets.zip
+  - (HEBI: why there are so many csv files?)
+- looks like there's also interventional data:
+  https://github.com/snarles/causal/blob/master/bnlearn_files/sachs.discretised.txt
+
+*** bnlearn data
+- https://www.bnlearn.com/bnrepository/gaussian-medium.html#ecoli70
+- https://www.bnlearn.com/bnrepository/#alarm
+
+Most of these are discrete. My approach should work on discrete too, maybe a different featurization.
+
+*** tuebingen pairs
+
+- https://www.ccd.pitt.edu/wiki/index.php/Data_Repository
+- http://webdav.tuebingen.mpg.de/cause-effect/
+
 
 ** DONE generate data beforehand
 CLOSED: [2020-05-17 Sun 20:53]
@@ -22,10 +42,14 @@ CLOSED: [2020-05-17 Sun 20:53]
 - [X] graph type: ER, SF
 - [X] noise model: Gaussian, TODO
 
-*** TODO the experiment code
+*** DONE the experiment code
+CLOSED: [2020-05-17 Sun 23:04]
 *** TODO the result parsing code
+*** STARTED restore previous results
+*** STARTED performance and GPU utilization
+Probably test previous correlation matrix approach
 
-** implement approaches to compare
+** STARTED implement approaches to compare
 
 - [ ] pairwise supervised model cite:2015-ICML-Lopez-Paz-Towards
 - [ ] PC, FCI
@@ -34,6 +58,77 @@ CLOSED: [2020-05-17 Sun 20:53]
 - [ ] DAG-GNN
 - [ ] RL-BIC: (CAUSAL DISCOVERY WITH REINFORCEMENT LEARNING, ICLR 2020)
 - [ ] GraN-DAG: (GRADIENT-BASED NEURAL DAG LEARNING, ICLR 2020)
+*** DONE [#A] cite:2099-Manual-XXX-pcalg R package pcalg
+CLOSED: [2019-12-02 Mon 13:23]
+https://cran.r-project.org/web/packages/pcalg/index.html
+
+#+begin_example
+svn checkout svn://svn.r-forge.r-project.org/svnroot/pcalg/
+#+end_example
+So
+- PC
+- FCI
+- RFCI
+- GIES
+
+**** cite:2014-Manual-Markus-More More Causal Inference with Graphical Models in R Package pcalg
+Discovery:
+- pc(): constraint based
+- fci(): generalization of PC, for allowing latent variables
+- skeleton(): a subroutine
+
+More discovery:
+- rfci(): much faster than FCI
+- ges(): score-based
+- gies(): a generalization of GES to interventional data
+- simy(): simy is a dynamic programming approach, same interface as gies, which
+  means interventional data. The cost is exponential, but computes exact optimum
+  of BIC score
+
+- PC and GES assumes no hidden variables
+- FCI and RFCI can allow hidden variables
+- GIES: assume no hidden variables. (HEBI: Jointly observational and
+  interventional data).
+*** DONE R package bnlearn
+CLOSED: [2019-12-02 Mon 15:18]
+http://www.bnlearn.com/, by Marco Scutari, looks like an independent hacker.
+
+There is a mirror: https://github.com/cran/bnlearn
+
+Code quality is less than pcalg.
+
+*** DONE [#A] Causal Discovery Toolbox: Uncover causal relationships in Python
+CLOSED: [2019-12-02 Mon 13:26]
+Package for causal inference in graphs and in the pairwise settings.
+https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox
+
+Most of the discovery algorithms call various of R libraries, pcalg, bnlearn,
+CAM. There are also some pairwise algorithms, e.g. NCC, where the original
+authors write a NN from scratch, and the code consistency is questionable.
+
+This is a good reference, but I'm not using it either.
+
+It contains clean implementations of many recent NN approaches.
+*** DONE [#A] CausalInference.jl
+CLOSED: [2019-12-02 Mon 17:22]
+based on =pcalg=
+https://github.com/mschauer/CausalInference.jl
+
+Discovery:
+- PC
+- FCI
+
+But pretty clean. Would use as starting point.
+*** DONE (2019) cite:2019-ICML-Yu-Dag DAG-GNN: DAG structure learning with graph neural networks
+CLOSED: [2019-12-05 Thu 18:14]
+DAG-GNN https://github.com/fishmoon1234/DAG-GNN, good quality
+*** DONE cite:2020-ICLRSubmit-Author1237-Gradient Gradient-based neural dag learning
+CLOSED: [2019-12-05 Thu 18:14]
+GraN-DAG https://github.com/kurowasan/GraN-DAG
+*** DONE [#A] cite:2018-NIPS-Zheng-Dags DAGs with NO TEARS: Continuous optimization for structure learning
+CLOSED: [2019-12-04 Wed 10:20]
+NOTEARS https://github.com/xunzheng/notears
+
 
 * [Paper] improve existing experiment
 

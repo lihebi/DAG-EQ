@@ -19,8 +19,13 @@ function test_size()
 end
 
 function test()
-    create_sup_data(DataSpec(d=10, k=1, gtype=:SF, noise=:Gaussian))
-    load_sup_ds(DataSpec(d=10, k=1, gtype=:SF, noise=:Gaussian), 100)
+    spec = DataSpec(d=11, k=1, gtype=:SF, noise=:Gaussian)
+    create_sup_data(spec)
+    load_sup_ds(spec, 100)
+    # load the raw data part
+    x, y = load_sup_raw(spec)
+    size(x)
+    size(y)
 end
 
 function main_gen_data()
@@ -31,8 +36,7 @@ function main_gen_data()
     # TODO create data with different W range
     # TODO create graphs of different types
     for d in [10,15,20]
-        # TODO [1,2,4]
-        for k in [1]
+        for k in [1,2,4]
             for gtype in [:ER, :SF]
                 for noise in [:Gaussian, :Poisson]
                     create_sup_data(DataSpec(d=d, k=k, gtype=gtype, noise=noise))
@@ -59,7 +63,7 @@ end
 function main_test_EQ()
     # TODO test on different types of data
     exp_test("deep-EQ",
-             ()->spec_ds_fn(DataSpec(d=20, k=1, gtype=:ER, noise=:Gaussian)))
+             ()->spec_ds_fn(DataSpec(d=25, k=1, gtype=:ER, noise=:Gaussian)))
     exp_test("deep-EQ",
              ()->spec_ds_fn(DataSpec(d=15, k=1, gtype=:SF, noise=:Poisson)))
 end
@@ -75,14 +79,28 @@ function main_train_FC()
 end
 
 function main_test_FC()
+    # FIXME FC performance seems to be really poor, maybe add some regularizations
     for d in [10, 15, 20]
-        exp_test("deep-FC-$d",
+        exp_test("deep-FC-d=$d",
                  ()->spec_ds_fn(DataSpec(d=d, k=1, gtype=:SF, noise=:Poisson)))
     end
 end
+
+function main_train_EQ_SF()
+    # I'll be training just one EQ model on SF graph with d=10,15,20
+    specs = map([10, 15, 20]) do d
+        # Train on :SF
+        DataSpec(d=d, k=1, gtype=:SF, noise=:Gaussian)
+    end
+    exp_train(()->mixed_ds_fn(specs),
+              deep_eq_model_fn,
+              expID="deep-EQ-SF", train_steps=3e4)
+end
+
 
 main_gen_data()
 main_train_EQ()
 main_test_EQ()
 main_train_FC()
 main_test_FC()
+main_train_EQ_SF()

@@ -117,6 +117,10 @@ end
 function exp_test(expID, ds_fn)
     model_dir = joinpath("saved_models", expID)
     model, _ = load_most_recent(model_dir)
+    if isnothing(model)
+        error("Cannot load model in $model_dir")
+    end
+
     model = gpu(model)
     ds, test_ds = ds_fn()
 
