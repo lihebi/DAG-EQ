@@ -228,7 +228,13 @@ function gen_sup_data_internal(g, spec)
         # direction
         W[W .> 0] .= 1
         W[W .< 0] .= 1
-        cor(X), W
+        if spec.mat == :COR
+            cor(X), W
+        elseif spec.mat == :COV
+            cov(X), W
+        else
+            error("Unsupported matrix type")
+        end
     end
     input = map(ds) do x x[1] end
     output = map(ds) do x x[2] end
@@ -316,19 +322,24 @@ struct DataSpec
     # noise: :Gaussian :Poisson
     noise
 
+    # :COV or :COR
+    mat
+
     ng
     N
 end
 
-function DataSpec(;d, k, gtype, noise, ng=10000, N=10)
-    DataSpec(d, k, gtype, noise, ng, N)
+function DataSpec(;d, k, gtype, noise, mat=:COR, ng=10000, N=10)
+    # FIXME maybe check error here
+    DataSpec(d, k, gtype, noise, mat, ng, N)
 end
 
 function dataspec_to_id(spec)
     join(["d=$(spec.d)",
           "k=$(spec.k)",
           "gtype=$(spec.gtype)",
-          "noise=$(spec.noise)"],
+          "noise=$(spec.noise)",
+          "mat=$(spec.mat)"],
          "_")
 end
 

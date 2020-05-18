@@ -44,6 +44,28 @@ function main_gen_data()
             end
         end
     end
+    # genereta really large graphs
+    for d in [30,50,80]
+        for k in [1]
+            for gtype in [:SF]
+                for noise in [:Gaussian]
+                    create_sup_data(DataSpec(d=d, k=k, gtype=gtype, noise=noise))
+                end
+            end
+        end
+    end
+    # generate covariate matrix
+    for d in [10,15,20]
+        for k in [1]
+            for gtype in [:ER, :SF]
+                for noise in [:Gaussian]
+                    create_sup_data(DataSpec(d=d, k=k,
+                                             gtype=gtype, noise=noise,
+                                             mat=:COV))
+                end
+            end
+        end
+    end
 end
 
 function main_train_EQ()
