@@ -2,7 +2,7 @@
 include("config.jl")
 
 using Statistics
-using Dates: now
+using Dates
 
 include("data_graph.jl")
 include("model.jl")
@@ -14,6 +14,8 @@ include("train.jl")
 
 using Profile
 using BenchmarkTools: @btime
+import CSV
+using DataFrames
 
 function load_most_recent(model_dir)
     if !isdir(model_dir) return nothing, 1 end
@@ -33,25 +35,25 @@ function load_most_recent(model_dir)
     return model, max_step
 end
 
-function spec_ds_fn(spec)
+function spec2ds(spec::DataSpec; batch_size=100)
     create_sup_data(spec)
-    ds, test_ds = load_sup_ds(spec, 100)
+    ds, test_ds = load_sup_ds(spec, batch_size)
     ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
     return ds, test_ds
 end
 
-function mixed_ds_fn(specs)
+function spec2ds(specs::Array{DataSpec, N} where N; batch_size=100)
     for spec in specs
         create_sup_data(spec)
     end
     dses = map(specs) do spec
-        ds, test_ds = load_sup_ds(spec, 100)
+        ds, test_ds = load_sup_ds(spec, batch_size)
         ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
     end
     return [ds[1] for ds in dses], [ds[2] for ds in dses]
 end
 
-function exp_train(ds_fn, model_fn;
+function exp_train(spec, model_fn;
                    expID,
                    train_steps=1e5, test_throttle=10)
     train_steps=Int(train_steps)
@@ -74,7 +76,7 @@ function exp_train(ds_fn, model_fn;
         return
     end
 
-    ds, test_ds = ds_fn()
+    ds, test_ds = spec2ds(spec)
     x, y = next_batch!(test_ds) |> gpu
 
     @info "warming up model with x .."
@@ -87,8 +89,10 @@ function exp_train(ds_fn, model_fn;
 
     # when continual training, new files are created
     # CAUTION there will be some overlapping
-    logger = TBLogger("tensorboard_logs/train-$expID", tb_append, min_level=Logging.Info)
-    test_logger = TBLogger("tensorboard_logs/test-$expID", tb_append, min_level=Logging.Info)
+    logger = TBLogger("tensorboard_logs/train-$expID",
+                      tb_append, min_level=Logging.Info)
+    test_logger = TBLogger("tensorboard_logs/test-$expID",
+                           tb_append, min_level=Logging.Info)
 
     print_cb = create_print_cb(logger=logger)
     test_cb = create_test_cb(model, test_ds, "test_ds", logger=test_logger)
@@ -102,7 +106,10 @@ function exp_train(ds_fn, model_fn;
                # test throttle = 10
                test_cb=Flux.throttle(test_cb, test_throttle),
                # save every 60 seconds TODO use a ultra large number
-               # I'll save all the model during training, if that's too large, I'll consider:
+               #
+               # I'll save all the model during training, if that's too large,
+               # I'll consider:
+               #
                # 1. delete old ones, i.e. rotating
                # 2. use a larger interval
                save_cb=Flux.throttle(save_cb, 60),
@@ -114,17 +121,89 @@ function exp_train(ds_fn, model_fn;
     save_cb(train_steps)
 end
 
-function exp_test(expID, ds_fn)
-    model_dir = joinpath("saved_models", expID)
-    model, _ = load_most_recent(model_dir)
-    if isnothing(model)
-        error("Cannot load model in $model_dir")
+
+# this should be a map, from (expID, testID) to values
+# - expID is the model name, manually specified
+# - testID is the DataSpec's string representation
+# Also, I should save it as a text file, and support external editing
+# I should also record the time of the test
+#
+# so, better just use a csv file
+#
+# expID, testID, date, prec, recall, shd
+_results = nothing
+function load_results!()
+    global _results
+    if isfile("result.csv")
+        df = CSV.read("result.csv")
+        df.date
+        _results = Dict((df.expID .=> df.testID)
+                        .=>
+                        zip(df.prec, df.recall, df.shd, df.date))
+    else
+        _results = Dict()
+    end
+end
+
+# However, although the date is string, it is saved without quotes. Then, the
+# read CSV.read() is too smart to that it converts that into DateTime. However,
+# it cannot convert DateTime to string when it saves it.
+Base.convert(String, date::DateTime) = "$date"
+
+function result2csv(res, fname)
+    df = DataFrame(expID=String[], testID=String[],
+                   prec=Float64[], recall=Float64[],
+                   shd=Float64[], date=String[])
+    for (key,value) in res
+        push!(df, (key[1], key[2], value[1], value[2], value[3], value[4]))
+    end
+    # save df
+    CSV.write(fname, df)
+end
+
+function save_results!()
+    global _results
+    result2csv(_results, "result.csv")
+end
+
+function test()
+    result = Dict(("hello"=>"world")=>(0.2, 0.3, 3),
+                  ("1"=>"2")=>(0.2, 0.3, 3))'
+    result2csv(result, "result.csv")
+end
+
+
+function exp_test(expID, spec)
+    global _results
+    if isnothing(_results)
+        load_results!()
     end
 
-    model = gpu(model)
-    ds, test_ds = ds_fn()
+    testID = dataspec_to_id(spec)
 
-    sup_test(model, test_ds)
+    if !haskey(_results, expID=>testID)
+        model_dir = joinpath("saved_models", expID)
+        model, _ = load_most_recent(model_dir)
+        if isnothing(model)
+            error("Cannot load model in $model_dir")
+        end
+
+        model = gpu(model)
+        # FIXME smaller batch size to avoid out-of-mem error (for d=80)
+        ds, test_ds = spec2ds(spec, batch_size=32)
+
+        # DEBUG not using all data for testing
+        metrics = sup_test(model, test_ds, nbatch=16)
+
+        # add this to result
+        _results[expID=>testID] = (metrics.prec, metrics.recall,
+                                   metrics.shd,
+                                   now())
+
+        # finally, save the results
+        @info "Saving results .."
+        save_results!()
+    end
 end
 
 
@@ -143,3 +222,4 @@ function test_profile()
     # import ProfileView
     # ProfileView.view()
 end
+

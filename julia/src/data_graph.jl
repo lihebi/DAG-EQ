@@ -281,8 +281,6 @@ function gen_raw_data_with_graphs(spec, gs)
     end
     input = map(ds) do x x[1] end
     output = map(ds) do x x[2] end
-    @show typeof(input)
-    @show size(input)
     # mycat(input), mycat(output)
     # input, output
     # FIXME mycat is not robust enough for this
@@ -376,6 +374,7 @@ end
 
 function load_sup_ds(spec, batch_size)
     fname = "data/" * dataspec_to_id(spec) * ".hdf5"
+    isfile(fname) || error("File not exists: $fname")
     # load into dataSET
     train_x = h5read(fname, "train_x")
     train_y = h5read(fname, "train_y")

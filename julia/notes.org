@@ -42,12 +42,19 @@ CLOSED: [2020-05-17 Sun 20:53]
 - [X] graph type: ER, SF
 - [X] noise model: Gaussian, TODO
 
+*** STARTED the result parsing code
+SCHEDULED: <2020-05-19 Tue>
+*** STARTED restore previous results
+SCHEDULED: <2020-05-19 Tue>
+Probably test previous correlation matrix approach
+*** TODO add CNN as baseline
+SCHEDULED: <2020-05-19 Tue>
+And add baseline of random guessing
+
 *** DONE the experiment code
 CLOSED: [2020-05-17 Sun 23:04]
-*** TODO the result parsing code
-*** STARTED restore previous results
-*** STARTED performance and GPU utilization
-Probably test previous correlation matrix approach
+*** CANCELED performance and GPU utilization
+CLOSED: [2020-05-18 Mon 23:10]
 
 ** STARTED implement approaches to compare
 
@@ -58,6 +65,7 @@ Probably test previous correlation matrix approach
 - [ ] DAG-GNN
 - [ ] RL-BIC: (CAUSAL DISCOVERY WITH REINFORCEMENT LEARNING, ICLR 2020)
 - [ ] GraN-DAG: (GRADIENT-BASED NEURAL DAG LEARNING, ICLR 2020)
+
 *** DONE [#A] cite:2099-Manual-XXX-pcalg R package pcalg
 CLOSED: [2019-12-02 Mon 13:23]
 https://cran.r-project.org/web/packages/pcalg/index.html

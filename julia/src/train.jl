@@ -105,12 +105,12 @@ end
 
 """This function is used purely for evaluation
 """
-function sup_test(model, test_ds)
+function sup_test(model, test_ds; nbatch=test_ds.nbatch)
     gm = MeanMetric{GraphMetric}()
     loss_metric = MeanMetric{Float64}()
 
     # FIXME testmode!
-    @showprogress 0.1 "Inner testing..." for i in 1:test_ds.nbatch
+    @showprogress 0.1 "Inner testing..." for i in 1:nbatch
         x, y = next_batch!(test_ds) |> gpu
         out = model(x)
         loss = myσxent(out, y)

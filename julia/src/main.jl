@@ -35,7 +35,7 @@ function main_gen_data()
 
     # TODO create data with different W range
     # TODO create graphs of different types
-    for d in [10,15,20]
+    for d in [10,15,20,30]
         for k in [1,2,4]
             for gtype in [:ER, :SF]
                 for noise in [:Gaussian, :Poisson]
@@ -44,17 +44,20 @@ function main_gen_data()
             end
         end
     end
-    # genereta really large graphs
-    for d in [30,50,80]
+
+    @info "Generating really large graphs .."
+    # only for testing
+    for d in [50,80]
         for k in [1]
             for gtype in [:SF]
                 for noise in [:Gaussian]
-                    create_sup_data(DataSpec(d=d, k=k, gtype=gtype, noise=noise))
+                    create_sup_data(DataSpec(d=d, k=k, gtype=gtype, noise=noise, ng=1000, N=1))
                 end
             end
         end
     end
-    # generate covariate matrix
+
+    @info "Generating covariate matrix inputs .."
     for d in [10,15,20]
         for k in [1]
             for gtype in [:ER, :SF]
@@ -69,47 +72,100 @@ function main_gen_data()
 end
 
 function main_train_EQ()
-    # I'll be training just one EQ model on SF graph with d=10,15,20
-    specs = map([10, 15, 20]) do d
-        DataSpec(d=d, k=1, gtype=:ER, noise=:Gaussian)
+    function train_ER()
+        # I'll be training just one EQ model on SF graph with d=10,15,20
+        specs = map([10, 15, 20]) do d
+            DataSpec(d=d, k=1, gtype=:ER, noise=:Gaussian)
+        end
+        exp_train(specs, deep_eq_model_fn,
+                  expID="deep-EQ", train_steps=3e4)
     end
-    exp_train(()->mixed_ds_fn(specs),
-              deep_eq_model_fn,
-              expID="deep-EQ", train_steps=3e4)
+    train_ER()
     # TODO train on individual graph size, instead of mixed
-    # TODO train on SF and test on ER
+
+    # train on SF and test on ER
+    function train_SF()
+        specs = map([10, 15, 20]) do d
+            # Train on :SF
+            DataSpec(d=d, k=1, gtype=:SF, noise=:Gaussian)
+        end
+        exp_train(specs, deep_eq_model_fn,
+                  expID="deep-EQ-SF", train_steps=3e4)
+    end
+    train_SF()
+
     # TODO mixed training of different noise models
+
+    # train on COV data
+    function train_ER_COV()
+        # I'll be training just one EQ model on SF graph with d=10,15,20
+        specs = map([10, 15, 20]) do d
+            DataSpec(d=d, k=1, gtype=:ER, noise=:Gaussian, mat=:COV)
+        end
+        exp_train(specs, deep_eq_model_fn,
+                  expID="deep-EQ-COV", train_steps=3e4)
+    end
+    train_ER_COV()
 end
 
 
 function main_test_EQ()
     # TODO test on different types of data
-    exp_test("deep-EQ",
-             ()->spec_ds_fn(DataSpec(d=25, k=1, gtype=:ER, noise=:Gaussian)))
-    exp_test("deep-EQ",
-             ()->spec_ds_fn(DataSpec(d=15, k=1, gtype=:SF, noise=:Poisson)))
+    for expID in ["deep-EQ", "deep-EQ-SF"]
+        # get specs
+        for d in [10,15,20,30]
+            for gtype in [:ER, :SF]
+                for k in [1,2,4]
+                    @info "Testing" expID d gtype k
+                    spec = DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian)
+                    exp_test(expID, spec)
+                end
+            end
+        end
+        # really large graphs have lower ng and N
+        for d in [50, 80]
+            @info "Testing" expID d
+            spec = DataSpec(d=d, k=1,
+                            gtype=:SF,
+                            noise=:Gaussian,
+                            ng=1000, N=1)
+            exp_test(expID, spec)
+        end
+    end
+
+    # COV data and models must be run separately
+    @info "Testing deep-EQ-COV .."
+    spec = DataSpec(d=20, k=1, gtype=:ER, noise=:Gaussian, mat=:COV)
+    exp_test("deep-EQ-COV", spec)
 end
 
 function main_train_FC()
-    # train for d = 10
     for d in [10, 15, 20]
         spec = DataSpec(d=d, k=1, gtype=:ER, noise=:Gaussian)
-        exp_train(()->spec_ds_fn(spec),
+        exp_train(spec,
                   ()->deep_fc_model_fn(d),
                   expID="deep-FC-d=$d", train_steps=1e5)
     end
 end
 
+
 function main_test_FC()
     # FIXME FC performance seems to be really poor, maybe add some regularizations
     for d in [10, 15, 20]
+        @info "Testing FC with d=$d .."
         exp_test("deep-FC-d=$d",
-                 ()->spec_ds_fn(DataSpec(d=d, k=1, gtype=:SF, noise=:Poisson)))
+                 DataSpec(d=d, k=1, gtype=:SF, noise=:Poisson))
     end
 end
 
-function main_train_EQ_SF()
-    # I'll be training just one EQ model on SF graph with d=10,15,20
+function test()
+    # DEBUG
+    exp_train(DataSpec(d=10, k=1, gtype=:ER, noise=:Gaussian),
+              cnn_model,
+              # eq_model,
+              expID="CNN-$(now())", train_steps=3e4)
+end
+
     specs = map([10, 15, 20]) do d
         # Train on :SF
         DataSpec(d=d, k=1, gtype=:SF, noise=:Gaussian)
@@ -125,4 +181,3 @@ main_train_EQ()
 main_test_EQ()
 main_train_FC()
 main_test_FC()
-main_train_EQ_SF()
