@@ -122,6 +122,8 @@ function sup_test(model, test_ds; nbatch=test_ds.nbatch)
     g_v = get!(gm)
     loss_v = get!(loss_metric)
     @info "data" g_v loss_v
+    # return the metrics
+    g_v
 end
 
 function create_test_cb(model, test_ds, msg; logger=nothing)

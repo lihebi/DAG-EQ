@@ -109,6 +109,8 @@ Pkg.add("Distributions")
 Pkg.add("HDF5")
 Pkg.build("HDF5")
 
+Pkg.add("PackageCompiler")
+
 Pkg.Registry.update()
 
 Pkg.instantiate()
