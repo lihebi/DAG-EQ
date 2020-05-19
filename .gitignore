@@ -15,3 +15,4 @@ training_checkpoints
 events.out.tfevents.*
 
 *.bson
+*.so
