@@ -19,29 +19,27 @@ function test_size()
 end
 
 function main_train_EQ()
-    function train_ER()
+    # seperate training
+    # TODO testing code for these settings
+    # CAUTION this will be super slow. That's 10hour * 6
+    for d in [10,15,20]
+        for gtype in [:ER, :SF]
+            exp_train(DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian),
+                      deep_eq_model_fn,
+                      expID="deep-EQ-$gtype-d=$d", train_steps=3e4)
+        end
+    end
+
+    # ensemble training
+    for gtype in [:ER, :SF]
         # I'll be training just one EQ model on SF graph with d=10,15,20
         specs = map([10, 15, 20]) do d
-            DataSpec(d=d, k=1, gtype=:ER, noise=:Gaussian)
+            # TODO mixed training of different noise models
+            DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian)
         end
         exp_train(specs, deep_eq_model_fn,
-                  expID="deep-EQ-ER", train_steps=3e4)
+                  expID="deep-EQ-$gtype", train_steps=3e4)
     end
-    train_ER()
-    # TODO train on individual graph size, instead of mixed
-
-    # train on SF and test on ER
-    function train_SF()
-        specs = map([10, 15, 20]) do d
-            # Train on :SF
-            DataSpec(d=d, k=1, gtype=:SF, noise=:Gaussian)
-        end
-        exp_train(specs, deep_eq_model_fn,
-                  expID="deep-EQ-SF", train_steps=3e4)
-    end
-    train_SF()
-
-    # TODO mixed training of different noise models
 
     # train on COV data
     function train_ER_COV()
@@ -57,7 +55,7 @@ end
 
 
 function main_test_EQ()
-    # TODO test on different types of data
+    # test on different types of data
     for expID in ["deep-EQ-ER", "deep-EQ-SF"]
         # get specs
         for d in [10,15,20,30]
@@ -78,6 +76,25 @@ function main_test_EQ()
                                 noise=:Gaussian,
                                 ng=1000, N=1)
                 exp_test(expID, spec)
+            end
+        end
+    end
+
+    # testing seperate models
+    for d in [10, 15, 20]
+        for gtype in [:ER, :SF]
+            expID = "deep-EQ-$gtype-d=$d"
+            # testing config
+            for k in [1, 2, 4]
+                # This loop is for testing gtype
+                # CAUTION I'm using the same variable name
+                for gtype in [:ER, :SF]
+                    @info "Testing" expID d k gtype
+                    exp_test(expID,
+                             DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
+                    exp_test(expID,
+                             DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
+                end
             end
         end
     end
@@ -142,6 +159,7 @@ function test()
               expID="CNN-$(now())", train_steps=3e4)
 end
 
+# FIXME use 8, 16, 32 in other models to keep consistent with CNN models?
 function main_train_CNN()
     # first, train separate models
     for d in [8,16,32]

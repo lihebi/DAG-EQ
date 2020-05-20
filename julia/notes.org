@@ -13,6 +13,9 @@
 - meta-transfer: https://github.com/ec6dde01667145e58de60f864e05a4/CausalOptimizationAnon
 
 * TODO NeurIPS 2020
+** Misc
+*** TODO And add baseline of random guessing
+
 ** Real data
 *** cite:2005-Science-Sachs-Causal Causal protein-signaling networks derived from multiparameter single-cell data
 Sachs 2005 dataset
@@ -34,20 +37,6 @@ Most of these are discrete. My approach should work on discrete too, maybe a dif
 - http://webdav.tuebingen.mpg.de/cause-effect/
 
 ** Tmp
-*** DONE add CNN as baseline
-CLOSED: [2020-05-20 Wed 12:13] SCHEDULED: <2020-05-19 Tue>
-**** TODO And add baseline of random guessing
-
-Probably two kinds of CNNs:
-- CNN with auto-encoder style bottleneck
-- CNN without any bottleneck, with same padding in all layers
-
-*** STARTED transfer or not-transfer
-- I should do one set of experiment for non-transfer, i.e. one model for a grpah
-  size d.
-- I should later do another experiment, specifically testing transferability and
-  ensemble training. This should include both CNN and Eq models
-
 ** STARTED implement approaches to compare
 
 - [ ] pairwise supervised model cite:2015-ICML-Lopez-Paz-Towards
@@ -781,3 +770,18 @@ Probably test previous correlation matrix approach
 CLOSED: [2020-05-17 Sun 23:04]
 *** CANCELED performance and GPU utilization
 CLOSED: [2020-05-18 Mon 23:10]
+
+*** DONE add CNN as baseline
+CLOSED: [2020-05-20 Wed 12:13] SCHEDULED: <2020-05-19 Tue>
+
+Probably two kinds of CNNs:
+- CNN with auto-encoder style bottleneck
+- CNN without any bottleneck, with same padding in all layers
+
+*** DONE transfer or not-transfer
+CLOSED: [2020-05-20 Wed 12:46]
+- I should do one set of experiment for non-transfer, i.e. one model for a grpah
+  size d.
+- I should later do another experiment, specifically testing transferability and
+  ensemble training. This should include both CNN and Eq models
+
