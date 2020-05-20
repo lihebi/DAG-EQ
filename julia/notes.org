@@ -15,6 +15,10 @@
 * TODO NeurIPS 2020
 ** Misc
 *** TODO And add baseline of random guessing
+*** TODO more variations
+- ER, SF, and others?
+- Gaussian, Poisson, and others?
+- non-linear mechanism?
 
 ** Real data
 *** cite:2005-Science-Sachs-Causal Causal protein-signaling networks derived from multiparameter single-cell data

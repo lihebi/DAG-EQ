@@ -60,9 +60,12 @@ function spec2ds(specs::Array{DataSpec, N} where N; batch_size=100)
 end
 
 function exp_train(spec, model_fn;
-                   expID,
+                   prefix,
                    train_steps=1e5, test_throttle=10)
     train_steps=Int(train_steps)
+
+    # setting expID
+    expID = "$prefix-$(dataspec_to_id(spec))"
 
     model_dir = joinpath("saved_models", expID)
 
@@ -73,13 +76,15 @@ function exp_train(spec, model_fn;
         # FIXME it does not seem to be smooth at the resume point
         model = most_recent_model |> gpu
     else
+        @info "DEBUG model does not exist: $expID, existing .."
+        error("DEBUG")
         model = model_fn() |> gpu
         from_step = 1
     end
 
     if from_step >= train_steps
         @info "already trained"
-        return
+        return expID
     end
 
     ds, test_ds = spec2ds(spec)
@@ -125,6 +130,8 @@ function exp_train(spec, model_fn;
     # final save and test
     test_cb(train_steps)
     save_cb(train_steps)
+
+    return expID
 end
 
 
@@ -234,7 +241,7 @@ function exp_test(expID, spec)
         # FIXME smaller batch size to avoid out-of-mem error (for d=80)
         ds, test_ds = spec2ds(spec, batch_size=32)
 
-        # DEBUG not using all data for testing
+        # DEBUG TODO not using all data for testing
         metrics = sup_test(model, test_ds, nbatch=16)
 
         # add this to result

@@ -228,6 +228,8 @@ function gen_sup_data_internal(g, spec)
         # direction
         W[W .> 0] .= 1
         W[W .< 0] .= 1
+        # FIXME I should record both COR and COV
+        # or, maybe I should just record W. g can be recovered from W, and 
         if spec.mat == :COR
             cor(X), W
         elseif spec.mat == :COV
@@ -332,13 +334,20 @@ function DataSpec(;d, k, gtype, noise, mat=:COR, ng=10000, N=10)
     DataSpec(d, k, gtype, noise, mat, ng, N)
 end
 
-function dataspec_to_id(spec)
+function dataspec_to_id(spec::DataSpec)
     join(["d=$(spec.d)",
           "k=$(spec.k)",
           "gtype=$(spec.gtype)",
           "noise=$(spec.noise)",
           "mat=$(spec.mat)"],
          "_")
+end
+
+function dataspec_to_id(specs::Array{DataSpec, N} where N)
+    # "[" * join(dataspec_to_id.(specs), "+") * "]"
+
+    # FIXME however, for ensemble model, I actually just want a single model
+    "ensemble"
 end
 
 function test()
