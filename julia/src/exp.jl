@@ -1,5 +1,6 @@
 # I must always load config first
 include("config.jl")
+include("utils.jl")
 
 using Statistics
 using Dates
@@ -35,6 +36,11 @@ function load_most_recent(model_dir)
     return model, max_step
 end
 
+
+"""These functions takes care of data creation. It is fine as long as the data
+is created only once, before first use.
+
+"""
 function spec2ds(spec::DataSpec; batch_size=100)
     create_sup_data(spec)
     ds, test_ds = load_sup_ds(spec, batch_size)
@@ -143,6 +149,42 @@ function load_results!()
     else
         _results = Dict()
     end
+end
+
+# DEBUG
+function pretty_print_result()
+    global _results
+
+    load_results!()
+
+    df = DataFrame(model=String[], d=Int[], k=Int[],
+                   gtype=String[], noise=String[], mat=String[],
+                   prec=Float64[], recall=Float64[], shd=Float64[])
+    for item in _results
+        m = match(r"d=(\d+)_k=(\d+)_gtype=(.*)_noise=(.*)_mat=(.*)", item[1][2])
+        # m = match(r"d=(\d+)_k=(\d+)_gtype=(.*)_noise=(.*)_mat=(.*)",
+        #           "d=15_k=2_gtype=ER_noise=Gaussian_mat=COR")
+        model = item[1][1]
+        d = parse(Int, m.captures[1])
+        k = parse(Int, m.captures[2])
+        gtype, noise, mat = m.captures[3:end]
+        prec, recall, shd = round3.(item[2][1:end-1])
+        push!(df, (model, d, k, gtype, noise, mat, prec*100, recall*100, shd))
+    end
+
+    df
+    df[df.model .== "deep-EQ", :]
+    describe(df)
+    unique(df.model)
+    sort(df[df.model .== "deep-EQ-ER", :], [:model, :gtype, :d, :k])
+    sort(df[df.model .== "deep-EQ-SF", :], [:model, :gtype, :d, :k])
+    sort(df[df.model .== "deep-EQ-ER-COV", :], [:model, :gtype, :d, :k])
+    sort(df[df.model .== "deep-FC-ER-d=10", :], [:model, :gtype, :d, :k])
+    sort(df[df.model .== "deep-FC-ER-d=15", :], [:model, :gtype, :d, :k])
+    sort(df[df.model .== "deep-FC-ER-d=20", :], [:model, :gtype, :d, :k])
+    sort(df[df.model .== "deep-FC-SF-d=10", :], [:model, :gtype, :d, :k])
+    sort(df[df.model .== "deep-FC-SF-d=15", :], [:model, :gtype, :d, :k])
+    sort(df[df.model .== "deep-FC-SF-d=20", :], [:model, :gtype, :d, :k])
 end
 
 # However, although the date is string, it is saved without quotes. Then, the

@@ -42,14 +42,21 @@ CLOSED: [2020-05-17 Sun 20:53]
 - [X] graph type: ER, SF
 - [X] noise model: Gaussian, TODO
 
-*** STARTED the result parsing code
-SCHEDULED: <2020-05-19 Tue>
-*** STARTED restore previous results
-SCHEDULED: <2020-05-19 Tue>
-Probably test previous correlation matrix approach
-*** TODO add CNN as baseline
+*** STARTED add CNN as baseline
 SCHEDULED: <2020-05-19 Tue>
 And add baseline of random guessing
+
+Probably two kinds of CNNs:
+- CNN with auto-encoder style bottleneck
+- CNN without any bottleneck, with same padding in all layers
+
+*** DONE the result parsing code
+CLOSED: [2020-05-19 Tue 17:25] SCHEDULED: <2020-05-19 Tue>
+*** DONE restore previous results
+CLOSED: [2020-05-19 Tue 17:25] SCHEDULED: <2020-05-19 Tue>
+Probably test previous correlation matrix approach
+
+- [X] why FC models are so bad now? previously it is also bad
 
 *** DONE the experiment code
 CLOSED: [2020-05-17 Sun 23:04]
