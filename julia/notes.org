@@ -33,35 +33,20 @@ Most of these are discrete. My approach should work on discrete too, maybe a dif
 - https://www.ccd.pitt.edu/wiki/index.php/Data_Repository
 - http://webdav.tuebingen.mpg.de/cause-effect/
 
-
-** DONE generate data beforehand
-CLOSED: [2020-05-17 Sun 20:53]
-- [X] graph size d
-- [X] weight matrix range
-  - weights range [0.5, 1.5*k] for k=1/3, 1/2, 1, 2, 3, ..., ?
-- [X] graph type: ER, SF
-- [X] noise model: Gaussian, TODO
-
-*** STARTED add CNN as baseline
-SCHEDULED: <2020-05-19 Tue>
-And add baseline of random guessing
+** Tmp
+*** DONE add CNN as baseline
+CLOSED: [2020-05-20 Wed 12:13] SCHEDULED: <2020-05-19 Tue>
+**** TODO And add baseline of random guessing
 
 Probably two kinds of CNNs:
 - CNN with auto-encoder style bottleneck
 - CNN without any bottleneck, with same padding in all layers
 
-*** DONE the result parsing code
-CLOSED: [2020-05-19 Tue 17:25] SCHEDULED: <2020-05-19 Tue>
-*** DONE restore previous results
-CLOSED: [2020-05-19 Tue 17:25] SCHEDULED: <2020-05-19 Tue>
-Probably test previous correlation matrix approach
-
-- [X] why FC models are so bad now? previously it is also bad
-
-*** DONE the experiment code
-CLOSED: [2020-05-17 Sun 23:04]
-*** CANCELED performance and GPU utilization
-CLOSED: [2020-05-18 Mon 23:10]
+*** STARTED transfer or not-transfer
+- I should do one set of experiment for non-transfer, i.e. one model for a grpah
+  size d.
+- I should later do another experiment, specifically testing transferability and
+  ensemble training. This should include both CNN and Eq models
 
 ** STARTED implement approaches to compare
 
@@ -774,3 +759,25 @@ CLOSED: [2020-03-12 四 23:29]
     - # parameters
 - plot AUC for different threshold
 - plot training process
+
+** DONE generate data beforehand, various of configs
+CLOSED: [2020-05-17 Sun 20:53]
+- [X] graph size d
+- [X] weight matrix range
+  - weights range [0.5, 1.5*k] for k=1/3, 1/2, 1, 2, 3, ..., ?
+- [X] graph type: ER, SF
+- [X] noise model: Gaussian, TODO
+
+
+*** DONE the result parsing code
+CLOSED: [2020-05-19 Tue 17:25] SCHEDULED: <2020-05-19 Tue>
+*** DONE restore previous results
+CLOSED: [2020-05-19 Tue 17:25] SCHEDULED: <2020-05-19 Tue>
+Probably test previous correlation matrix approach
+
+- [X] why FC models are so bad now? previously it is also bad
+
+*** DONE the experiment code
+CLOSED: [2020-05-17 Sun 23:04]
+*** CANCELED performance and GPU utilization
+CLOSED: [2020-05-18 Mon 23:10]

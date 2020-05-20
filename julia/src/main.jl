@@ -142,17 +142,44 @@ function test()
               expID="CNN-$(now())", train_steps=3e4)
 end
 
-    specs = map([10, 15, 20]) do d
-        # Train on :SF
-        DataSpec(d=d, k=1, gtype=:SF, noise=:Gaussian)
+function main_train_CNN()
+    # first, train separate models
+    for d in [8,16,32]
+        exp_train(DataSpec(d=d, k=1, gtype=:ER, noise=:Gaussian),
+                  bottleneck_cnn_model,
+                  expID="bottle-CNN-d=$d", train_steps=1e5)
+        exp_train(DataSpec(d=d, k=1, gtype=:ER, noise=:Gaussian),
+                  flat_cnn_model,
+                  expID="flat-CNN-d=$d", train_steps=1e5)
     end
-    exp_train(()->mixed_ds_fn(specs),
-              deep_eq_model_fn,
-              expID="deep-EQ-SF", train_steps=3e4)
+    # mix training
+    specs = map([8,16,32]) do d
+        DataSpec(d=d, k=1, gtype=:ER, noise=:Gaussian)
+    end
+    exp_train(specs,
+              bottle_cnn_model,
+              expID="bottle-CNN", train_steps=1e5)
+    exp_train(specs,
+              flat_cnn_model,
+              expID="flat-CNN", train_steps=1e5)
 end
 
+function main_test_CNN()
+    for d in [8,16,32]
+        for gtype in [:ER, :SF]
+            exp_test("bottle-CNN-d=$d",
+                     DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian))
+            exp_test("flat-CNN-d=$d",
+                     DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian))
+        end
+    end
+end
 
 main_train_EQ()
 main_test_EQ()
+
 main_train_FC()
 main_test_FC()
+
+main_train_CNN()
+# main_test_CNN()

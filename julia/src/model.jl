@@ -212,6 +212,59 @@ function eq_model(; z=300, reg=false, nlayer=3)
         DimDrop())
 end
 
+# TODO try a ResNet?
+# FIXME filter and channel sizes
+function bottleneck_cnn_model()
+    # since our input is the same as output, we might just use an auto-encoder
+    encoder = Chain(Conv((3,3), 1=>64, relu, pad=(1,1), stride=2),
+                    BatchNorm(64),
+                    Conv((3,3), 64=>32, relu, pad=(1,1), stride=2),
+                    BatchNorm(32),
+                    Conv((3,3), 32=>16, relu, pad=(1,1), stride=2),
+                    BatchNorm(16))
+    decoder = Chain(
+        # FIXME I don't need Conv between ConvTs, do I?
+        # Conv((3,3), 16=>16, pad=(1,1), relu),
+        ConvTranspose((2,2), 16=>16, relu, stride=2, pad=0),
+        BatchNorm(16),
+        # Conv((3,3), 16=>32, pad=(1,1), relu),
+        ConvTranspose((2,2), 16=>32, relu, stride=2, pad=0),
+        BatchNorm(32),
+        # Conv((3,3), 32=>64, pad=(1,1), relu),
+        ConvTranspose((2,2), 32=>64, relu, stride=2, pad=0),
+        BatchNorm(64),
+        # CAUTION no relu in the last one
+        Conv((1,1), 64=>1, pad=0))
+    Chain(DimAdd(), encoder, decoder, DimDrop())
+end
+
+function flat_cnn_model()
+    Chain(DimAdd(),
+          Conv((3,3), 1=>32, relu, pad=(1,1)),
+          BatchNorm(32),
+          # FIXME channel size
+          # FIXME number of layers
+          # FIXME normalization
+          Conv((3,3), 32=>32, relu, pad=(1,1)),
+          BatchNorm(32),
+          Conv((3,3), 32=>32, relu, pad=(1,1)),
+          BatchNorm(32),
+          Conv((3,3), 32=>32, relu, pad=(1,1)),
+          BatchNorm(32),
+          Conv((3,3), 32=>32, relu, pad=(1,1)),
+          BatchNorm(32),
+          # CAUTION no relu in the last layer
+          Conv((3,3), 32=>1, pad=(1,1)),
+          DimDrop())
+end
+
+function test()
+    size(cnn_model()(randn(32,32,100)))
+    size(cnn_model()(randn(16,16,100)))
+    size(cnn_model()(randn(8,8,100)))
+    size(cnn_model()(randn(9,9,100)))
+end
+
 fc_model_fn(d) = fc_model(d=d, z=1024, nlayer=3)
 fc_dropout_model_fn(d) = fc_model(d=d, z=1024, reg=true, nlayer=3)
 
