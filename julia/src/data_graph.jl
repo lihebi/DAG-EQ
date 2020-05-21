@@ -34,7 +34,11 @@ import Base.display
 using Distributions
 
 using HDF5
+using Match
+using RecursiveArrayTools
 
+
+using BSON: @save, @load
 
 include("display.jl")
 include("data.jl")
@@ -156,15 +160,6 @@ function gen_weights(dag, zfunc=()->1)
     # 2. attach edges
     # FIXME to ensure pureness, copy dag
     for e in edges(dag)
-        # DEBUG trying different weights
-        #
-        # z = randn()
-        # MOTE using uniform in [-2,-0.5] and [0.5, 2], better performance, make sense because it is easier
-        # z = (rand() * 1.5 + 0.5) * rand([1,-1])
-        # z = (rand() + 0.5) * rand([1,-1])
-        # z = (rand() + 0.5)
-        # z = 1 * rand([1,-1])
-        # z = 0.5
         set_prop!(dag, e, :weight, zfunc())
     end
     W = dag_W(dag)
@@ -174,8 +169,6 @@ function gen_weights(dag, zfunc=()->1)
     W
 end
 
-poisson_d = nothing
-
 function gen_data2(W, noise, n)
     d = size(W, 1)
     X = zeros(n, d)
@@ -184,15 +177,15 @@ function gen_data2(W, noise, n)
     if noise == :Gaussian
         noise_fn = randn
     elseif noise == :Poisson
-        global poisson_d
-        if isnothing(poisson_d)
-            # DEBUG this should only be called once
-            @info "generating poisson distribution"
-            # FIXME but this does not seem to make it faster
-            # FIXME fixed hyper-parameter \lambda
-            poisson_d = Poisson(1)
-        end
-        noise_fn = n->rand(poisson_d,n)
+        # FIXME fixed hyper-parameter \lambda
+        d = Poisson(1)
+        noise_fn = n->rand(d, n)
+    elseif noise == :Exp
+        d = Exponential(1)
+        noise_fn = n->rand(d, n)
+    elseif noise == :Gumbel
+        d = Gumbel(0, 1)
+        noise_fn = n->rand(d, n)
     else
         error("Noise model $noise not supported.")
     end
@@ -207,6 +200,62 @@ function gen_data2(W, noise, n)
     X
 end
 
+function gen_MLP(g, noise, n)
+    adj = adjacency_matrix(g)
+    d = size(adj, 1)
+    # CAUTION MLP requires channel last
+    X = zeros(d, n)
+
+    dist = @match noise begin
+        :Gaussian => Normal(0,1)
+        # FIXME fixed hyper-parameter \lambda
+        :Poisson => Poisson(1)
+        :Exp => Exponential(1)
+        :Gumbel => Gumbel(0, 1)
+        _ => error("Noise model $noise not supported.")
+    end
+    noise_fn = n->rand(dist, n)
+
+    # topological sort
+    # for vertices in order
+    # 1. get causal order
+    for v in topological_sort_by_dfs(g)
+        # 2. for causal order nodes
+        #    2.1 get parents
+        parents = inneighbors(g, v)
+        if length(parents) == 0
+            X[v, :] = noise_fn(n)
+        else
+            # 2.2 construct a random Dense Layer, with sigmoid activation. The
+            # weights should be in some range, say [0.5,2], and TODO this might
+            # be configurable by the spec.k as well
+            mlp = Chain(Dense(length(parents), 10, σ,
+                              # FIXME maybe this default is better
+                              initW = Flux.glorot_uniform),
+                        Dense(10, 1),
+                        x->dropdims(x, dims=1))
+            # 3.3 get result by applying the MLP
+            X[v, :] = mlp(X[parents, :]) .+ noise_fn(n)
+        end
+    end
+    # CAUTION and this is transposed to the final result
+    X'
+end
+
+function test()
+    # construct a G
+    g = gen_ER_dag(13)
+    # from g to binary adj matrix
+    adj = adjacency_matrix(g)
+    # genereate linear X
+    W = gen_weights(g, ()->((rand() * 1.5 + 0.5) * rand([1,-1])))
+    # generate linear X
+    X = gen_data2(W, :Gaussian, 1000)
+    # generate quadratic X
+    size(gen_MLP(g, :Gaussian, 100))
+end
+
+
 # TODO more variables
 function gen_sup_data_internal(g, spec)
     d = nv(g)
@@ -215,27 +264,32 @@ function gen_sup_data_internal(g, spec)
         # W = gen_weights(g)
         # W = gen_weights(g, ()->((rand() + 0.5) * rand([1,-1])))
         # W = gen_weights(g, ()->((rand() * 1.5 + 0.5) * rand([1,-1])))
-        W = gen_weights(g, ()->((rand() * (0.5+spec.k) + 0.5) * rand([1,-1])))
+        # W = gen_weights(g, ()->((rand() * (0.5+spec.k) + 0.5) * rand([1,-1])))
         # W = gen_weights(g, ()->((rand() * 1.5 + 0.5)))
 
-        # FIXME the number of data points generated
-        X = gen_data2(W, spec.noise, 1000)
+        X = @match spec.mechanism begin
+            :Linear => begin
+                W = gen_weights(g, ()->((rand() * (0.5+spec.k) + 0.5) * rand([1,-1])))
+                # FIXME the number of data points generated
+                gen_data2(W, spec.noise, 1000)
+            end
+            :MLP =>
+                # FIXME performance
+                gen_MLP(g, spec.noise, 1000)
+            _ => error("Unsupported mechanism.")
+        end
+
         # cor(X), W
         # DEBUG one-hot encoding
         # cor(X), Flux.onehotbatch(W_bin, [0,1])
 
-        # FIXME I'm just recording whether this is causal, not the linear
-        # direction
-        W[W .> 0] .= 1
-        W[W .< 0] .= 1
         # FIXME I should record both COR and COV
-        # or, maybe I should just record W. g can be recovered from W, and 
-        if spec.mat == :COR
-            cor(X), W
-        elseif spec.mat == :COV
-            cov(X), W
-        else
-            error("Unsupported matrix type")
+        # or, maybe I should just record W. g can be recovered from W, and
+        @match spec.mat begin
+            # DEBUG using adjacency_matrix(g) instead of W
+            :COR => (cor(X), adjacency_matrix(g))
+            :COV => (cov(X), adjacency_matrix(g))
+            _ => error("Unsupported matrix type")
         end
     end
     input = map(ds) do x x[1] end
@@ -289,29 +343,6 @@ function gen_raw_data_with_graphs(spec, gs)
     cat(input..., dims=3), cat(output..., dims=3)
 end
 
-
-# catch the datasets to avoid generation
-function gen_sup_data(spec)
-    # generate graphs first
-    graphs = gen_graphs_hard(spec)
-
-    # ratio
-    index = convert(Int, round(length(graphs) * 4 / 5))
-    train_gs = graphs[1:index]
-    test_gs = graphs[index:end]
-
-    # TODO use different graphs for ds and test
-    @info "generating training ds .."
-    train_x, train_y = gen_sup_data_with_graphs(spec, train_gs)
-    @info  "generating testing ds .."
-    test_x, test_y = gen_sup_data_with_graphs(spec, test_gs)
-
-    # generate raw data for use with other methods
-    raw_x, raw_y = gen_raw_data_with_graphs(spec, test_gs)
-
-    train_x, train_y, test_x, test_y, raw_x, raw_y
-end
-
 struct DataSpec
     d
     # weight range: [0.5, 0.5+k]
@@ -324,23 +355,49 @@ struct DataSpec
 
     # :COV or :COR
     mat
+    # :Linear, :GP, :Quad, :MLP
+    mechanism
 
     ng
     N
 end
 
-function DataSpec(;d, k, gtype, noise, mat=:COR, ng=10000, N=10)
+# FIXME previous 10000, 10
+function DataSpec(;d, k, gtype, noise, mat=:COR, mechanism=:Linear, ng=3000, N=3)
     # FIXME maybe check error here
-    DataSpec(d, k, gtype, noise, mat, ng, N)
+    #
+    # UPDATE set ng and N based on d
+    if d <= 20
+        ng = 3000
+        N = 3
+    elseif d <= 40
+        ng = 2000
+        N = 2
+    else
+        # FIXME this might be too small. But should be more than enough if we
+        # just use it as testing data
+        ng = 1000
+        N = 1
+    end
+    DataSpec(d, k, gtype, noise, mat, mechanism, ng, N)
 end
 
 function dataspec_to_id(spec::DataSpec)
-    join(["d=$(spec.d)",
-          "k=$(spec.k)",
-          "gtype=$(spec.gtype)",
-          "noise=$(spec.noise)",
-          "mat=$(spec.mat)"],
-         "_")
+    a = join(["d=$(spec.d)",
+              "k=$(spec.k)",
+              "gtype=$(spec.gtype)",
+              "noise=$(spec.noise)",
+              "mat=$(spec.mat)",
+              ],
+             "_")
+    # FIMXE the naming of existing data must change
+    b = @match spec.mechanism begin
+        :Linear => ""
+        :MLP => "_mec=$(spec.mechanism)"
+        _ => error("Unsupported mechanism.")
+    end
+    # cannot put that @match inside join because that would create extra _
+    a * b
 end
 
 function dataspec_to_id(specs::Array{DataSpec, N} where N)
@@ -351,65 +408,131 @@ function dataspec_to_id(specs::Array{DataSpec, N} where N)
 end
 
 function test()
-    dataspec_to_id(DataSpec(d=10, k=1, gtype=:SF, noise=:Gaussian))
-    x,y,x2,y2,x3,y3 = gen_sup_data(DataSpec(d=11, k=1, ng=100, gtype=:SF, noise=:Gaussian))
-    size(x)
-    typeof(x)
-    size(x3)
-    typeof(x3)
+    # this will always connect to the last dimension
+    convert(Array, VectorOfArray([randn(10,5,3), randn(10,5,3)]))
 end
 
-"""create data into file
-"""
-function create_sup_data(spec)
+function gs2hdf5mat(graphs)
+    # from array of graphs to matrix suitable for saving as hdf5
+    mats = Matrix.(adjacency_matrix.(graphs))
+    # this seems to be slow
+    @info "concating .."
+    # onemat = cat(mats..., dims=3)
+    onemat = convert(Array, VectorOfArray(mats))
+    @info "done"
+    onemat
+end
+
+function hdf5mat2gs(onemat)
+    # and transfer back
+    MetaDiGraph.([onemat[:,:,i] for i in 1:size(onemat, 3)])
+end
+
+function test()
+    graphs = gen_graphs_hard(DataSpec(d=10, k=1, gtype=:ER,
+                                      noise=:Gaussian))[1:11]
+    recs = hdf5mat2gs(gs2hdf5mat(graphs))
+    for (g,r) in zip(graphs, recs)
+        g == r || error("Error")
+    end
+end
+
+function tmp_convert_bson_hdf5()
+    # loop through all the g.bson, and generate a g.hdf5
+    # walk through the file system
+    for dir in readdir("data")
+        fname = joinpath("data", dir, "g.bson")
+        fnew = joinpath(dirname(fname), "g.hdf5")
+        if isfile(fname) && !isfile(fnew)
+            @info "converting $fname to $fnew"
+            @load fname train_gs test_gs
+            h5open(fnew, "w") do file
+                write(file, "train_gs", gs2hdf5mat(train_gs))
+                write(file, "test_gs", gs2hdf5mat(test_gs))
+            end
+        end
+    end
+end
+
+function load_sup_ds(spec, batch_size=100)
     # create "data/" folder is not already there
     if !isdir("data") mkdir("data") end
-    fname = "data/" * dataspec_to_id(spec) * ".hdf5"
-    if ispath(fname)
-        @info "Data already exist: $fname"
-        return
-    end
-    train_x, train_y, test_x, test_y, raw_x, raw_y = gen_sup_data(spec)
-    h5open(fname, "w") do file
-        write(file, "train_x", train_x)
-        write(file, "train_y", train_y)
-        write(file, "test_x", test_x)
-        write(file, "test_y", test_y)
-        write(file, "raw_x", raw_x)
-        write(file, "raw_y", raw_y)
-    end
-    @info "Saved to $fname"
-end
+    # 1. generate graph
+    gdir = "data/$(spec.gtype)-$(spec.d)"
+    if !isdir(gdir) mkdir(gdir) end
+    gfile = "$gdir/g.hdf5"
+    if isfile(gfile)
+        # DEBUG loading
+        train_gs = hdf5mat2gs(h5read(gfile, "train_gs"))
+        test_gs = hdf5mat2gs(h5read(gfile, "test_gs"))
+    else
+        @info "Generating graphs for " spec
+        # generate graphs first
+        graphs = gen_graphs_hard(spec)
 
-function load_sup_ds(spec, batch_size)
-    fname = "data/" * dataspec_to_id(spec) * ".hdf5"
-    isfile(fname) || error("File not exists: $fname")
-    # load into dataSET
-    train_x = h5read(fname, "train_x")
-    train_y = h5read(fname, "train_y")
-    test_x = h5read(fname, "test_x")
-    test_y = h5read(fname, "test_y")
+        # ratio
+        index = convert(Int, round(length(graphs) * 4 / 5))
+        train_gs = graphs[1:index]
+        test_gs = graphs[index:end]
+        # DEBUG writing
+        h5open(gfile, "w") do file
+            write(file, "train_gs", gs2hdf5mat(train_gs))
+            write(file, "test_gs", gs2hdf5mat(test_gs))
+        end
+    end
+
+    fname = "$gdir/$(dataspec_to_id(spec)).hdf5"
+    if ispath(fname)
+        train_x = h5read(fname, "train_x")
+        train_y = h5read(fname, "train_y")
+        test_x = h5read(fname, "test_x")
+        test_y = h5read(fname, "test_y")
+    else
+        # generate according to train_gs and test_gs
+        # TODO use different graphs for ds and test
+        @info "generating training ds .."
+        train_x, train_y = gen_sup_data_with_graphs(spec, train_gs)
+        @info  "generating testing ds .."
+        test_x, test_y = gen_sup_data_with_graphs(spec, test_gs)
+
+        # generate raw data for use with other methods
+        raw_x, raw_y = gen_raw_data_with_graphs(spec, test_gs)
+
+        h5open(fname, "w") do file
+            write(file, "train_x", train_x)
+            write(file, "train_y", train_y)
+            write(file, "test_x", test_x)
+            write(file, "test_y", test_y)
+            write(file, "raw_x", raw_x)
+            write(file, "raw_y", raw_y)
+        end
+        @info "Saved to $fname"
+    end
+    # returning
     return (DataSetIterator(train_x, train_y, batch_size),
             DataSetIterator(test_x, test_y, batch_size))
 end
 
 # DEBUG
 function load_sup_raw(spec)
+    error("DEPRECATED")
     fname = "data/" * dataspec_to_id(spec) * ".hdf5"
     raw_x = h5read(fname, "raw_x")
     raw_y = h5read(fname, "raw_y")
     raw_x, raw_y
 end
 
-
 function gen_graphs(spec)
     # generate n
-    if spec.gtype == :ER
-        f = gen_ER_dag
-    elseif spec.gtype == :SF
-        f = gen_SF_dag
-    else
-        error("Not supported graph type.")
+    f = @match spec.gtype begin
+        :ER => gen_ER_dag
+        :SF => gen_SF_dag
+        :ER2 => (d)->gen_ER_dag(2*d)
+        :ER4 => (d)->gen_ER_dag(4*d)
+        :SF2 => (d)->gen_SF_dag(2*d)
+        :SF4 => (d)->gen_SF_dag(4*d)
+        :Bern => error("Not implemented")
+        _ => error("Not supported graph type.")
     end
     all_graphs = map(1:spec.ng) do i
         f(spec.d)

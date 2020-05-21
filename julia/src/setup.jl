@@ -2,9 +2,12 @@ using Pkg
 
 Pkg.build(verbose=true)
 
+Pkg.add("GaussianProcess")
 Pkg.add("Distributions")
 Pkg.add("Arpack")
 Pkg.add("CausalInference")
+Pkg.add("Match")
+Pkg.add("RecursiveArrayTools")
 
 # for LightGraphs
 Pkg.add("FileIO")

@@ -42,16 +42,12 @@ is created only once, before first use.
 
 """
 function spec2ds(spec::DataSpec; batch_size=100)
-    create_sup_data(spec)
     ds, test_ds = load_sup_ds(spec, batch_size)
     ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
     return ds, test_ds
 end
 
 function spec2ds(specs::Array{DataSpec, N} where N; batch_size=100)
-    for spec in specs
-        create_sup_data(spec)
-    end
     dses = map(specs) do spec
         ds, test_ds = load_sup_ds(spec, batch_size)
         ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
@@ -76,8 +72,6 @@ function exp_train(spec, model_fn;
         # FIXME it does not seem to be smooth at the resume point
         model = most_recent_model |> gpu
     else
-        @info "DEBUG model does not exist: $expID, existing .."
-        error("DEBUG")
         model = model_fn() |> gpu
         from_step = 1
     end

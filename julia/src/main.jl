@@ -23,21 +23,27 @@ function main_EQ_sep()
     # TODO testing code for these settings
     # CAUTION this will be super slow. That's 10hour * 6
     for d in [10,15,20]
-        for gtype in [:ER, :SF]
-            # UPDATE the expID is set to modelID-dataID
-            expID = exp_train(DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian),
-                              deep_eq_model_fn,
-                              prefix="deep-EQ", train_steps=3e4)
-            # testing config
-            for k in [1, 2, 4]
-                # This loop is for testing gtype
-                # CAUTION I'm using the same variable name
-                for gtype in [:ER, :SF]
-                    @info "Testing" expID d k gtype
-                    exp_test(expID,
-                             DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
-                    exp_test(expID,
-                             DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
+        for gtype in [:ER, :ER2, :ER4, :SF, :SF2, :SF4]
+            for mec in [:Linear, :MLP]
+                # UPDATE the expID is set to modelID-dataID
+                expID = exp_train(DataSpec(d=d, k=1,
+                                           gtype=gtype,
+                                           noise=:Gaussian,
+                                           mechanism=mec),
+                                  deep_eq_model_fn,
+                                  prefix="deep-EQ",
+                                  train_steps=1.5e4)
+                # testing config
+                for k in [1,2,4]
+                    # This loop is for testing gtype
+                    # CAUTION I'm using the same variable name
+                    for gtype in [:ER, :SF]
+                        @info "Testing" expID d k gtype
+                        exp_test(expID,
+                                 DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
+                        exp_test(expID,
+                                 DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
+                    end
                 end
             end
         end
@@ -83,7 +89,7 @@ end
 
 function main_EQ_cov()
     # TODO OVERNIGHT add :SF
-    for gtype in [:ER]
+    for gtype in [:ER, :SF]
         # train on COV data
         # I'll be training just one EQ model on SF graph with d=10,15,20
         specs = map([10, 15, 20]) do d
@@ -106,18 +112,22 @@ function main_FC()
     # FIXME FC performance seems to be really poor, maybe add some regularizations
     # using COV
     for d in [10, 15, 20]
-        for gtype in [:ER, :SF]
-            expID = exp_train(DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian),
-                              ()->deep_fc_model_fn(d),
-                              prefix="deep-FC", train_steps=1e5)
-            # testing ..
-            for k in [1, 2, 4]
-                for gtype in [:ER, :SF]
-                    @info "Testing" d k gtype
-                    exp_test(expID,
-                             DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
-                    exp_test(expID,
-                             DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
+        for gtype in [:ER, :ER2, :ER4, :SF, :SF2, :SF4]
+            for mec in [:Linear, :MLP]
+                expID = exp_train(DataSpec(d=d, k=1,
+                                           gtype=gtype, noise=:Gaussian,
+                                           mechanism=mec),
+                                  ()->deep_fc_model_fn(d),
+                                  prefix="deep-FC", train_steps=1e5)
+                # testing ..
+                for k in [1, 2, 4]
+                    for gtype in [:ER, :SF]
+                        @info "Testing" d k gtype
+                        exp_test(expID,
+                                 DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
+                        exp_test(expID,
+                                 DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
+                    end
                 end
             end
         end
@@ -140,20 +150,25 @@ end
 function main_CNN_sep()
     # FIXME use 8, 16, 32 in other models to keep consistent with CNN models?
     for d in [8,16,32]
-        for gtype in [:ER, :SF]
-            expID1 = exp_train(DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian),
-                              bottleneck_cnn_model,
-                              prefix="bottle-CNN", train_steps=1e5)
+        for gtype in [:ER, :ER2, :ER4, :SF, :SF2, :SF4]
+            for mec in [:Linear, :MLP]
+                expID1 = exp_train(DataSpec(d=d, k=1,
+                                            gtype=gtype,
+                                            noise=:Gaussian,
+                                            mechanism=mec),
+                                   bottleneck_cnn_model,
+                                   prefix="bottle-CNN", train_steps=1e5)
 
-            expID2 = exp_train(DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian),
-                              flat_cnn_model,
-                              prefix="flat-CNN", train_steps=1e5)
+                expID2 = exp_train(DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian),
+                                   flat_cnn_model,
+                                   prefix="flat-CNN", train_steps=1e5)
 
-            for gtype in [:ER, :SF]
-                exp_test(expID1,
-                         DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian))
-                exp_test(expID2,
-                         DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian))
+                for gtype in [:ER, :SF]
+                    exp_test(expID1,
+                             DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian))
+                    exp_test(expID2,
+                             DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian))
+                end
             end
         end
     end
@@ -170,7 +185,7 @@ function main_CNN_ensemble()
                            prefix="bottle-CNN-$gtype", train_steps=1e5)
         expID2 = exp_train(specs,
                            flat_cnn_model,
-                           prefix="flat-CNN-gtype", train_steps=1e5)
+                           prefix="flat-CNN-$gtype", train_steps=1e5)
         # testing
         # FIXME 64 might be too large
         for d in [8,16,32]
@@ -185,17 +200,63 @@ function main_CNN_ensemble()
     end
 end
 
+function test()
+    # generating data
+    for d in [8, 16, 32, 10, 15]
+        for gtype in [:ER, :SF]
+            for mat in [:COR, :COV]
+                for k in [1,2,4]
+                    # TODO :Gumbel
+                    for noise in [:Gaussian, :Exp]
+                        load_sup_ds(DataSpec(d=d, k=k, gtype=gtype,
+                                             noise=noise, mat=mat))
+                    end
+                end
+            end
+        end
+    end
+
+    for d in [10, 15, 20]
+        for gtype in [:ER, :SF]
+            for k in [1]
+                for mec in [:Linear, :MLP]
+                    load_sup_ds(DataSpec(d=d, k=k,
+                                         gtype=gtype,
+                                         noise=:Gaussian,
+                                         mechanism=mec))
+                end
+            end
+        end
+    end
+    for d in [10, 15, 20]
+        for gtype in [:ER, :ER2, :ER4, :SF, :SF2, :SF4]
+            for k in [1]
+                for mec in [:Linear]
+                    load_sup_ds(DataSpec(d=d, k=k,
+                                         gtype=gtype,
+                                         noise=:Gaussian,
+                                         mechanism=mec))
+                end
+            end
+        end
+    end
+end
+
+function test()
+    (DataSpec(10, 1, :ER, :Gaussian, :COR, :Linear, 3000, 3))
+end
+
 function main()
-    # TODO OVERNIGHT
-    # main_EQ_sep()
-    main_EQ_ensemble()
-    main_EQ_cov()
+    main_CNN_sep()
+    main_CNN_ensemble()
 
     main_FC()
     main_FC_cov()
 
-    main_CNN_sep()
-    main_CNN_ensemble()
+    # TODO OVERNIGHT
+    main_EQ_sep()
+    main_EQ_ensemble()
+    main_EQ_cov()
 end
 
 main()

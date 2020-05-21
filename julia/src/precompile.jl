@@ -1,4 +1,5 @@
 using PackageCompiler
+include("config.jl")
 
 # FIXME this probably would compile all functions in these packages? If that's
 # slow, try identify the key functions to compile
@@ -18,3 +19,4 @@ create_sysimage([:CuArrays, :Zygote,
 
 ## to use the image
 # julia --sysimage myimage.so --project main.jl
+restore_default_sysimage()
