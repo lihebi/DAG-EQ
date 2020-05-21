@@ -15,10 +15,7 @@
 * TODO NeurIPS 2020
 ** Misc
 *** TODO And add baseline of random guessing
-*** TODO more variations
-- ER, SF, and others?
-- Gaussian, Poisson, and others?
-- non-linear mechanism?
+*** data efficiency
 
 ** Real data
 *** cite:2005-Science-Sachs-Causal Causal protein-signaling networks derived from multiparameter single-cell data
@@ -40,16 +37,21 @@ Most of these are discrete. My approach should work on discrete too, maybe a dif
 - https://www.ccd.pitt.edu/wiki/index.php/Data_Repository
 - http://webdav.tuebingen.mpg.de/cause-effect/
 
-** Tmp
+** testing code for variations
+- [X] ER2, ER4
+- [ ] Exp, Gumbel
+- [X] MLP
+
 ** STARTED implement approaches to compare
 
 - [ ] pairwise supervised model cite:2015-ICML-Lopez-Paz-Towards
 - [ ] PC, FCI
 - [ ] FGS
+- [ ] CAM?
 - [ ] Notears: cite:2018-NIPS-Zheng-Dags
 - [ ] DAG-GNN
-- [ ] RL-BIC: (CAUSAL DISCOVERY WITH REINFORCEMENT LEARNING, ICLR 2020)
-- [ ] GraN-DAG: (GRADIENT-BASED NEURAL DAG LEARNING, ICLR 2020)
+- [ ] RL-BIC: (Causal Discovery With Reinforcement Learning, ICLR 2020)
+- [ ] GraN-DAG: (Gradient-Based Neural Dag Learning, ICLR 2020)
 
 *** DONE [#A] cite:2099-Manual-XXX-pcalg R package pcalg
 CLOSED: [2019-12-02 Mon 13:23]
@@ -788,4 +790,36 @@ CLOSED: [2020-05-20 Wed 12:46]
   size d.
 - I should later do another experiment, specifically testing transferability and
   ensemble training. This should include both CNN and Eq models
+
+*** DONE more variations
+CLOSED: [2020-05-21 Thu 20:18]
+- [X] ER, SF, and others?
+  - [X] ER-1 ER-2 ER-4: with d, 2d, 4d edges
+  - [X] SF-1 SF-2 SF-4
+  - [-] (CANCELED) graph generation: triangular binary matrix, each generated as
+    Bern(0.5), then permutate the variables
+- [-] Gaussian, Poisson, and others?
+  - [X] Exponential
+  - [X] Gumbel
+  - [-] what is used in LiNGRAM cite:cite:2006-JMLR-Shimizu-Linear Seems to be
+    1. generate Gaussian noise e
+    2. use e^a where a is uniform from the interval [0.5, 0.8] or [1.2, 2.0]
+- [-] non-linear mechanism?
+  - [-] linear and quadratic terms
+  - [-] Gaussian process with RBF kernel
+  - [X] MLP: one hidden layer of size 10 and sigmoid activation
+  - Sobolev basis
+
+Gaussian prcess
+
+#+BEGIN_SRC python
+from sklearn.gaussian_process import GaussianProcessRegressor
+gp = GaussianProcessRegressor()
+X = np.random.randn(10, 3)
+gp.sample_y(np.concatenate((X,X)), random_state=None).flatten()
+gp.sample_y(np.concatenate((X,X)), random_state=None).flatten()
+#+END_SRC
+
+However, there's no random function (=sample_y=) equivalent in Julia
+GaussianProcesses libraries, thus I'm not using it.
 
