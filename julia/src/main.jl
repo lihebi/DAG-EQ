@@ -22,30 +22,30 @@ function main_EQ_sep()
     # seperate training
     # TODO testing code for these settings
     # CAUTION this will be super slow. That's 10hour * 6
-    for d in [10,15,20]
-        for gtype in [:ER, :ER2, :ER4, :SF, :SF2, :SF4]
-            for mec in [:Linear, :MLP]
-                # UPDATE the expID is set to modelID-dataID
-                expID = exp_train(DataSpec(d=d, k=1,
-                                           gtype=gtype,
-                                           noise=:Gaussian,
-                                           mechanism=mec),
-                                  deep_eq_model_fn,
-                                  prefix="deep-EQ",
-                                  train_steps=1.5e4)
-                # testing config
-                for k in [1,2,4]
-                    # This loop is for testing gtype
-                    # CAUTION I'm using the same variable name
-                    for gtype in [:ER, :SF]
-                        @info "Testing" expID d k gtype
-                        exp_test(expID,
-                                 DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
-                        exp_test(expID,
-                                 DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
-                    end
-                end
-            end
+    for d in [10,15,20],
+        # I'm putting SF first because they tends to perform better
+        gtype in [:SF, :SF2, :SF4, :ER, :ER2, :ER4],
+        mec in [:Linear]
+
+        # UPDATE the expID is set to modelID-dataID
+        expID = exp_train(DataSpec(d=d, k=1,
+                                   gtype=gtype,
+                                   noise=:Gaussian,
+                                   mechanism=mec),
+                          deep_eq_model_fn,
+                          prefix="deep-EQ",
+                          train_steps=1.5e4)
+        # testing config
+        for k in [1,2,4],
+            # This loop is for testing gtype
+            # CAUTION I'm using the same variable name
+            gtype in [:ER, :SF]
+
+            @info "Testing" expID d k gtype
+            exp_test(expID,
+                     DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
+            exp_test(expID,
+                     DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
         end
     end
 end
@@ -64,25 +64,24 @@ function main_EQ_ensemble()
                           prefix="deep-EQ-$gtype", train_steps=3e4)
         # Testing
         # get specs
-        for d in [10,15,20,30]
-            for gtype in [:ER, :SF]
-                for k in [1,2,4]
-                    @info "Testing" expID d gtype k
-                    spec = DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian)
-                    exp_test(expID, spec)
-                end
-            end
+        for d in [10,15,20,30],
+            gtype in [:ER, :SF],
+            k in [1,2,4]
+
+            @info "Testing" expID d gtype k
+            spec = DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian)
+            exp_test(expID, spec)
         end
         # really large graphs have lower ng and N
-        for d in [50, 80]
-            for gtype in [:ER, :SF]
-                @info "Testing" expID d gtype
-                spec = DataSpec(d=d, k=1,
-                                gtype=gtype,
-                                noise=:Gaussian,
-                                ng=1000, N=1)
-                exp_test(expID, spec)
-            end
+        for d in [50, 80],
+            gtype in [:ER, :SF]
+
+            @info "Testing" expID d gtype
+            spec = DataSpec(d=d, k=1,
+                            gtype=gtype,
+                            noise=:Gaussian,
+                            ng=1000, N=1)
+            exp_test(expID, spec)
         end
     end
 end
@@ -99,77 +98,87 @@ function main_EQ_cov()
                           prefix="deep-EQ-$gtype-COV", train_steps=3e4)
         # COV data and models must be run separately
         # TODO different k
-        for d in [10, 15, 20, 30]
-            for gtype in [:ER, :SF]
-                exp_test(expID,
-                         DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian, mat=:COV))
-            end
-        end
-    end
-end
+        for d in [10, 15, 20, 30],
+            gtype in [:ER, :SF]
 
-function main_FC()
-    # FIXME FC performance seems to be really poor, maybe add some regularizations
-    # using COV
-    for d in [10, 15, 20]
-        for gtype in [:ER, :ER2, :ER4, :SF, :SF2, :SF4]
-            for mec in [:Linear, :MLP]
-                expID = exp_train(DataSpec(d=d, k=1,
-                                           gtype=gtype, noise=:Gaussian,
-                                           mechanism=mec),
-                                  ()->deep_fc_model_fn(d),
-                                  prefix="deep-FC", train_steps=1e5)
-                # testing ..
-                for k in [1, 2, 4]
-                    for gtype in [:ER, :SF]
-                        @info "Testing" d k gtype
-                        exp_test(expID,
-                                 DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
-                        exp_test(expID,
-                                 DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
-                    end
-                end
-            end
-        end
-    end
-end
-
-function main_FC_cov()
-    for d in [10, 15, 20]
-        for gtype in [:ER, :SF]
-            expID = exp_train(DataSpec(d=d, k=1, gtype=gtype,
-                                       noise=:Gaussian, mat=:COV),
-                              ()->deep_fc_model_fn(d),
-                              prefix="deep-FC", train_steps=1e5)
             exp_test(expID,
                      DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian, mat=:COV))
         end
     end
 end
 
+function test()
+    spec = DataSpec(d=10, k=1, gtype=:ER2, noise=:Gaussian, mechanism=:Linear)
+    ds, test_ds = load_sup_ds(spec)
+    x, y = next_batch!(ds)
+    size(x)
+    size(y)
+end
+
+function main_FC()
+    # FIXME FC performance seems to be really poor, maybe add some regularizations
+    # using COV
+    for d in [10, 15, 20],
+        gtype in [:ER, :ER2, :ER4, :SF, :SF2, :SF4],
+        mec in [:Linear]
+
+        @info "Training " d gtype mec
+        expID = exp_train(DataSpec(d=d, k=1,
+                                   gtype=gtype, noise=:Gaussian,
+                                   mechanism=mec),
+                          ()->deep_fc_model_fn(d),
+                          prefix="deep-FC", train_steps=1e5)
+        # testing ..
+        for k in [1, 2, 4],
+            gtype in [:ER, :SF]
+
+            @info "Testing" d k gtype
+            exp_test(expID,
+                     DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
+            exp_test(expID,
+                     DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian))
+        end
+    end
+end
+
+function main_FC_cov()
+    for d in [10, 15, 20],
+        gtype in [:ER, :SF]
+
+        expID = exp_train(DataSpec(d=d, k=1, gtype=gtype,
+                                   noise=:Gaussian, mat=:COV),
+                          ()->deep_fc_model_fn(d),
+                          prefix="deep-FC", train_steps=5e4)
+        exp_test(expID,
+                 DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian, mat=:COV))
+    end
+end
+
+# TODO the GPU usage is too low for this small CNN
 function main_CNN_sep()
     # FIXME use 8, 16, 32 in other models to keep consistent with CNN models?
-    for d in [8,16,32]
-        for gtype in [:ER, :ER2, :ER4, :SF, :SF2, :SF4]
-            for mec in [:Linear, :MLP]
-                expID1 = exp_train(DataSpec(d=d, k=1,
-                                            gtype=gtype,
-                                            noise=:Gaussian,
-                                            mechanism=mec),
-                                   bottleneck_cnn_model,
-                                   prefix="bottle-CNN", train_steps=1e5)
+    for d in [8,16,32],
+        gtype in [:ER, :ER2, :ER4, :SF, :SF2, :SF4],
+        mec in [:Linear]
 
-                expID2 = exp_train(DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian),
-                                   flat_cnn_model,
-                                   prefix="flat-CNN", train_steps=1e5)
+        spec = DataSpec(d=d, k=1,
+                        gtype=gtype,
+                        noise=:Gaussian,
+                        mechanism=mec)
 
-                for gtype in [:ER, :SF]
-                    exp_test(expID1,
-                             DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian))
-                    exp_test(expID2,
-                             DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian))
-                end
-            end
+        expID1 = exp_train(spec,
+                           bottleneck_cnn_model,
+                           prefix="bottle-CNN", train_steps=3e4)
+
+        expID2 = exp_train(spec,
+                           flat_cnn_model,
+                           prefix="flat-CNN", train_steps=3e4)
+
+        for gtype in [:ER, :SF],
+            expID in [expID1, expID2]
+
+            exp_test(expID,
+                     DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian))
         end
     end
 end
@@ -177,6 +186,7 @@ end
 function main_CNN_ensemble()
     # mix training
     for gtype in [:ER, :SF]
+
         specs = map([8,16,32]) do d
             DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian)
         end
@@ -202,43 +212,37 @@ end
 
 function test()
     # generating data
-    for d in [8, 16, 32, 10, 15]
-        for gtype in [:ER, :SF]
-            for mat in [:COR, :COV]
-                for k in [1,2,4]
-                    # TODO :Gumbel
-                    for noise in [:Gaussian, :Exp]
-                        load_sup_ds(DataSpec(d=d, k=k, gtype=gtype,
-                                             noise=noise, mat=mat))
-                    end
-                end
-            end
-        end
+    for d in [8, 16, 32, 10, 15],
+        gtype in [:ER, :SF],
+        mat in [:COR, :COV],
+        k in [1,2,4],
+        # TODO :Gumbel
+        noise in [:Gaussian, :Exp]
+
+        load_sup_ds(DataSpec(d=d, k=k, gtype=gtype,
+                             noise=noise, mat=mat))
     end
 
-    for d in [10, 15, 20]
-        for gtype in [:ER, :SF]
-            for k in [1]
-                for mec in [:Linear, :MLP]
-                    load_sup_ds(DataSpec(d=d, k=k,
-                                         gtype=gtype,
-                                         noise=:Gaussian,
-                                         mechanism=mec))
-                end
-            end
-        end
+    for d in [10, 15, 20],
+        gtype in [:ER, :SF],
+        k in [1],
+        mec in [:Linear]
+
+        load_sup_ds(DataSpec(d=d, k=k,
+                             gtype=gtype,
+                             noise=:Gaussian,
+                             mechanism=mec))
     end
-    for d in [10, 15, 20]
-        for gtype in [:ER, :ER2, :ER4, :SF, :SF2, :SF4]
-            for k in [1]
-                for mec in [:Linear]
-                    load_sup_ds(DataSpec(d=d, k=k,
-                                         gtype=gtype,
-                                         noise=:Gaussian,
-                                         mechanism=mec))
-                end
-            end
-        end
+
+    for d in [10, 15, 20],
+        gtype in [:ER, :ER2, :ER4, :SF, :SF2, :SF4],
+        k in [1],
+        mec in [:Linear]
+
+        load_sup_ds(DataSpec(d=d, k=k,
+                             gtype=gtype,
+                             noise=:Gaussian,
+                             mechanism=mec))
     end
 end
 
