@@ -16,7 +16,7 @@ include("train.jl")
 using Profile
 using BenchmarkTools: @btime
 import CSV
-using DataFrames
+using DataFrames: DataFrame
 
 function load_most_recent(model_dir)
     if !isdir(model_dir) return nothing, 1 end
