@@ -196,6 +196,15 @@ function gen_data2(W, noise, n)
     X
 end
 
+function my_uniform_init(din, dout)
+    (rand(din, dout) .* 1.5 .+ 0.5) .* rand([1,-1], din, dout)
+end
+
+function test()
+    # maybe this MLP weights are too small
+    Dense(10, 10, initW=my_uniform_init).W
+end
+
 function gen_MLP(g, noise, n)
     adj = adjacency_matrix(g)
     d = size(adj, 1)
@@ -227,7 +236,7 @@ function gen_MLP(g, noise, n)
             # be configurable by the spec.k as well
             mlp = Chain(Dense(length(parents), 10, σ,
                               # FIXME maybe this default is better
-                              initW = Flux.glorot_uniform),
+                              initW = my_uniform_init),
                         Dense(10, 1),
                         x->dropdims(x, dims=1))
             # 3.3 get result by applying the MLP
