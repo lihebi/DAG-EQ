@@ -16,6 +16,13 @@
 ** Misc
 *** TODO And add baseline of random guessing
 *** data efficiency
+*** testing for variations
+- [X] ER2, ER4
+- [ ] Exp, Gumbel
+- [X] MLP
+  - FIXME OK, I probably need to try some other non-linear model, or just
+    non-linear does not work
+
 
 ** Real data
 *** cite:2005-Science-Sachs-Causal Causal protein-signaling networks derived from multiparameter single-cell data
@@ -37,21 +44,38 @@ Most of these are discrete. My approach should work on discrete too, maybe a dif
 - https://www.ccd.pitt.edu/wiki/index.php/Data_Repository
 - http://webdav.tuebingen.mpg.de/cause-effect/
 
-** testing code for variations
-- [X] ER2, ER4
-- [ ] Exp, Gumbel
-- [X] MLP
 
 ** STARTED implement approaches to compare
 
-- [ ] pairwise supervised model cite:2015-ICML-Lopez-Paz-Towards
-- [ ] PC, FCI
-- [ ] FGS
-- [ ] CAM?
-- [ ] Notears: cite:2018-NIPS-Zheng-Dags
-- [ ] DAG-GNN
-- [ ] RL-BIC: (Causal Discovery With Reinforcement Learning, ICLR 2020)
-- [ ] GraN-DAG: (Gradient-Based Neural Dag Learning, ICLR 2020)
+- [X] PC, from pcalg package, also in cdt
+- [X] FGS cite:2017-Journal-Ramsey-Million https://github.com/bd2kccd/py-causal
+  - GES cite:2002-JMLR-Chickering-Learning, from pcalg, also in cdt
+- [ ] LiNGRAM cite:2006-JMLR-Shimizu-Linear, from pcalg, also in cdt
+  - author's page https://sites.google.com/site/sshimizu06/lingam
+- [ ] CAM cite:2014-Journal-Buhlmann-CAM, from cdt, wrapper for an R script
+  - cdt: https://github.com/FenTechSolutions/CausalDiscoveryToolbox
+  - was on CRAN https://cran.r-project.org/web/packages/CAM/index.html
+
+- [ ] Notears cite:2018-NIPS-Zheng-Dags cite:2018-cs.LG-Zheng-Dags https://github.com/xunzheng/notears
+- [ ] DAG-GNN cite:2019-ICML-Yu-Dag https://github.com/fishmoon1234/DAG-GNN
+- [ ] GraN-DAG cite:2020-ICLRPoster-Lachapelle-Gradient https://github.com/kurowasan/GraN-DAG
+- [ ] RL-BIC cite:2020-ICLROral-Zhu-Causal https://github.com/huawei-noah/trustworthyAI
+
+- [-] pairwise supervised model cite:2015-ICML-Lopez-Paz-Towards
+- [-] Structural Agnostic Model (SAM)
+
+
+| model    | where     |
+|----------+-----------|
+| PC       | cdt       |
+| FGS      | py-causal |
+| LiNGRAM  | cdt       |
+| CAM      | cdt       |
+|----------+-----------|
+| Notears  | github    |
+| DAG-GNN  | github    |
+| GraN-DAG | github    |
+| RL-BIC   | github    |
 
 *** DONE [#A] cite:2099-Manual-XXX-pcalg R package pcalg
 CLOSED: [2019-12-02 Mon 13:23]
@@ -84,18 +108,11 @@ More discovery:
 - FCI and RFCI can allow hidden variables
 - GIES: assume no hidden variables. (HEBI: Jointly observational and
   interventional data).
-*** DONE R package bnlearn
-CLOSED: [2019-12-02 Mon 15:18]
-http://www.bnlearn.com/, by Marco Scutari, looks like an independent hacker.
-
-There is a mirror: https://github.com/cran/bnlearn
-
-Code quality is less than pcalg.
 
 *** DONE [#A] Causal Discovery Toolbox: Uncover causal relationships in Python
 CLOSED: [2019-12-02 Mon 13:26]
 Package for causal inference in graphs and in the pairwise settings.
-https://github.com/Diviyan-Kalainathan/CausalDiscoveryToolbox
+https://github.com/FenTechSolutions/CausalDiscoveryToolbox
 
 Most of the discovery algorithms call various of R libraries, pcalg, bnlearn,
 CAM. There are also some pairwise algorithms, e.g. NCC, where the original
@@ -114,15 +131,6 @@ Discovery:
 - FCI
 
 But pretty clean. Would use as starting point.
-*** DONE (2019) cite:2019-ICML-Yu-Dag DAG-GNN: DAG structure learning with graph neural networks
-CLOSED: [2019-12-05 Thu 18:14]
-DAG-GNN https://github.com/fishmoon1234/DAG-GNN, good quality
-*** DONE cite:2020-ICLRSubmit-Author1237-Gradient Gradient-based neural dag learning
-CLOSED: [2019-12-05 Thu 18:14]
-GraN-DAG https://github.com/kurowasan/GraN-DAG
-*** DONE [#A] cite:2018-NIPS-Zheng-Dags DAGs with NO TEARS: Continuous optimization for structure learning
-CLOSED: [2019-12-04 Wed 10:20]
-NOTEARS https://github.com/xunzheng/notears
 
 
 * [Paper] improve existing experiment
