@@ -90,30 +90,26 @@ end
 ##############################
 
 
-function gen_ER(d=10)
-    n = d
-    m = d
-    erdos_renyi(n, m, is_directed=true)
+function gen_ER(d, e)
+    erdos_renyi(d, e, is_directed=true)
 end
 
-function gen_SF(d=10)
-    n = d
-    m = d
+function gen_SF(d, e)
     # static_scale_free(n, m, 2)
-    barabasi_albert(n, convert(Int, round(m/n)), is_directed=true)
+    barabasi_albert(d, convert(Int, round(e/d)), is_directed=true)
 end
 
-function gen_ER_dag(d=10)
-    gen_ER(d)  |> Graph |> random_orientation_dag |> MetaDiGraph
+function gen_ER_dag(d, e=d)
+    gen_ER(d, e)  |> Graph |> random_orientation_dag |> MetaDiGraph
 end
 
-function gen_SF_dag(d=10)
-    gen_SF(d)  |> Graph |> random_orientation_dag |> MetaDiGraph
+function gen_SF_dag(d, e=d)
+    gen_SF(d, e)  |> Graph |> random_orientation_dag |> MetaDiGraph
 end
 
 function test()
-    g = gen_ER()
-    g = gen_SF()
+    g = gen_ER(10, 10)
+    g = gen_SF(10, 10)
 
     is_directed(g)
     is_cyclic(g)
@@ -527,10 +523,10 @@ function gen_graphs(spec)
     f = @match spec.gtype begin
         :ER => gen_ER_dag
         :SF => gen_SF_dag
-        :ER2 => (d)->gen_ER_dag(2*d)
-        :ER4 => (d)->gen_ER_dag(4*d)
-        :SF2 => (d)->gen_SF_dag(2*d)
-        :SF4 => (d)->gen_SF_dag(4*d)
+        :ER2 => (d)->gen_ER_dag(d, 2*d)
+        :ER4 => (d)->gen_ER_dag(d, 4*d)
+        :SF2 => (d)->gen_SF_dag(d, 2*d)
+        :SF4 => (d)->gen_SF_dag(d, 4*d)
         :Bern => error("Not implemented")
         _ => error("Not supported graph type.")
     end
