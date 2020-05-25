@@ -30,8 +30,9 @@ function sup_graph_metrics(out, y)
     nbatch = size(y, 3)
     # FIXME threshold value
     #
-    # this should be 0.5 for binary sigmoid xent results
-    mat(y) = threshold(reshape(y, d, d, :), 0.3, true)
+    # FIXME UPDATE this should be 0.5 for binary sigmoid xent results. But I
+    # need to monitor what are really the values out there
+    mat(y) = threshold(reshape(y, d, d, :), 0.5, true)
 
     mout = mat(out)
     my = mat(y)
