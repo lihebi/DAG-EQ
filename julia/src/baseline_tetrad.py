@@ -93,7 +93,9 @@ def run_one(alg, x, y):
     pred = tetrad_get_adj(tetrad)
     # I probably don't want to calculate the precision, recall, shd here?
     # anyway, I'm calculating the metrics
-    adj_true = y
+    #
+    # CAUTION FIXME y should be transposed too? But performance is still bad
+    adj_true = y.transpose()
     return compute_metrics(pred, y)
 
 def compute_metrics(pred, true):
