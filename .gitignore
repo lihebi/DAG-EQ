@@ -16,3 +16,6 @@ events.out.tfevents.*
 
 *.bson
 *.so
+
+*.log
+*.svg

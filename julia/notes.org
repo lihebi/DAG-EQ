@@ -50,16 +50,29 @@ Most of these are discrete. My approach should work on discrete too, maybe a dif
 - [X] PC, from pcalg package, also in cdt
 - [X] FGS cite:2017-Journal-Ramsey-Million https://github.com/bd2kccd/py-causal
   - GES cite:2002-JMLR-Chickering-Learning, from pcalg, also in cdt
-- [ ] LiNGRAM cite:2006-JMLR-Shimizu-Linear, from pcalg, also in cdt
+- [-] LiNGRAM cite:2006-JMLR-Shimizu-Linear, from pcalg, also in cdt
   - author's page https://sites.google.com/site/sshimizu06/lingam
-- [ ] CAM cite:2014-Journal-Buhlmann-CAM, from cdt, wrapper for an R script
+- [-] CAM cite:2014-Journal-Buhlmann-CAM, from cdt, wrapper for an R script
   - cdt: https://github.com/FenTechSolutions/CausalDiscoveryToolbox
   - was on CRAN https://cran.r-project.org/web/packages/CAM/index.html
 
-- [ ] Notears cite:2018-NIPS-Zheng-Dags cite:2018-cs.LG-Zheng-Dags https://github.com/xunzheng/notears
+Notears has very clean API, there's no problem of plugging in my data.
+- [-] Notears cite:2018-NIPS-Zheng-Dags cite:2018-cs.LG-Zheng-Dags https://github.com/xunzheng/notears
+
+For these three, the model, trainig, and data loading are highly tangled
+together. I thus need to figure out, for each of them, the data loading
+scheme. Then, I'll have to do two parts:
+1. transform my data into their format
+2. possibly need to write loader and data wrapper in their code
+Then I'll just run their code and get whatever they are reporting.
+
 - [ ] DAG-GNN cite:2019-ICML-Yu-Dag https://github.com/fishmoon1234/DAG-GNN
+  - ths is non-linear extension. But this seems to be the easiest to modify
 - [ ] GraN-DAG cite:2020-ICLRPoster-Lachapelle-Gradient https://github.com/kurowasan/GraN-DAG
+  - (HEBI: the code is too tangled to run. Running time is long)
 - [ ] RL-BIC cite:2020-ICLROral-Zhu-Causal https://github.com/huawei-noah/trustworthyAI
+  - (HEBI: this is super slow) for even a single data point, about 100 iter/min,
+    where there seems to be a lot of iterations
 
 - [-] pairwise supervised model cite:2015-ICML-Lopez-Paz-Towards
 - [-] Structural Agnostic Model (SAM)

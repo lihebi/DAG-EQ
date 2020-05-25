@@ -363,6 +363,10 @@ struct DataSpec
     # :Linear, :GP, :Quad, :MLP
     mechanism
 
+    # I'll be training on different d, k, gtype, mat, mechanism
+    #
+    # for noise, I'll be only testing on different noise
+
     ng
     N
 end

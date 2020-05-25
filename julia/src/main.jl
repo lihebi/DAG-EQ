@@ -24,8 +24,11 @@ function main_EQ_sep()
     # CAUTION this will be super slow. That's 10hour * 6
     for d in [10,15,20],
         # I'm putting SF first because they tends to perform better
-        gtype in [:SF, :SF2, :SF4, :ER, :ER2, :ER4],
-        mec in [:Linear]
+        gtype in [:SF :ER
+                  # :SF2 :SF4
+                  # :ER2 :ER4
+                  ],
+        mec in [:Linear, :MLP]
 
         # UPDATE the expID is set to modelID-dataID
         expID = exp_train(DataSpec(d=d, k=1,
@@ -52,11 +55,17 @@ end
 
 function main_EQ_ensemble()
     # ensemble training
-    for gtype in [:ER, :SF]
+    for gtype in [:ER :SF
+                  # :ER2 :SF2
+                  ],
+        mec in [:Linear
+                # :MLP
+                ]
+
         # I'll be training just one EQ model on SF graph with d=10,15,20
         specs = map([10, 15, 20]) do d
             # TODO mixed training of different noise models
-            DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian)
+            DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian, mechanism=mec)
         end
         expID = exp_train(specs, deep_eq_model_fn,
                           # TODO I'll need to increase the training steps here
@@ -119,8 +128,11 @@ function main_FC()
     # FIXME FC performance seems to be really poor, maybe add some regularizations
     # using COV
     for d in [10, 15, 20],
-        gtype in [:ER, :ER2, :ER4, :SF, :SF2, :SF4],
-        mec in [:Linear]
+        gtype in [:ER :SF
+                  # :ER2 :SF2
+                  # :ER4 :SF4
+                  ],
+        mec in [:Linear, :MLP]
 
         @info "Training " d gtype mec
         expID = exp_train(DataSpec(d=d, k=1,
@@ -158,8 +170,11 @@ end
 function main_CNN_sep()
     # FIXME use 8, 16, 32 in other models to keep consistent with CNN models?
     for d in [8,16,32],
-        gtype in [:ER, :ER2, :ER4, :SF, :SF2, :SF4],
-        mec in [:Linear]
+        gtype in [:ER :SF
+                  # :ER2 :SF2
+                  # :ER4 :SF4
+                  ],
+        mec in [:Linear, :MLP]
 
         spec = DataSpec(d=d, k=1,
                         gtype=gtype,
@@ -185,10 +200,11 @@ end
 
 function main_CNN_ensemble()
     # mix training
-    for gtype in [:ER, :SF]
+    for gtype in [:ER, :SF],
+        mec in [:Linear, :MLP]
 
         specs = map([8,16,32]) do d
-            DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian)
+            DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian, mechanism=mec)
         end
         expID1 = exp_train(specs,
                            bottleneck_cnn_model,
@@ -251,15 +267,15 @@ function test()
 end
 
 function main()
-    main_CNN_sep()
     main_CNN_ensemble()
+    main_CNN_sep()
 
     main_FC()
     main_FC_cov()
 
+    main_EQ_ensemble()
     # TODO OVERNIGHT
     main_EQ_sep()
-    main_EQ_ensemble()
     main_EQ_cov()
 end
 
