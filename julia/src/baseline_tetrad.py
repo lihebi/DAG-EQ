@@ -95,7 +95,8 @@ def run_one(alg, x, y):
     # anyway, I'm calculating the metrics
     #
     # CAUTION FIXME y should be transposed too? But performance is still bad
-    adj_true = y.transpose()
+    # UPDATE y should not be transposed
+    adj_true = y
     return compute_metrics(pred, y)
 
 def compute_metrics(pred, true):

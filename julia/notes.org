@@ -23,6 +23,15 @@
   - FIXME OK, I probably need to try some other non-linear model, or just
     non-linear does not work
 
+** Important
+
+- [-] compare with pairwise-supervised approach
+  - [ ] and the code up the traditional approach experiment code
+- [-] 10, 20, 50, 100 should be ideal graph size
+- [ ] close comparison between flat-CNN and deep-EQ
+  - maybe try CNN with larger filters?
+- [X] add MLP testing results
+  - [ ] I could probably ignore MLP experiment for now
 
 ** Real data
 *** cite:2005-Science-Sachs-Causal Causal protein-signaling networks derived from multiparameter single-cell data
