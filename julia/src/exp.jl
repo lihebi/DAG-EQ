@@ -16,7 +16,7 @@ include("train.jl")
 using Profile
 using BenchmarkTools: @btime
 import CSV
-using DataFrames: DataFrame
+using DataFrames: DataFrame, Not, All
 
 function load_most_recent(model_dir)
     if !isdir(model_dir) return nothing, 1 end
@@ -153,40 +153,273 @@ function load_results!()
     end
 end
 
+function parse_spec_string(s)
+    re = r"d=(\d+)_k=(\d+)_gtype=(.*)_noise=(.*)_mat=([^_]*)(_mec=MLP)?"
+    m = match(re, s)
+    if isnothing(m) @show s end
+    d = parse(Int, m.captures[1])
+    k = parse(Int, m.captures[2])
+    gtype, noise, mat, mec = m.captures[3:end]
+    if isnothing(mec)
+        mec = "Linear"
+    else
+        mec = "MLP"
+    end
+    # FIXME nothing seems to match any expressions, see
+    # https://github.com/kmsquire/Match.jl/issues/60
+    #
+    # mec = @match mec begin
+    #     nothing => "Linear"
+    #     # CAUTION This is substring, thus this won't match
+    #     # var::String => "MLP"
+    #     _ => "MLP"
+    # end
+    return d, k, gtype, noise, mat, mec
+end
+
+# FIXME these type definitions do not seem to be allowed inside function scope
+MInt = Union{Missing, Int}
+MString = Union{Missing, String}
+
 # DEBUG
 function pretty_print_result()
     global _results
 
     load_results!()
 
-    df = DataFrame(model=String[], d=Int[], k=Int[],
-                   gtype=String[], noise=String[], mat=String[],
-                   prec=Float64[], recall=Float64[], shd=Float64[])
+    df = DataFrame(model=String[],
+                   train_d=MInt[], train_k=MInt[],
+                   train_gtype=MString[],
+                   train_noise=MString[],
+                   train_mat=MString[],
+                   train_mec=MString[],
+
+                   test_d=Int[], test_k=Int[],
+                   test_gtype=String[],
+                   test_noise=String[],
+                   test_mat=String[],
+                   test_mec=MString[],
+
+                   prec=Float32[], recall=Float32[], shd=Float32[])
     for item in _results
-        m = match(r"d=(\d+)_k=(\d+)_gtype=(.*)_noise=(.*)_mat=(.*)", item[1][2])
-        # m = match(r"d=(\d+)_k=(\d+)_gtype=(.*)_noise=(.*)_mat=(.*)",
-        #           "d=15_k=2_gtype=ER_noise=Gaussian_mat=COR")
-        model = item[1][1]
-        d = parse(Int, m.captures[1])
-        k = parse(Int, m.captures[2])
-        gtype, noise, mat = m.captures[3:end]
-        prec, recall, shd = round3.(item[2][1:end-1])
-        push!(df, (model, d, k, gtype, noise, mat, prec*100, recall*100, shd))
+        # 1. find the model name
+        m = match(r"(.*)-d=.*", item[1][1])
+        if isnothing(m)
+            model = item[1][1]
+            train_d = missing
+            train_k = missing
+            train_gtype = missing
+            train_noise = missing
+            train_mat = missing
+            train_mec = missing
+        else
+            # model = item[1][1]
+            model = m.captures[1]
+            (train_d, train_k, train_gtype, train_noise, train_mat,
+             train_mec) = parse_spec_string(item[1][1])
+        end
+
+        (test_d, test_k, test_gtype, test_noise, test_mat,
+             test_mec) = parse_spec_string(item[1][2])
+
+        prec = round3(item[2][1]) * 100
+        recall = round3(item[2][2]) * 100
+        shd = round(item[2][3], digits=1)
+        # prec, recall, shd = round3.(item[2][1:end-1])
+
+        push!(df, (model,
+                   train_d, train_k, train_gtype, train_noise, train_mat, train_mec,
+                   test_d, test_k, test_gtype, test_noise, test_mat, test_mec,
+                   prec, recall, shd))
     end
 
     df
-    df[df.model .== "deep-EQ", :]
-    describe(df)
+
+    # I don't need train_k, because all of them are 1s
+    df = df[!, Not(All(:train_k, :train_noise))]
+
+    unique(df.train_mat)
     unique(df.model)
-    sort(df[df.model .== "deep-EQ-ER", :], [:model, :gtype, :d, :k])
-    sort(df[df.model .== "deep-EQ-SF", :], [:model, :gtype, :d, :k])
-    sort(df[df.model .== "deep-EQ-ER-COV", :], [:model, :gtype, :d, :k])
-    sort(df[df.model .== "deep-FC-ER-d=10", :], [:model, :gtype, :d, :k])
-    sort(df[df.model .== "deep-FC-ER-d=15", :], [:model, :gtype, :d, :k])
-    sort(df[df.model .== "deep-FC-ER-d=20", :], [:model, :gtype, :d, :k])
-    sort(df[df.model .== "deep-FC-SF-d=10", :], [:model, :gtype, :d, :k])
-    sort(df[df.model .== "deep-FC-SF-d=15", :], [:model, :gtype, :d, :k])
-    sort(df[df.model .== "deep-FC-SF-d=20", :], [:model, :gtype, :d, :k])
+
+    # 1. all the models in separate mode
+    select_sep_df(df, "deep-FC")
+    select_sep_df(df, "flat-CNN")
+    select_sep_df(df, "bottle-CNN")
+    select_sep_df(df, "deep-EQ")
+
+    # DONE close comparison between flat-CNN and deep-EQ
+    # header=map((x)->replace(x,"_"=>"/"),
+    #            names(tbl_baseline))
+    # quotestrings=true,
+    CSV.write("results/cmp-baseline.csv", table_cmp_baseline(df))
+    CSV.write("results/er4.csv", table_ER24(df))
+
+    # DONE add MLP testing results
+
+    # 2. transfering
+    #
+    # - train on k=1, test on k=1,2,4
+    CSV.write("results/transfer_k.csv", table_transfer_k(df))
+    # - train on Gaussian, test on Exp, Gumbel
+    CSV.write("results/transfer_noise.csv", table_transfer_noise(df))
+    # - train on ER, test on SF
+    CSV.write("results/transfer_gtype.csv", table_transfer_gtype(df))
+
+    # 3. the ensemble models. The training setting is in model name
+    select_ensemble_df(df, "flat-CNN-ER-ensemble")
+    select_ensemble_df(df, "flat-CNN-SF-ensemble")
+    select_ensemble_df(df, "bottle-CNN-ER-ensemble")
+    select_ensemble_df(df, "bottle-CNN-SF-ensemble")
+
+    select_ensemble_df(df, "deep-EQ-ER-ensemble")
+    select_ensemble_df(df, "deep-EQ-SF-ensemble")
+
+    select_ensemble_df(df, "deep-EQ-ER-COV-ensemble")
+    select_ensemble_df(df, "deep-EQ-SF-COV-ensemble")
+
+    CSV.write("results/ensemble.csv", table_ensemble(df))
+end
+
+function table_transfer_k(df)
+    # - train on k=1, test on k=1,2,4
+    selector = ((df.model .== "deep-EQ")
+                .& (df.test_noise .== "Gaussian")
+                .& (df.train_gtype .== "SF")
+                .& (df.test_gtype .== "SF")
+                .& (df.train_mec .== "Linear")
+                .& (df.test_mec .== "Linear")
+                .& (df.train_mat .== "COR")
+                .& (df.test_mat .== "COR"))
+    sort(df[selector,
+            Not(All(:train_k, :train_noise,
+                    :test_d,
+                    :train_mec, :test_mec, :test_noise,
+                    :train_mat, :test_mat))],
+         [:train_gtype, :model, :test_gtype, :train_d, :test_k])
+end
+
+function table_transfer_noise(df)
+    # - train on Gaussian, test on Exp, Gumbel
+    selector = ((df.model .== "deep-EQ")
+                .& in.(df.train_gtype, Ref(["SF", "ER"]))
+                .& (df.train_gtype .== df.test_gtype)
+                .& (df.test_k .== 1)
+                .& (df.train_mec .== "Linear")
+                .& (df.test_mec .== "Linear")
+                .& (df.train_mat .== "COR")
+                .& (df.test_mat .== "COR"))
+    sort(df[selector,
+            Not(All(:train_k,
+                    # CAUTION I need to show this to tell that the training and
+                    # testing noise are different :train_noise,
+                    :test_d, :test_k,
+                    :train_mec, :test_mec,
+                    :test_gtype,
+                    :train_mat, :test_mat))],
+         [:train_gtype, :model, :train_d, :test_noise])
+end
+
+
+function table_transfer_gtype(df)
+    # - train on ER, test on SF
+    selector = ((df.model .== "deep-EQ")
+                # TODO ER2 ER4 SF2 SF4
+                .& in.(df.train_gtype, Ref(["ER", "SF"]))
+                .& (df.train_gtype .!= df.test_gtype)
+                .& (df.test_noise .== "Gaussian")
+                .& (df.test_k .== 1)
+                .& (df.train_mec .== "Linear")
+                .& (df.test_mec .== "Linear")
+                .& (df.train_mat .== "COR")
+                .& (df.test_mat .== "COR"))
+    sort(df[selector,
+            Not(All(:train_k, :train_noise,
+                    :test_d, :test_k,
+                    :train_mec, :test_mec, :test_noise,
+                    :train_mat, :test_mat))],
+         [:train_gtype, :model, :test_gtype, :train_d])
+end
+
+
+function table_cmp_baseline(df)
+    # comparison of EQ with FC and CNN (and random) baselines
+    # only show d=10,15,20, SF and ER graphs, k=1
+    sel1 = in.(df.model, Ref(["deep-FC", "deep-EQ", "flat-CNN"]))
+    sel2 = in.(df.train_d, Ref([10, 15, 20]))
+    selector = (sel1 .& sel2
+                .& (df.train_gtype .== df.test_gtype)
+                .& in.(df.train_gtype, Ref(["ER", "SF"]))
+                .& (df.test_noise .== "Gaussian")
+                .& (df.train_mec .== "Linear")
+                .& (df.test_mec .== "Linear")
+                .& (df.train_mat .== "COR")
+                .& (df.test_mat .== "COR")
+                .& (df.test_k .== 1))
+
+    sort(df[selector,
+            # test_d is same as train_d
+            Not(All(:train_k,
+                    :train_noise,
+                    :test_d,
+                    :test_k,
+                    :train_mec, :test_mec,
+                    :test_noise,
+                    :train_mat,
+                    :test_mat))],
+         [:train_gtype, :model, :test_gtype, :train_d])
+end
+
+function table_ER24(df)
+    # - ER2 ER4 SF2 SF4
+    # TODO CNN, FC data for these graphs
+    selector = ((df.model .== "deep-EQ")
+                .& in.(df.train_gtype, Ref(["SF", "SF2", "SF4", "ER", "ER2", "ER4"]))
+                .& (df.train_gtype .== df.test_gtype)
+                .& (df.test_k .== 1)
+                .& (df.test_noise .== "Gaussian")
+                .& (df.train_mec .== "Linear")
+                .& (df.test_mec .== "Linear")
+                .& (df.train_mat .== "COR")
+                .& (df.test_mat .== "COR"))
+    sort(df[selector,
+            Not(All(:train_k, :train_noise,
+                    :test_d, :test_k,
+                    :train_mec, :test_mec, :test_noise,
+                    :train_mat, :test_mat))],
+         [:train_gtype, :model, :test_gtype, :train_d])
+end
+
+
+
+function select_sep_df(df, model)
+    subdf = sort(df[df.model .== model,
+                    # test_d is same as train_d
+                    Not(All(:train_k, :train_noise, :test_d))],
+                 [:train_mec, :train_gtype, :test_gtype, :train_d, :test_k])
+    show(subdf, allrows=true)
+    nothing
+end
+
+function table_ensemble(df)
+    selector = (in.(df.model, Ref(["deep-EQ-ER-ensemble",
+                                   "deep-EQ-SF-ensemble"]))
+                .& (df.test_k .== 1)
+                .& (df.test_mec .== "Linear")
+                .& (df.test_mat .== "COR"))
+    sort(df[selector,
+            Not(All(:train_k, :train_noise,
+                    :test_k,
+                    r"train_",
+                    :train_mec, :test_mec, :test_noise,
+                    :train_mat, :test_mat))],
+         [:model, :test_gtype, :test_d])
+end
+
+function select_ensemble_df(df, model)
+    subdf = sort(df[df.model .== model, Not(All(:train_k, :train_noise, r"train_"))],
+                 [:test_gtype, :test_d, :test_k])
+    show(subdf, allrows=true)
+    nothing
 end
 
 # However, although the date is string, it is saved without quotes. Then, the
