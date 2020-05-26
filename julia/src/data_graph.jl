@@ -515,6 +515,9 @@ function load_sup_ds(spec, batch_size=100)
         test_x, test_y = gen_sup_data_with_graphs(spec, test_gs)
 
         # generate raw data for use with other methods
+        #
+        # FIXME the raw_x should not be just for test graphs. When training
+        # NCC/RCC, I need them as training data
         raw_x, raw_y = gen_raw_data_with_graphs(spec, test_gs)
 
         h5open(fname, "w") do file

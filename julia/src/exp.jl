@@ -466,8 +466,7 @@ function exp_test(expID, spec)
         end
 
         model = gpu(model)
-        # FIXME smaller batch size to avoid out-of-mem error (for d=80)
-        ds, test_ds = spec2ds(spec, batch_size=32)
+        ds, test_ds = spec2ds(spec)
 
         # DEBUG TODO not using all data for testing
         metrics = sup_test(model, test_ds, nbatch=16)

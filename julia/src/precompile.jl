@@ -1,4 +1,7 @@
 using PackageCompiler
+
+# CAUTION when precompiling images, the env configs seems also fixed, especially
+# CUARRAYS_MEMORY_LIMIT
 include("config.jl")
 
 # FIXME this probably would compile all functions in these packages? If that's
