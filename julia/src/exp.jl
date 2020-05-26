@@ -41,16 +41,17 @@ end
 is created only once, before first use.
 
 """
-function spec2ds(spec::DataSpec; batch_size=100)
+function spec2ds(spec::DataSpec)
+    batch_size = spec.bsize
     ds, test_ds = load_sup_ds(spec, batch_size)
     ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
     return ds, test_ds
 end
 
-function spec2ds(specs::Array{DataSpec, N} where N; batch_size=100)
+function spec2ds(specs::Array{DataSpec, N} where N)
     dses = map(specs) do spec
-        ds, test_ds = load_sup_ds(spec, batch_size)
         ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
+        ds, test_ds = load_sup_ds(spec)
     end
     return [ds[1] for ds in dses], [ds[2] for ds in dses]
 end

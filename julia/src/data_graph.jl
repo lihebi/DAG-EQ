@@ -369,6 +369,7 @@ struct DataSpec
 
     ng
     N
+    bsize
 end
 
 # FIXME previous 10000, 10
@@ -379,16 +380,25 @@ function DataSpec(;d, k, gtype, noise, mat=:COR, mechanism=:Linear, ng=3000, N=3
     if d <= 20
         ng = 3000
         N = 3
+        bsize=128
     elseif d <= 40
         ng = 2000
         N = 2
-    else
+        bsize=64
+    elseif d <= 80
         # FIXME this might be too small. But should be more than enough if we
         # just use it as testing data
         ng = 1000
         N = 1
+        bsize=32
+    else
+        ng = 1000
+        N = 1
+        # DEBUG testing memory limit during training (pullback of EQ layer seems
+        # to consume lots of memory)
+        bsize = 16
     end
-    DataSpec(d, k, gtype, noise, mat, mechanism, ng, N)
+    DataSpec(d, k, gtype, noise, mat, mechanism, ng, N, bsize)
 end
 
 function dataspec_to_id(spec::DataSpec)
