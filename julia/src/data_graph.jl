@@ -473,7 +473,7 @@ function tmp_convert_bson_hdf5()
     end
 end
 
-function load_sup_ds(spec, batch_size=100)
+function load_sup_ds(spec, batch_size=100; use_raw=false)
     # create "data/" folder is not already there
     if !isdir("data") mkdir("data") end
     # 1. generate graph
@@ -482,6 +482,7 @@ function load_sup_ds(spec, batch_size=100)
     gfile = "$gdir/g.hdf5"
     if isfile(gfile)
         # DEBUG loading
+        # FIXME I don't need to load the graphs
         train_gs = hdf5mat2gs(h5read(gfile, "train_gs"))
         test_gs = hdf5mat2gs(h5read(gfile, "test_gs"))
     else
@@ -506,6 +507,8 @@ function load_sup_ds(spec, batch_size=100)
         train_y = h5read(fname, "train_y")
         test_x = h5read(fname, "test_x")
         test_y = h5read(fname, "test_y")
+        raw_x = h5read(fname, "raw_x")
+        raw_y = h5read(fname, "raw_y")
     else
         # generate according to train_gs and test_gs
         # TODO use different graphs for ds and test
@@ -530,18 +533,12 @@ function load_sup_ds(spec, batch_size=100)
         end
         @info "Saved to $fname"
     end
-    # returning
-    return (DataSetIterator(train_x, train_y, batch_size),
-            DataSetIterator(test_x, test_y, batch_size))
-end
-
-# DEBUG
-function load_sup_raw(spec)
-    error("DEPRECATED")
-    fname = "data/" * dataspec_to_id(spec) * ".hdf5"
-    raw_x = h5read(fname, "raw_x")
-    raw_y = h5read(fname, "raw_y")
-    raw_x, raw_y
+    if use_raw
+        return DataSetIterator(raw_x, raw_y, batch_size)
+    else
+        return (DataSetIterator(train_x, train_y, batch_size),
+                DataSetIterator(test_x, test_y, batch_size))
+    end
 end
 
 function gen_graphs(spec)

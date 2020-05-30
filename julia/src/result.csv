@@ -21,6 +21,7 @@ deep-EQ-d=20_k=1_gtype=SF4_noise=Gaussian_mat=COR,d=20_k=4_gtype=SF_noise=Gaussi
 deep-EQ-d=15_k=1_gtype=ER_noise=Gaussian_mat=COR_mec=MLP,d=15_k=2_gtype=SF_noise=Gaussian_mat=COR_mec=MLP,0.6860340080767603,0.4545200892857143,10.5546875,-1.0,2020-05-25T17:15:32.958
 deep-EQ-d=15_k=1_gtype=SF4_noise=Gaussian_mat=COR,d=15_k=2_gtype=SF_noise=Gaussian_mat=COR,0.21572789547345345,0.7604631696428571,42.146484375,-1.0,2020-05-23T06:15:35.837
 flat-CNN-d=16_k=1_gtype=SF_noise=Gaussian_mat=COR_mec=MLP,d=16_k=1_gtype=ER_noise=Gaussian_mat=COR_mec=MLP,0.41586367629819443,0.19519660927632018,16.736328125,-1.0,2020-05-25T17:09:17.155
+deep-EQ-d=15_k=1_gtype=ER_noise=Gaussian_mat=COR,raw-d=15_k=1_gtype=ER_noise=Gaussian_mat=COR,0.7940017572288588,0.7352808360638949,6.640625,0.06806200742721558,2020-05-31T00:34:32.239
 deep-EQ-d=15_k=1_gtype=ER_noise=Gaussian_mat=COR,d=15_k=2_gtype=ER_noise=Gaussian_mat=COR,0.6066790655557807,0.7922385252880635,10.48828125,-1.0,2020-05-21T04:35:55.998
 deep-FC-d=20_k=1_gtype=SF4_noise=Gaussian_mat=COR,d=20_k=2_gtype=ER_noise=Gaussian_mat=COR,0.054368997811798485,0.1377618285462358,63.451171875,-1.0,2020-05-22T19:31:57.944
 deep-EQ-ER-ensemble,d=20_k=1_gtype=SF_noise=Gaussian_mat=COR,0.8106907908497012,0.8321340460526314,6.888671875,-1.0,2020-05-20T14:18:07.214
@@ -222,6 +223,7 @@ deep-EQ-SF-ensemble,d=15_k=2_gtype=ER_noise=Gaussian_mat=COR,0.6260054081144928,
 deep-EQ-d=10_k=1_gtype=SF_noise=Gaussian_mat=COR_mec=MLP,d=10_k=4_gtype=SF_noise=Gaussian_mat=COR_mec=MLP,0.7172480036941544,0.46484375,6.46484375,-1.0,2020-05-25T17:12:01.594
 deep-EQ-d=20_k=1_gtype=ER_noise=Gaussian_mat=COR,d=20_k=1_gtype=ER_noise=Gumbel_mat=COR,0.8423683207936602,0.6550371425095883,9.10009765625,-1.0,2020-05-26T03:48:35.048
 flat-CNN-d=8_k=1_gtype=SF2_noise=Gaussian_mat=COR_mec=MLP,d=8_k=1_gtype=ER_noise=Gaussian_mat=COR,0.1807560431349604,0.28868896576322234,15.1328125,-1.0,2020-05-22T12:13:37.102
+deep-EQ-d=100_k=1_gtype=SF_noise=Gaussian_mat=COR,raw-d=100_k=1_gtype=SF_noise=Gaussian_mat=COR,0.8225615209789696,0.5836095328282828,53.703125,1.0225581377744675,2020-05-31T00:34:59.911
 flat-CNN-SF-ensemble,d=32_k=1_gtype=SF_noise=Gaussian_mat=COR,0.6170960172684172,0.8743069556451613,20.7421875,-1.0,2020-05-22T23:00:04.376
 bottle-CNN-d=16_k=1_gtype=SF_noise=Gaussian_mat=COR_mec=MLP,d=16_k=1_gtype=ER_noise=Gaussian_mat=COR_mec=MLP,0.29386950518737986,0.05412498690508397,16.697265625,-1.0,2020-05-25T17:09:16.601
 flat-CNN-SF-ensemble,d=32_k=4_gtype=SF_noise=Gaussian_mat=COR,0.5338890706737819,0.7291456653225806,28.15234375,-1.0,2020-05-22T23:00:13.452
@@ -264,6 +266,7 @@ deep-FC-d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,d=10_k=2_gtype=SF_noise=Gaussia
 flat-CNN-d=20_k=1_gtype=ER_noise=Gaussian_mat=COR,d=20_k=1_gtype=SF_noise=Gaussian_mat=COR,0.5782694551079622,0.2970805921052632,17.48046875,-1.0,2020-05-25T20:01:19.897
 bottle-CNN-d=32_k=1_gtype=ER_noise=Gaussian_mat=COR_mec=MLP,d=32_k=1_gtype=ER_noise=Gaussian_mat=COR,0.08982561754321684,0.045303443363856805,44.7421875,-1.0,2020-05-24T23:59:04.925
 flat-CNN-ER-ensemble,d=16_k=2_gtype=SF_noise=Gaussian_mat=COR,0.45532964250167596,0.5207031249999999,16.552734375,-1.0,2020-05-22T21:07:34.302
+deep-EQ-d=50_k=1_gtype=SF_noise=Gaussian_mat=COR,raw-d=50_k=1_gtype=SF_noise=Gaussian_mat=COR,0.9112957590656119,0.6697225765306123,19.37890625,0.17807836830615997,2020-05-31T00:34:40.356
 deep-FC-d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,0.43927363973529987,0.3939560692358699,10.537109375,-1.0,2020-05-20T17:11:20.071
 flat-CNN-d=50_k=1_gtype=SF_noise=Gaussian_mat=COR,d=50_k=1_gtype=ER_noise=Gaussian_mat=COR,0.335398103411627,0.19901042457199677,59.189453125,-1.0,2020-05-25T20:51:58.932
 deep-EQ-d=10_k=1_gtype=SF_noise=Gaussian_mat=COR,d=10_k=4_gtype=SF_noise=Exp_mat=COR,0.6953687346788027,0.6620551215277778,5.654296875,-1.0,2020-05-26T03:33:06.178
@@ -351,6 +354,7 @@ deep-EQ-d=15_k=1_gtype=ER2_noise=Gaussian_mat=COR,d=15_k=4_gtype=ER_noise=Gaussi
 flat-CNN-SF-ensemble,d=32_k=2_gtype=SF_noise=Gaussian_mat=COR,0.5833386774101168,0.8140751008064516,23.791015625,-1.0,2020-05-22T23:00:08.257
 deep-FC-d=10_k=1_gtype=ER4_noise=Gaussian_mat=COR,d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,0.12824070856798298,0.3458292092321308,28.453125,-1.0,2020-05-22T10:15:02.133
 deep-EQ-d=10_k=1_gtype=SF4_noise=Gaussian_mat=COR,d=10_k=1_gtype=SF_noise=Gaussian_mat=COR,0.3126082552557491,0.9327256944444443,19.0859375,-1.0,2020-05-23T00:51:41.518
+deep-EQ-d=15_k=1_gtype=SF_noise=Gaussian_mat=COR,raw-d=15_k=1_gtype=SF_noise=Gaussian_mat=COR,0.9244852418930531,0.9204799107142858,2.16796875,0.05685575306415558,2020-05-31T00:34:30.441
 flat-CNN-d=16_k=1_gtype=ER_noise=Gaussian_mat=COR,d=16_k=1_gtype=SF_noise=Gaussian_mat=COR,0.4976205570298202,0.648828125,15.11328125,-1.0,2020-05-20T17:31:04.045
 flat-CNN-d=32_k=1_gtype=ER_noise=Gaussian_mat=COR_mec=MLP,d=32_k=1_gtype=ER_noise=Gaussian_mat=COR_mec=MLP,0.5379400034556687,0.2105797501630285,30.5390625,-1.0,2020-05-25T17:09:20.557
 deep-FC-d=20_k=1_gtype=ER2_noise=Gaussian_mat=COR,d=20_k=1_gtype=ER_noise=Gaussian_mat=COR,0.057138101523497575,0.06455264309117104,38.900390625,-1.0,2020-05-22T19:07:44.555
@@ -513,6 +517,7 @@ deep-EQ-d=15_k=1_gtype=SF_noise=Gaussian_mat=COR,d=15_k=1_gtype=SF_noise=Gaussia
 deep-EQ-d=15_k=1_gtype=ER2_noise=Gaussian_mat=COR,d=15_k=4_gtype=ER2_noise=Gaussian_mat=COR,0.5913949568853674,0.172398771687516,26.35498046875,-1.0,2020-05-26T03:44:36.069
 deep-EQ-d=20_k=1_gtype=SF_noise=Gaussian_mat=COR_mec=MLP,d=20_k=2_gtype=ER_noise=Gaussian_mat=COR_mec=MLP,0.6028185978712131,0.427851194469707,16.654296875,-1.0,2020-05-25T17:16:43.541
 deep-EQ-d=10_k=1_gtype=SF2_noise=Gaussian_mat=COR,d=10_k=1_gtype=SF_noise=Gaussian_mat=COR,0.4575631732877242,0.9641927083333333,10.625,-1.0,2020-05-22T23:56:04.694
+deep-EQ-d=10_k=1_gtype=SF_noise=Gaussian_mat=COR,raw-d=10_k=1_gtype=SF_noise=Gaussian_mat=COR,0.9299812878907906,0.9470486111111113,1.12109375,1.1770719438791275,2020-05-31T00:34:27.211
 deep-FC-d=15_k=1_gtype=SF_noise=Gaussian_mat=COR,d=15_k=2_gtype=ER_noise=Gaussian_mat=COR,0.25354346632485775,0.20014073667379823,20.12890625,-1.0,2020-05-20T17:17:19.436
 deep-FC-d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,d=10_k=1_gtype=SF_noise=Gaussian_mat=COR,0.4265837273570081,0.431640625,10.333984375,-1.0,2020-05-20T17:11:26.573
 deep-EQ-d=20_k=1_gtype=ER_noise=Gaussian_mat=COR_mec=MLP,d=20_k=4_gtype=ER_noise=Gaussian_mat=COR,0.15557988348979448,0.5760678609628136,71.107421875,-1.0,2020-05-25T11:47:51.702
@@ -605,6 +610,7 @@ deep-EQ-d=20_k=1_gtype=SF_noise=Gaussian_mat=COR,d=20_k=1_gtype=SF_noise=Gumbel_
 deep-FC-d=10_k=1_gtype=ER2_noise=Gaussian_mat=COR_mec=MLP,d=10_k=4_gtype=SF_noise=Gaussian_mat=COR,0.15077665207147278,0.3005642361111111,21.53515625,-1.0,2020-05-22T10:10:46.608
 deep-EQ-d=10_k=1_gtype=SF4_noise=Gaussian_mat=COR,d=10_k=2_gtype=ER_noise=Gaussian_mat=COR,0.31802402713517874,0.8950437842052248,19.318359375,-1.0,2020-05-23T00:51:42.366
 deep-EQ-d=15_k=1_gtype=SF_noise=Gaussian_mat=COR,d=15_k=4_gtype=ER_noise=Poisson_mat=COR,0.5560169173238886,0.4371537933958995,13.2392578125,-1.0,2020-05-26T03:36:56.349
+deep-EQ-d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,raw-d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,0.8450745416401196,0.7290214879133761,3.84765625,0.018667936325073242,2020-05-31T00:34:28.651
 deep-FC-d=10_k=1_gtype=ER2_noise=Gaussian_mat=COR,d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,0.20990985183990948,0.31859428719893257,17.955078125,-1.0,2020-05-22T10:10:40.915
 deep-EQ-d=20_k=1_gtype=SF_noise=Gaussian_mat=COR,d=20_k=1_gtype=SF_noise=Exp_mat=COR,0.9242035044804611,0.8753083881578949,3.73291015625,-1.0,2020-05-26T03:40:04.704
 deep-EQ-d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,d=10_k=1_gtype=ER_noise=Gumbel_mat=COR,0.8311435469277161,0.7282224734029722,3.99169921875,-1.0,2020-05-26T03:48:15.224
@@ -649,7 +655,9 @@ deep-EQ-d=20_k=1_gtype=ER_noise=Gaussian_mat=COR_mec=MLP,d=20_k=1_gtype=SF_noise
 deep-EQ-SF-ensemble,d=30_k=4_gtype=SF_noise=Gaussian_mat=COR,0.5386199302957656,0.5319234913793104,26.80859375,-1.0,2020-05-20T14:20:35.78
 deep-EQ-d=10_k=1_gtype=ER4_noise=Gaussian_mat=COR,d=10_k=4_gtype=SF_noise=Gaussian_mat=COR,0.21899266869320155,0.7317708333333333,26.0703125,-1.0,2020-05-23T02:42:51.326
 bottle-CNN-d=32_k=1_gtype=ER2_noise=Gaussian_mat=COR,d=32_k=1_gtype=SF_noise=Gaussian_mat=COR,0.03560460646809331,0.0006930443548387096,31.5546875,-1.0,2020-05-22T20:03:20.162
+deep-EQ-d=20_k=1_gtype=ER_noise=Gaussian_mat=COR,raw-d=20_k=1_gtype=ER_noise=Gaussian_mat=COR,0.8445173442177709,0.6494215647475516,9.1640625,0.07477244734764099,2020-05-31T00:34:37.334
 flat-CNN-d=16_k=1_gtype=ER4_noise=Gaussian_mat=COR,d=16_k=1_gtype=SF_noise=Gaussian_mat=COR,0.17897323230698628,0.4759114583333333,40.708984375,-1.0,2020-05-22T11:54:41.782
+deep-EQ-d=20_k=1_gtype=SF_noise=Gaussian_mat=COR,raw-d=20_k=1_gtype=SF_noise=Gaussian_mat=COR,0.9231730430452519,0.891858552631579,3.46484375,0.10708524286746979,2020-05-31T00:34:35.06
 bottle-CNN-d=16_k=1_gtype=SF_noise=Gaussian_mat=COR_mec=MLP,d=16_k=1_gtype=ER_noise=Gaussian_mat=COR,0.09952250290255277,0.09021979502220978,26.88671875,-1.0,2020-05-24T23:43:59.869
 deep-FC-d=10_k=1_gtype=ER4_noise=Gaussian_mat=COR_mec=MLP,d=10_k=1_gtype=SF_noise=Gaussian_mat=COR,0.11595419231376058,0.37868923611111116,31.560546875,-1.0,2020-05-22T10:23:20.952
 deep-EQ-d=20_k=1_gtype=SF2_noise=Gaussian_mat=COR,d=20_k=2_gtype=SF2_noise=Gaussian_mat=COR,0.6476467194541565,0.2539740668402778,31.83203125,-1.0,2020-05-26T03:45:05.775
@@ -699,6 +707,7 @@ deep-EQ-d=10_k=1_gtype=ER_noise=Gaussian_mat=COR_mec=MLP,d=10_k=4_gtype=ER_noise
 deep-EQ-d=15_k=1_gtype=SF_noise=Gaussian_mat=COR,d=15_k=2_gtype=ER_noise=Gumbel_mat=COR,0.6729624497677729,0.542184602686784,10.47265625,-1.0,2020-05-26T03:34:46.45
 deep-EQ-d=20_k=1_gtype=SF2_noise=Gaussian_mat=COR,d=20_k=2_gtype=SF_noise=Gaussian_mat=COR,0.4153941604173014,0.8545435855263156,25.712890625,-1.0,2020-05-23T13:13:27.117
 deep-FC-d=15_k=1_gtype=ER2_noise=Gaussian_mat=COR,d=15_k=4_gtype=ER_noise=Gaussian_mat=COR,0.09916105389034213,0.1422891544190034,31.15625,-1.0,2020-05-22T18:35:52.822
+deep-EQ-d=50_k=1_gtype=ER_noise=Gaussian_mat=COR,raw-d=50_k=1_gtype=ER_noise=Gaussian_mat=COR,0.7515107949875107,0.5769170882710273,30.40234375,0.14718268811702728,2020-05-31T00:34:42.893
 bottle-CNN-SF-ensemble,d=16_k=4_gtype=ER_noise=Gaussian_mat=COR,0.18007199109665575,0.19355375720910822,26.15625,-1.0,2020-05-20T20:05:05.273
 deep-FC-d=20_k=1_gtype=ER2_noise=Gaussian_mat=COR,d=20_k=4_gtype=ER_noise=Gaussian_mat=COR,0.062147339023218715,0.08018242601602746,41.505859375,-1.0,2020-05-22T19:07:51.629
 deep-EQ-ER-ensemble,d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,0.7312791292853674,0.775448045523322,4.8515625,-1.0,2020-05-20T14:17:36.796

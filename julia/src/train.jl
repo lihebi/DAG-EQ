@@ -110,6 +110,7 @@ function sup_test(model, test_ds; nbatch=test_ds.nbatch)
     gm = MeanMetric{GraphMetric}()
     loss_metric = MeanMetric{Float64}()
 
+    t1 = time()
     # FIXME testmode!
     @showprogress 0.1 "Inner testing..." for i in 1:nbatch
         x, y = next_batch!(test_ds) |> gpu
@@ -119,12 +120,45 @@ function sup_test(model, test_ds; nbatch=test_ds.nbatch)
         add!(gm, metric)
         add!(loss_metric, loss)
     end
+    t2 = time()
+    t = (t2 - t1) / nbatch
 
     g_v = get!(gm)
     loss_v = get!(loss_metric)
     @info "data" g_v loss_v
     # return the metrics
-    g_v
+    g_v, t
+end
+
+function sup_test_raw(model, test_ds; nbatch=test_ds.nbatch)
+    gm = MeanMetric{GraphMetric}()
+    loss_metric = MeanMetric{Float64}()
+
+    t1 = time()
+    # FIXME testmode!
+    @showprogress 0.1 "Inner testing..." for i in 1:nbatch
+        x, y = next_batch!(test_ds)
+
+        x = cat([cor(x[:,:,i]) for i in 1:size(x, 3)]..., dims=3) |> gpu
+        y = y |> gpu
+
+        out = model(x)
+        loss = myσxent(out, y)
+        metric = sup_graph_metrics(cpu(σ.(out)), cpu(y))
+        add!(gm, metric)
+        add!(loss_metric, loss)
+    end
+
+    t2 = time()
+    t = (t2 - t1) / nbatch
+    # FIXME actually I need to mention the batch size in the paper
+    # * test_ds.batch_size
+
+    g_v = get!(gm)
+    loss_v = get!(loss_metric)
+    @info "data" g_v loss_v
+    # return the metrics
+    g_v, t
 end
 
 function create_test_cb(model, test_ds, msg; logger=nothing)

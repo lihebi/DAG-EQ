@@ -46,6 +46,7 @@ function main_EQ_sep()
                                    mechanism=mec),
                           deep_eq_model_fn,
                           prefix="deep-EQ",
+                          # FIXME I probably want to train more steps for this
                           train_steps=1.5e4)
         # testing config
         for k in [1,
@@ -60,7 +61,8 @@ function main_EQ_sep()
 
             @info "Testing" expID d k gtype
             exp_test(expID,
-                     DataSpec(d=d, k=k, gtype=gtype, noise=noise, mechanism=mec))
+                     DataSpec(d=d, k=k, gtype=gtype, noise=noise, mechanism=mec),
+                     use_raw=true)
         end
     end
 end

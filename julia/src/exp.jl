@@ -147,7 +147,8 @@ function load_results!()
         df.date
         _results = Dict((df.expID .=> df.testID)
                         .=>
-                        zip(df.prec, df.recall, df.shd, df.date))
+                        zip(df.prec, df.recall, df.shd,
+                            df.time, df.date))
     else
         _results = Dict()
     end
@@ -430,9 +431,10 @@ Base.convert(String, date::DateTime) = "$date"
 function result2csv(res, fname)
     df = DataFrame(expID=String[], testID=String[],
                    prec=Float64[], recall=Float64[],
-                   shd=Float64[], date=String[])
+                   shd=Float64[], time=Float64[],
+                   date=String[])
     for (key,value) in res
-        push!(df, (key[1], key[2], value[1], value[2], value[3], value[4]))
+        push!(df, (key[1], key[2], value[1], value[2], value[3], value[4], value[5]))
     end
     # save df
     CSV.write(fname, df)
@@ -449,14 +451,17 @@ function test()
     result2csv(result, "result.csv")
 end
 
-
-function exp_test(expID, spec)
+function exp_test(expID, spec; use_raw=false)
     global _results
     if isnothing(_results)
         load_results!()
     end
 
     testID = dataspec_to_id(spec)
+
+    if use_raw
+        testID = "raw-$testID"
+    end
 
     if !haskey(_results, expID=>testID)
         model_dir = joinpath("saved_models", expID)
@@ -466,14 +471,19 @@ function exp_test(expID, spec)
         end
 
         model = gpu(model)
-        ds, test_ds = spec2ds(spec)
-
-        # DEBUG TODO not using all data for testing
-        metrics = sup_test(model, test_ds, nbatch=16)
+        if use_raw
+            test_ds = load_sup_ds(spec, 16, use_raw=true);
+            metrics, t = sup_test_raw(model, test_ds, nbatch=16)
+        else
+            ds, test_ds = spec2ds(spec)
+            # DEBUG TODO not using all data for testing
+            metrics, t = sup_test(model, test_ds, nbatch=16)
+        end
 
         # add this to result
         _results[expID=>testID] = (metrics.prec, metrics.recall,
                                    metrics.shd,
+                                   t,
                                    now())
 
         # finally, save the results
