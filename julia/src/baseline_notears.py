@@ -32,6 +32,14 @@ def test_notears():
     print(acc)
 
 
+def run_notears(npx, npy):
+    W_est = notears_linear(npx, lambda1=0, loss_type='l2')
+    assert ut.is_dag(W_est)
+    # np.savetxt('W_est.csv', W_est, delimiter=',')
+    # acc = ut.count_accuracy(y.transpose(), W_est != 0)
+    
+
+
 def test_notears_nonlinear():
     os.chdir('julia/src')
     fname = 'data/SF-10/d=10_k=1_gtype=SF_noise=Gaussian_mat=COR_mec=MLP.hdf5'
