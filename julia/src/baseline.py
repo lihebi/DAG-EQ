@@ -82,6 +82,8 @@ def run_one(alg, x, y):
         d = x.shape[1]
         # FIXME hyper-parameters
         mat = dag_gnn(d, np.array(x), y.transpose(), max_iter=5, num_epochs=100)
+        # CAUTION I have to convert it into 1/0
+        mat = (mat != 0).astype(np.int)
         prec, recall, shd = compute_metrics(mat, y.transpose())
         print('prec:', prec, 'recall:', recall, 'shd:', shd)
         return prec, recall, shd
@@ -137,6 +139,7 @@ def test():
     # TODO CAUTION this is very slow
     # run_one('SAM', x, y)
     run_one('notears', x, y)
+    run_one('DAG-GNN', x, y)
 
     run_RCC(raw_x, raw_y, 'CLF')
     run_RCC(raw_x, raw_y, 'NN')
@@ -184,6 +187,8 @@ def main():
                 if alg not in res[fname]:
                     prec, recall, shd, t = run_many(alg, fname)
                     res[fname][alg] = [prec, recall, shd, t]
+                    print('-- testing result:', [prec, recall, shd, t])
+                    print('-- writing ..')
                     save_results(res)
 
 if __name__ == '__main__':

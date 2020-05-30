@@ -25,16 +25,6 @@ def clear_tqdm():
 
 clear_tqdm()
 
-def test():
-    # 1. load my data
-    #    - X
-    #    - Graph in the form of networkx graph
-    X, graph
-    # X.shape should be (1000,10) for d=10
-
-    # 2.
-
-
 # graph_size = 10
 x_dims = 1
 z_dims = 1
