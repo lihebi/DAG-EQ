@@ -26,12 +26,19 @@
 ** Important
 
 - [-] compare with pairwise-supervised approach
-  - [ ] and the code up the traditional approach experiment code
+  - [X] and the code up the traditional approach experiment code
 - [-] 10, 20, 50, 100 should be ideal graph size
 - [ ] close comparison between flat-CNN and deep-EQ
   - maybe try CNN with larger filters?
 - [X] add MLP testing results
   - [ ] I could probably ignore MLP experiment for now
+
+*** TODO ensemble SF and ER
+Looks like our method performs so much better on SF than ER. I either:
+- figure out if there's anything wrong, or
+- ensemble training on SF and ER
+
+*** TODO record featurization time
 
 ** Real data
 *** cite:2005-Science-Sachs-Causal Causal protein-signaling networks derived from multiparameter single-cell data
@@ -68,6 +75,12 @@ Most of these are discrete. My approach should work on discrete too, maybe a dif
 Notears has very clean API, there's no problem of plugging in my data.
 - [-] Notears cite:2018-NIPS-Zheng-Dags cite:2018-cs.LG-Zheng-Dags https://github.com/xunzheng/notears
 
+| model | EQ | CNN baseline | NOTEARS | FGS |
+|-------+----+--------------+---------+-----|
+| d=50  | 23 |           42 |      20 |  10 |
+| d=100 | 62 |           93 |      50 |  80 |
+
+
 For these three, the model, trainig, and data loading are highly tangled
 together. I thus need to figure out, for each of them, the data loading
 scheme. Then, I'll have to do two parts:
@@ -77,12 +90,13 @@ Then I'll just run their code and get whatever they are reporting.
 
 - [ ] DAG-GNN cite:2019-ICML-Yu-Dag https://github.com/fishmoon1234/DAG-GNN
   - ths is non-linear extension. But this seems to be the easiest to modify
-- [ ] GraN-DAG cite:2020-ICLRPoster-Lachapelle-Gradient https://github.com/kurowasan/GraN-DAG
-  - (HEBI: the code is too tangled to run. Running time is long)
 - [ ] RL-BIC cite:2020-ICLROral-Zhu-Causal https://github.com/huawei-noah/trustworthyAI
   - (HEBI: this is super slow) for even a single data point, about 100 iter/min,
     where there seems to be a lot of iterations
 
+- [-] GraN-DAG cite:2020-ICLRPoster-Lachapelle-Gradient https://github.com/kurowasan/GraN-DAG
+  - (HEBI: the code is too tangled to run. Running time is long)
+  - this is non-linear only, so pass
 - [-] pairwise supervised model cite:2015-ICML-Lopez-Paz-Towards
 - [-] Structural Agnostic Model (SAM)
 
@@ -853,3 +867,5 @@ gp.sample_y(np.concatenate((X,X)), random_state=None).flatten()
 However, there's no random function (=sample_y=) equivalent in Julia
 GaussianProcesses libraries, thus I'm not using it.
 
+*** CANCELED use json for on julia-side result collection as well
+CLOSED: [2020-05-31 Sun 01:12]
