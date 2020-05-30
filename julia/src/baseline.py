@@ -6,6 +6,7 @@ import numpy as np
 import random
 import json
 import time
+import networkx as nx
 
 import sys
 sys.path.append("/home/hebi/git/reading/notears")
@@ -14,6 +15,8 @@ from notears.nonlinear import NotearsMLP, notears_nonlinear
 
 from baseline_common import compute_metrics
 from baseline_cdt import run_CDT, run_RCC
+
+from baseline_daggnn import dag_gnn
 
 def read_hdf5(fname):
     f = h5py.File(fname, 'r')
@@ -72,6 +75,13 @@ def run_one(alg, x, y):
         mat = notears_linear(np.array(x), lambda1=0, loss_type='l2')
         mat = (mat != 0).astype(np.int)
         # CAUTION here seems that I must do y.transpose()
+        prec, recall, shd = compute_metrics(mat, y.transpose())
+        print('prec:', prec, 'recall:', recall, 'shd:', shd)
+        return prec, recall, shd
+    elif alg == 'DAG-GNN':
+        d = x.shape[1]
+        # FIXME hyper-parameters
+        mat = dag_gnn(d, np.array(x), y.transpose(), max_iter=5, num_epochs=100)
         prec, recall, shd = compute_metrics(mat, y.transpose())
         print('prec:', prec, 'recall:', recall, 'shd:', shd)
         return prec, recall, shd
@@ -156,15 +166,18 @@ def save_results(res):
     with open(fname, 'w') as fp:
         json.dump(res, fp, indent=2)
 
+def test():
+    os.chdir('julia/src')
+
 def main():
     for gtype in ['SF', 'ER']:
-        for d in [10, 20, 50]:
+        for d in [10, 20, 50, 100]:
             fname = 'data/{}-{}/d={}_k=1_gtype={}_noise=Gaussian_mat=COR.hdf5'.format(gtype, d, d, gtype)
             print('== processing', fname, '..')
             # read baseline
             res = load_results()
             # FIXME notears seems to work too well
-            for alg in ['PC', 'CAM', 'GES', 'notears', 'RCC-CLF', 'RCC-NN']:
+            for alg in ['PC', 'CAM', 'GES', 'notears', 'RCC-CLF', 'RCC-NN', 'DAG-GNN']:
                 print('-- running', alg, 'algorithm ..')
                 if fname not in res:
                     res[fname] = {}
@@ -173,4 +186,5 @@ def main():
                     res[fname][alg] = [prec, recall, shd, t]
                     save_results(res)
 
-main()
+if __name__ == '__main__':
+    main()
