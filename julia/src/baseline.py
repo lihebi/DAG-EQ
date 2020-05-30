@@ -17,6 +17,7 @@ from baseline_common import compute_metrics
 from baseline_cdt import run_CDT, run_RCC
 
 from baseline_daggnn import dag_gnn
+from baseline_rlbic import rlbic
 
 def read_hdf5(fname):
     f = h5py.File(fname, 'r')
@@ -87,6 +88,20 @@ def run_one(alg, x, y):
         prec, recall, shd = compute_metrics(mat, y.transpose())
         print('prec:', prec, 'recall:', recall, 'shd:', shd)
         return prec, recall, shd
+    elif alg == 'RL-BIC':
+        d = x.shape[1]
+        try:
+            mat = rlbic(d, np.array(x), y.transpose(),
+                        lambda_iter_num=500, nb_epoch=2000)
+            # FIXME the mat seems to be already int
+            mat = (mat != 0).astype(np.int)
+            # FIXME this seems to be wrong
+            prec, recall, shd = compute_metrics(mat, y.transpose())
+            print('prec:', prec, 'recall:', recall, 'shd:', shd)
+            return prec, recall, shd
+        except KeyboardInterrupt as e:
+            print('keyboard interrupt')
+            exit(1)
     else:
         print('Unsupport alg', alg)
         assert(False)
@@ -110,7 +125,8 @@ def run_many(alg, fname):
         ct = 0
         start = time.time()
         # FIXME testing only 10 graphs
-        for _ in range(10):
+        # DEBUG 6 for d=100
+        for _ in range(4):
             x, y = next(it)
             prec, recall, shd = run_one(alg, x, y)
             ct += 1
@@ -180,11 +196,15 @@ def main():
             # read baseline
             res = load_results()
             # FIXME notears seems to work too well
-            for alg in ['PC', 'CAM', 'GES', 'notears', 'RCC-CLF', 'RCC-NN', 'DAG-GNN']:
+            for alg in ['PC', 'CAM', 'GES',
+                        'RCC-CLF', 'RCC-NN',
+                        'notears', 'DAG-GNN', 'RL-BIC']:
                 print('-- running', alg, 'algorithm ..')
                 if fname not in res:
                     res[fname] = {}
                 if alg not in res[fname]:
+                    # run RL-BIC only on d=10,20
+                    if alg == 'RL-BIC' and d > 20: continue
                     prec, recall, shd, t = run_many(alg, fname)
                     res[fname][alg] = [prec, recall, shd, t]
                     print('-- testing result:', [prec, recall, shd, t])
