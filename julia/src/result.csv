@@ -174,6 +174,7 @@ bottle-CNN-d=8_k=1_gtype=SF2_noise=Gaussian_mat=COR,d=8_k=1_gtype=SF_noise=Gauss
 deep-EQ-d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,d=10_k=2_gtype=SF_noise=Gaussian_mat=COR,0.6852437685921695,0.855251736111111,4.845703125,2020-05-20T22:41:14.636
 bottle-CNN-ER-ensemble,d=16_k=4_gtype=SF_noise=Gaussian_mat=COR,0.23629016237326503,0.1721354166666667,20.759765625,2020-05-20T19:45:45.652
 flat-CNN-d=32_k=1_gtype=SF_noise=Gaussian_mat=COR,d=32_k=1_gtype=SF_noise=Gaussian_mat=COR,0.694429651373264,0.8601310483870968,16.076171875,2020-05-20T19:12:51.755
+deep-EQ-d=100_k=1_gtype=SF_noise=Gaussian_mat=COR,d=100_k=1_gtype=SF_noise=Gaussian_mat=COR,0.718609188956559,0.5981691919191919,63.0390625,2020-05-27T13:13:22.818
 deep-FC-d=10_k=1_gtype=ER2_noise=Gaussian_mat=COR_mec=MLP,d=10_k=1_gtype=SF_noise=Gaussian_mat=COR,0.16556233883316898,0.3311631944444444,21.02734375,2020-05-22T10:10:44.433
 deep-FC-d=15_k=1_gtype=ER4_noise=Gaussian_mat=COR,d=15_k=2_gtype=ER_noise=Gaussian_mat=COR,0.08165873657929867,0.23250310689911563,49.10546875,2020-05-22T18:43:48.155
 flat-CNN-d=8_k=1_gtype=ER2_noise=Gaussian_mat=COR,d=8_k=1_gtype=ER_noise=Gaussian_mat=COR,0.2929153049431654,0.621472239514199,14.0234375,2020-05-22T10:57:36.427
