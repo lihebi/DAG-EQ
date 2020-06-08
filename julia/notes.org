@@ -23,6 +23,17 @@
   - FIXME OK, I probably need to try some other non-linear model, or just
     non-linear does not work
 
+** final
+*** DONE all table use 10,20,50,100
+CLOSED: [2020-06-02 Tue 13:37]
+*** TODO Sachs better results?
+*** add training time
+*** DONE simplify comparison tables
+CLOSED: [2020-06-02 Tue 13:37]
+*** better ensemble
+*** TODO related work
+*** TODO more model description, possibly add background section
+
 ** Important
 
 - [-] compare with pairwise-supervised approach
