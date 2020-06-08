@@ -98,6 +98,11 @@ def run_one(alg, x, y):
             # FIXME this seems to be wrong
             prec, recall, shd = compute_metrics(mat, y.transpose())
             print('prec:', prec, 'recall:', recall, 'shd:', shd)
+
+            # And yes, no tranpose will result in worse performance
+            # prec2, recall2, shd2 = compute_metrics(mat, y)
+            # print('prec2:', prec2, 'recall2:', recall2, 'shd2:', shd2)
+
             return prec, recall, shd
         except KeyboardInterrupt as e:
             print('keyboard interrupt')
@@ -107,6 +112,27 @@ def run_one(alg, x, y):
         assert(False)
     end = time.time()
     print('time: {:.3f}'.format(end-start))
+
+def test():
+    fname = 'data/SF-100/d=100_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5'
+    fname = 'data/SF-200/d=200_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5'
+    fname = 'data/SF-300/d=300_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5'
+    fname = 'data/SF-400/d=400_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5'
+    # run_many('GES', fname)
+    it = read_hdf5_iter(fname)
+    x, y = next(it)
+    mat = run_CDT('GES', x, y, False)
+    mat.astype(np.int)
+    sum(sum(np.array(mat)))
+    compute_metrics(mat, y)
+    compute_metrics(np.array(mat), y)
+    prec, recall, shd = compute_metrics(mat, y)
+    print('prec:', prec, 'recall:', recall, 'shd:', shd)
+    np.sum(mat != y)
+    # number of predicted edges
+    np.sum(mat == 1)
+    # fp:
+    np.sum(mat[y == 1] == 1)
 
 def run_many(alg, fname):
     if alg in ['RCC-CLF', 'RCC-NN']:
@@ -126,7 +152,7 @@ def run_many(alg, fname):
         start = time.time()
         # FIXME testing only 10 graphs
         # DEBUG 6 for d=100
-        for _ in range(4):
+        for _ in range(5):
             x, y = next(it)
             prec, recall, shd = run_one(alg, x, y)
             ct += 1
@@ -188,6 +214,67 @@ def save_results(res):
 def test():
     os.chdir('julia/src')
 
+def main_large():
+    for gtype in ['SF']:
+        for d in [200, 300, 400]:
+            fname = 'data/{}-{}/d={}_k=1_gtype={}_noise=Gaussian_mat=COR.hdf5'.format(gtype, d, d, gtype)
+            print('== processing', fname, '..')
+            # read baseline
+            res = load_results()
+            # FIXME notears seems to work too well
+            for alg in ['GES']:
+                print('-- running', alg, 'algorithm ..')
+                if fname not in res:
+                    res[fname] = {}
+                if alg not in res[fname]:
+                    prec, recall, shd, t = run_many(alg, fname)
+                    res[fname][alg] = [prec, recall, shd, t]
+                    print('-- testing result:', [prec, recall, shd, t])
+                    print('-- writing ..')
+                    save_results(res)
+
+def test_RLBIC():
+    gtype = 'SF'
+    d = 10
+    fname = 'data/{}-{}/d={}_k=1_gtype={}_noise=Gaussian_mat=COR.hdf5'.format(
+        gtype, d, d, gtype)
+    alg = 'RL-BIC'
+
+    # prec, recall, shd, t = run_many(alg, fname)
+    # print('-- testing result:', [prec, recall, shd, t])
+
+    # running one
+    it = read_hdf5_iter(fname)
+    x, y = next(it)
+    # prec, recall, shd = run_one(alg, x, y)
+
+    # even inside for RL-BIC only
+    d = x.shape[1]
+    mat = rlbic(d, np.array(x), y.transpose(),
+                lambda_iter_num=500, nb_epoch=2000)
+
+    # compare mat with y
+    compute_metrics(mat, y)
+    # this seems to make sense the most
+    compute_metrics(mat, y.transpose())
+    # and this seems not necessary
+    mat2 = (mat != 0).astype(np.int)
+    compute_metrics(mat2, y)
+    compute_metrics(mat2, y.transpose())
+
+    # FIXME the mat seems to be already int
+    mat = (mat != 0).astype(np.int)
+    # FIXME this seems to be wrong
+    prec, recall, shd = compute_metrics(mat, y.transpose())
+    print('prec:', prec, 'recall:', recall, 'shd:', shd)
+
+    prec2, recall2, shd2 = compute_metrics(mat, y)
+    print('prec2:', prec2, 'recall2:', recall2, 'shd2:', shd2)
+
+    return prec, recall, shd
+    
+    
+
 def main():
     for gtype in ['SF', 'ER']:
         for d in [10, 20, 50, 100]:
@@ -203,13 +290,41 @@ def main():
                 if fname not in res:
                     res[fname] = {}
                 if alg not in res[fname]:
-                    # run RL-BIC only on d=10,20
-                    if alg == 'RL-BIC' and d > 20: continue
+                    # run RL-BIC only on d=10,20,50
+                    if alg == 'RL-BIC' and d > 50: continue
                     prec, recall, shd, t = run_many(alg, fname)
                     res[fname][alg] = [prec, recall, shd, t]
                     print('-- testing result:', [prec, recall, shd, t])
                     print('-- writing ..')
                     save_results(res)
+import csv
+def table():
+    # generate table for paper
+    res = load_results()
+    # generate csv directly
+    # csv.write()
+    with open('results/method.csv', 'w') as fp:
+        writer = csv.writer(fp)
+        # header
+        writer.writerow(['model', 'prec', 'recall', 'shd', 'time'])
+        for d in [10, 20, 50, 100]:
+            name = "data/SF-{}/d={}_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5".format(d, d)
+            methods = ['PC', 'GES', 'CAM',
+                       'RCC-CLF', 'RCC-NN',
+                       'notears', 'DAG-GNN']
+            if d < 50:
+                methods += ['RL-BIC']
+            for method in methods:
+                tmp = res[name][method]
+                tmp = ['{:.1f}'.format(tmp[0] * 100),
+                       '{:.1f}'.format(tmp[1] * 100),
+                       tmp[2],
+                       '{:.2f}'.format(tmp[3])]
+                # tmp = list(map(lambda x: '{:.3f}'.format(x), tmp))
+                tmp = [method] + tmp
+                writer.writerow(tmp)
+            writer.writerow([])
 
 if __name__ == '__main__':
     main()
+    # main_large()

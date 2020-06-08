@@ -474,7 +474,7 @@ def run_RCC(raw_x, raw_y, model):
     #
     # FIXME testing only 10 graphs
     # FIXME keep in-sync with other methods?
-    indices = random.sample(range(len(test_x)), 10)
+    indices = random.sample(range(len(test_x)), 5)
     # TODO featurizing is slow. I'll be doing featurizing all together
     obj.preprocess
     all_prec = 0
