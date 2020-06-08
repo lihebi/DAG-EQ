@@ -78,6 +78,17 @@ function test()
     gradient(()->sum(model(x)), Flux.params(model))
 end
 
+function main_ultra_large_graphs()
+    gtype = :SF
+    mec = :Linear
+    train_spec = DataSpec(d=100, k=1, gtype=gtype, noise=:Gaussian, mechanism=mec)
+    expID = exp_train(train_spec, deep_eq_model_fn, prefix="deep-EQ", train_steps=3e4)
+    for d in [100]
+        spec = DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian, mechanism=mec)
+        exp_test(expID, spec)
+    end
+end
+
 function main_EQ_ensemble()
     # ensemble training
     for gtype in [:ER, :SF,
@@ -116,6 +127,34 @@ function main_EQ_ensemble()
                             gtype=gtype,
                             noise=:Gaussian,
                             ng=1000, N=1)
+            exp_test(expID, spec)
+        end
+    end
+end
+
+function main_EQ_super_ensemble()
+    # ensemble training
+    for gtype in [:ER, :SF,
+                  :ER2, :SF4],
+        mec in [:Linear,
+                # :MLP
+                ],
+        k in [1,2,4]
+
+        # I'll be training just one EQ model on SF graph with d=10,15,20
+        specs = map([10, 20, 50, 100]) do d
+            DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian, mechanism=mec)
+        end
+        expID = exp_train(specs, deep_eq_model_fn,
+                          prefix="deep-EQ-super-$gtype", train_steps=3e4)
+        # Testing
+        # get specs
+        for d in [15,30,80],
+            gtype in [:ER, :SF],
+            k in [1,2,4]
+
+            @info "Testing" expID d gtype k
+            spec = DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian)
             exp_test(expID, spec)
         end
     end
@@ -363,6 +402,8 @@ function main()
     # TODO OVERNIGHT
     main_EQ_sep()
     main_EQ_cov()
+    # DEBUG super ensemble
+    main_EQ_super_ensemble()
 end
 
 main()
