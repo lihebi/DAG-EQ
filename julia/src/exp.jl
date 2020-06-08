@@ -44,14 +44,15 @@ is created only once, before first use.
 function spec2ds(spec::DataSpec)
     batch_size = spec.bsize
     ds, test_ds = load_sup_ds(spec, batch_size)
-    ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
+    # DEBUG move on GPU on demand to reduce memory usage
+    # ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
     return ds, test_ds
 end
 
 function spec2ds(specs::Array{DataSpec, N} where N)
     dses = map(specs) do spec
-        ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
         ds, test_ds = load_sup_ds(spec)
+        # ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
     end
     return [ds[1] for ds in dses], [ds[2] for ds in dses]
 end
