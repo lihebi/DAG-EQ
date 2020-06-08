@@ -156,16 +156,21 @@ function load_results!()
 end
 
 function parse_spec_string(s)
-    re = r"d=(\d+)_k=(\d+)_gtype=(.*)_noise=(.*)_mat=([^_]*)(_mec=MLP)?"
+    re = r"d=(\d+)_k=(\d+)_gtype=(.*)_noise=(.*)_mat=([^_]*)(_mec=MLP)?(_raw)?"
     m = match(re, s)
     if isnothing(m) @show s end
     d = parse(Int, m.captures[1])
     k = parse(Int, m.captures[2])
-    gtype, noise, mat, mec = m.captures[3:end]
+    gtype, noise, mat, mec, raw = m.captures[3:end]
     if isnothing(mec)
         mec = "Linear"
     else
         mec = "MLP"
+    end
+    if isnothing(raw)
+        raw = false
+    else
+        raw = true
     end
     # FIXME nothing seems to match any expressions, see
     # https://github.com/kmsquire/Match.jl/issues/60
@@ -176,7 +181,7 @@ function parse_spec_string(s)
     #     # var::String => "MLP"
     #     _ => "MLP"
     # end
-    return d, k, gtype, noise, mat, mec
+    return d, k, gtype, noise, mat, mec, raw
 end
 
 # FIXME these type definitions do not seem to be allowed inside function scope
@@ -201,8 +206,10 @@ function pretty_print_result()
                    test_noise=String[],
                    test_mat=String[],
                    test_mec=MString[],
+                   raw=Bool[],
 
-                   prec=Float32[], recall=Float32[], shd=Float32[])
+                   prec=Float32[], recall=Float32[], shd=Float32[],
+                   time=Float32[])
     for item in _results
         # 1. find the model name
         m = match(r"(.*)-d=.*", item[1][1])
@@ -218,30 +225,34 @@ function pretty_print_result()
             # model = item[1][1]
             model = m.captures[1]
             (train_d, train_k, train_gtype, train_noise, train_mat,
-             train_mec) = parse_spec_string(item[1][1])
+             train_mec, _) = parse_spec_string(item[1][1])
         end
 
         (test_d, test_k, test_gtype, test_noise, test_mat,
-             test_mec) = parse_spec_string(item[1][2])
+         test_mec, raw) = parse_spec_string(item[1][2])
 
         prec = round3(item[2][1]) * 100
         recall = round3(item[2][2]) * 100
         shd = round(item[2][3], digits=1)
+        t = round(item[2][4], digits=1)
         # prec, recall, shd = round3.(item[2][1:end-1])
 
         push!(df, (model,
                    train_d, train_k, train_gtype, train_noise, train_mat, train_mec,
-                   test_d, test_k, test_gtype, test_noise, test_mat, test_mec,
-                   prec, recall, shd))
+                   test_d, test_k, test_gtype, test_noise, test_mat, test_mec, raw,
+                   prec, recall, shd, t))
     end
 
-    df
+    parse_spec_string("d=15_k=1_gtype=ER_noise=Gaussian_mat=COR_raw")
+
+    # sum(df.raw)
 
     # I don't need train_k, because all of them are 1s
     df = df[!, Not(All(:train_k, :train_noise))]
 
     unique(df.train_mat)
     unique(df.model)
+
 
     # 1. all the models in separate mode
     select_sep_df(df, "deep-FC")
@@ -253,10 +264,14 @@ function pretty_print_result()
     # header=map((x)->replace(x,"_"=>"/"),
     #            names(tbl_baseline))
     # quotestrings=true,
+    table_cmp_baseline(df)
     CSV.write("results/cmp-baseline.csv", table_cmp_baseline(df))
     CSV.write("results/er4.csv", table_ER24(df))
 
     # DONE add MLP testing results
+
+    # 1.5 raw
+    CSV.write("results/raw.csv", table_raw(df))
 
     # 2. transfering
     #
@@ -280,6 +295,22 @@ function pretty_print_result()
     select_ensemble_df(df, "deep-EQ-SF-COV-ensemble")
 
     CSV.write("results/ensemble.csv", table_ensemble(df))
+end
+
+function test()
+    df[in.(df.test_d, Ref([200, 300, 400])), All(:model, :train_d, :test_d,  :prec, :recall, :shd, :time)]
+end
+
+function table_raw(df)
+    selector = (
+        # (df.raw .== 1) .&
+        (df.train_gtype .== "SF")
+        .& in.(df.test_d, Ref([10, 20, 50, 100, 200, 300, 400]))
+        # .& in.(df.train_d, Ref([10, 20, 50, 100, 200, 300, 400]))
+    )
+    sort(df[selector,
+            All(:model, :train_d, :prec, :recall, :shd, :time, :test_d)],
+         [:train_d])
 end
 
 function table_transfer_k(df)
