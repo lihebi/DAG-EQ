@@ -391,12 +391,24 @@ function DataSpec(;d, k, gtype, noise, mat=:COR, mechanism=:Linear, ng=3000, N=3
         ng = 1000
         N = 1
         bsize=32
-    else
+    elseif d <= 150
         ng = 1000
         N = 1
         # DEBUG testing memory limit during training (pullback of EQ layer seems
         # to consume lots of memory)
         bsize = 16
+    elseif d <= 200
+        ng = 500
+        N = 1
+        bsize = 8
+    elseif d <= 300
+        ng = 300
+        N = 1
+        bsize = 4
+    elseif d <= 400
+        ng = 300
+        N = 1
+        bsize = 2
     end
     DataSpec(d, k, gtype, noise, mat, mechanism, ng, N, bsize)
 end
