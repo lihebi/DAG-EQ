@@ -377,11 +377,12 @@ end
 function table_cmp_baseline(df)
     # comparison of EQ with FC and CNN (and random) baselines
     # only show d=10,15,20, SF and ER graphs, k=1
-    sel1 = in.(df.model, Ref(["deep-FC", "deep-EQ", "flat-CNN"]))
-    sel2 = in.(df.train_d, Ref([10, 15, 20]))
+    sel1 = in.(df.model, Ref(["deep-FC", "deep-EQ", "flat-CNN", "bottle-CNN"]))
+    # sel2 = in.(df.train_d, Ref([10, 15, 20,8,16,32]))
+    sel2 = in.(df.train_d, Ref([10, 20, 50, 100]))
     selector = (sel1 .& sel2
                 .& (df.train_gtype .== df.test_gtype)
-                .& in.(df.train_gtype, Ref(["ER", "SF"]))
+                .& in.(df.train_gtype, Ref(["SF"]))
                 .& (df.test_noise .== "Gaussian")
                 .& (df.train_mec .== "Linear")
                 .& (df.test_mec .== "Linear")
@@ -390,16 +391,8 @@ function table_cmp_baseline(df)
                 .& (df.test_k .== 1))
 
     sort(df[selector,
-            # test_d is same as train_d
-            Not(All(:train_k,
-                    :train_noise,
-                    :test_d,
-                    :test_k,
-                    :train_mec, :test_mec,
-                    :test_noise,
-                    :train_mat,
-                    :test_mat))],
-         [:train_gtype, :model, :test_gtype, :train_d])
+            All(:model, :train_d, :prec, :recall, :shd)],
+         [:model, :train_d])
 end
 
 function table_ER24(df)
