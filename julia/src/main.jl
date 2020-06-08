@@ -301,7 +301,58 @@ function test()
     (DataSpec(10, 1, :ER, :Gaussian, :COR, :Linear, 3000, 3))
 end
 
+function test_real()
+    # cite:2005-Science-Sachs-Causal
+    df = CSV.read("/home/hebi/Downloads/tmp/Sachs/csv/1.cd3cd28.csv")
+    df = CSV.read("/home/hebi/Downloads/tmp/Sachs/csv/12.cd3cd28icam2+psit.csv")
+    df = CSV.read("/home/hebi/Downloads/tmp/Sachs/csv/7.cd3cd28+ly.csv")
+    
+    names(df)
+
+    SachsG = Sachs_ground_truth()
+    display_named_graph(SachsG)
+    # 853, 11
+    SachsX = convert(Matrix, df)
+
+
+    @load "saved_models/deep-EQ-SF-ensemble/step-30000.bson" model
+    @load "saved_models/deep-EQ-ER-ensemble/step-30000.bson" model
+    
+    @load "back/supervised/saved_models/EQ-deep-mixed-d=[10,15,20]-COR2-2020-05-11T22:09:56.734/step-40000.bson" model
+    @load "back/supervised/saved_models/EQ-deep-mixed-d=[10,15,20]-ONE/step-17671.bson" model
+    @load "back/supervised/saved_models/EQ-deep-mixed-d=[10,15,20]-CORR/step-41438.bson" model
+
+    @load "saved_models/EQ-deep-mixed-d=[10,15,20]-COV/step-47208.bson" model
+
+    @load "saved_models/deep-EQ-d=10_k=1_gtype=SF_noise=Gaussian_mat=COR/step-30000.bson"
+    @load "saved_models/deep-EQ-ER-ensemble/step-30000.bson" model
+    # out = inf_one(model, cov(SachsX))
+    out = inf_one(model, cor(SachsX))
+    # visualize the graph
+    Wout = threshold(σ.(out), 0.5, true)
+    # Wout = threshold(out, 25, true)
+    # no, this is all 0
+    display_graph_with_label(DiGraph(Wout), names(df))
+    display_graph_with_label(SachsG, names(df))
+    # call notears
+    ne(DiGraph(Wout))
+    adjacency_matrix(SachsG)
+
+    # predicted edge, true edge, SHD
+    predicted_edge = ne(DiGraph(Wout))
+    @show predicted_edge
+    correct_edge = sum(Wout[Wout .== 1] .== adjacency_matrix(SachsG)[Wout .== 1])
+    @show correct_edge
+
+    # metrics
+    ytrue = Matrix(gen_weights(SachsG))
+    sup_graph_metrics(Wout, ytrue)
+end
+
+
 function main()
+    main_ultra_large_graphs()
+
     main_CNN_ensemble()
     main_CNN_sep()
 
