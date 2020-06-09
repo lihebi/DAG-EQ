@@ -165,3 +165,45 @@ function test()
     m10.recall
 
 end
+
+using Distributions
+using CausalInference
+using LightGraphs
+
+using DelimitedFiles, LinearAlgebra, Statistics
+
+function test_PC_demo()
+    p = 0.01
+
+    # Download data
+    run(`wget http://nugget.unisa.edu.au/ParallelPC/data/real/NCI-60.csv`)
+
+    # Read data and compute correlation matrix
+    X = readdlm("NCI-60.csv", ',')
+    d, n = size(X)
+    C = Symmetric(cor(X, dims=2))
+
+    # Compute skeleton `h` and separating sets `S`
+    h, S = skeleton(d, gausscitest, (C, 100), quantile(Normal(), 1-p/2))
+
+    # Compute the CPDAG `g`
+    g = pcalg(d, gausscitest, (C, 100), quantile(Normal(), 1-p/2))
+end
+
+function test_PC()
+    # 1. load data
+    ds, test_ds = spec2ds(DataSpec(d=10, k=1, gtype=:ER, noise=:Gaussian))
+    # 2. get X
+    X, Y = next_batch!(test_ds) |> gpu
+    # 3. run PC algorithm
+    d, n = size(X)
+    C = Symmetric(cor(X, dims=2))
+
+    # Compute skeleton `h` and separating sets `S`
+    h, S = skeleton(d, gausscitest, (C, n), quantile(Normal(), 1-p/2))
+
+    # Compute the CPDAG `g`
+    g = pcalg(d, gausscitest, (C, n), quantile(Normal(), 1-p/2))
+    
+end
+
