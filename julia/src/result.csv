@@ -521,6 +521,7 @@ deep-EQ-d=15_k=1_gtype=ER2_noise=Gaussian_mat=COR,d=15_k=4_gtype=ER2_noise=Gauss
 deep-EQ-d=20_k=1_gtype=ER_noise=Gaussian_mat=COR,d=20_k=1_gtype=ER_noise=Gaussian_mat=COR_raw,0.8445173442177709,0.6494215647475516,9.1640625,0.07477244734764099,2020-05-31T00:34:37.334
 deep-EQ-d=20_k=1_gtype=SF_noise=Gaussian_mat=COR_mec=MLP,d=20_k=2_gtype=ER_noise=Gaussian_mat=COR_mec=MLP,0.6028185978712131,0.427851194469707,16.654296875,-1.0,2020-05-25T17:16:43.541
 deep-EQ-d=10_k=1_gtype=SF2_noise=Gaussian_mat=COR,d=10_k=1_gtype=SF_noise=Gaussian_mat=COR,0.4575631732877242,0.9641927083333333,10.625,-1.0,2020-05-22T23:56:04.694
+deep-EQ-d=10_k=1_gtype=SF_noise=Gaussian_mat=COR,raw-d=10_k=1_gtype=SF_noise=Gaussian_mat=COR,0.9243891597224342,0.9483506944444444,1.1640625,2.4066299349069595,2020-06-08T23:32:58.914
 deep-FC-d=15_k=1_gtype=SF_noise=Gaussian_mat=COR,d=15_k=2_gtype=ER_noise=Gaussian_mat=COR,0.25354346632485775,0.20014073667379823,20.12890625,-1.0,2020-05-20T17:17:19.436
 deep-FC-d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,d=10_k=1_gtype=SF_noise=Gaussian_mat=COR,0.4265837273570081,0.431640625,10.333984375,-1.0,2020-05-20T17:11:26.573
 deep-EQ-d=20_k=1_gtype=ER_noise=Gaussian_mat=COR_mec=MLP,d=20_k=4_gtype=ER_noise=Gaussian_mat=COR,0.15557988348979448,0.5760678609628136,71.107421875,-1.0,2020-05-25T11:47:51.702
@@ -616,6 +617,7 @@ deep-EQ-d=20_k=1_gtype=SF_noise=Gaussian_mat=COR,d=20_k=1_gtype=SF_noise=Gumbel_
 deep-FC-d=10_k=1_gtype=ER2_noise=Gaussian_mat=COR_mec=MLP,d=10_k=4_gtype=SF_noise=Gaussian_mat=COR,0.15077665207147278,0.3005642361111111,21.53515625,-1.0,2020-05-22T10:10:46.608
 deep-EQ-d=10_k=1_gtype=SF4_noise=Gaussian_mat=COR,d=10_k=2_gtype=ER_noise=Gaussian_mat=COR,0.31802402713517874,0.8950437842052248,19.318359375,-1.0,2020-05-23T00:51:42.366
 deep-EQ-d=15_k=1_gtype=SF_noise=Gaussian_mat=COR,d=15_k=4_gtype=ER_noise=Poisson_mat=COR,0.5560169173238886,0.4371537933958995,13.2392578125,-1.0,2020-05-26T03:36:56.349
+deep-EQ-d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,raw-d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,0.8333010930033332,0.7296989166349908,3.9296875,0.05363805592060089,2020-06-08T23:33:02.522
 deep-FC-d=10_k=1_gtype=ER2_noise=Gaussian_mat=COR,d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,0.20990985183990948,0.31859428719893257,17.955078125,-1.0,2020-05-22T10:10:40.915
 deep-EQ-d=20_k=1_gtype=SF_noise=Gaussian_mat=COR,d=20_k=1_gtype=SF_noise=Exp_mat=COR,0.9242035044804611,0.8753083881578949,3.73291015625,-1.0,2020-05-26T03:40:04.704
 deep-EQ-d=10_k=1_gtype=ER_noise=Gaussian_mat=COR,d=10_k=1_gtype=ER_noise=Gumbel_mat=COR,0.8311435469277161,0.7282224734029722,3.99169921875,-1.0,2020-05-26T03:48:15.224
@@ -661,7 +663,9 @@ deep-EQ-d=20_k=1_gtype=ER_noise=Gaussian_mat=COR_mec=MLP,d=20_k=1_gtype=SF_noise
 deep-EQ-SF-ensemble,d=30_k=4_gtype=SF_noise=Gaussian_mat=COR,0.5386199302957656,0.5319234913793104,26.80859375,-1.0,2020-05-20T14:20:35.78
 deep-EQ-d=10_k=1_gtype=ER4_noise=Gaussian_mat=COR,d=10_k=4_gtype=SF_noise=Gaussian_mat=COR,0.21899266869320155,0.7317708333333333,26.0703125,-1.0,2020-05-23T02:42:51.326
 bottle-CNN-d=32_k=1_gtype=ER2_noise=Gaussian_mat=COR,d=32_k=1_gtype=SF_noise=Gaussian_mat=COR,0.03560460646809331,0.0006930443548387096,31.5546875,-1.0,2020-05-22T20:03:20.162
+deep-EQ-d=20_k=1_gtype=ER_noise=Gaussian_mat=COR,raw-d=20_k=1_gtype=ER_noise=Gaussian_mat=COR,0.8395405346620921,0.6455744023961366,9.33984375,0.10708150267601013,2020-06-09T00:43:49.6
 flat-CNN-d=16_k=1_gtype=ER4_noise=Gaussian_mat=COR,d=16_k=1_gtype=SF_noise=Gaussian_mat=COR,0.17897323230698628,0.4759114583333333,40.708984375,-1.0,2020-05-22T11:54:41.782
+deep-EQ-d=20_k=1_gtype=SF_noise=Gaussian_mat=COR,raw-d=20_k=1_gtype=SF_noise=Gaussian_mat=COR,0.9219712175141378,0.8930921052631577,3.46875,0.18127530813217163,2020-06-09T00:43:46.117
 bottle-CNN-d=16_k=1_gtype=SF_noise=Gaussian_mat=COR_mec=MLP,d=16_k=1_gtype=ER_noise=Gaussian_mat=COR,0.09952250290255277,0.09021979502220978,26.88671875,-1.0,2020-05-24T23:43:59.869
 deep-FC-d=10_k=1_gtype=ER4_noise=Gaussian_mat=COR_mec=MLP,d=10_k=1_gtype=SF_noise=Gaussian_mat=COR,0.11595419231376058,0.37868923611111116,31.560546875,-1.0,2020-05-22T10:23:20.952
 deep-EQ-d=20_k=1_gtype=SF2_noise=Gaussian_mat=COR,d=20_k=2_gtype=SF2_noise=Gaussian_mat=COR,0.6476467194541565,0.2539740668402778,31.83203125,-1.0,2020-05-26T03:45:05.775
