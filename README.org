@@ -13,10 +13,11 @@ julia --project src/main.jl
 #+end_example
 
 Or you can use the pre-trained models. Pre-trained models can be found at:
-- [[https://github.com/lihebi/DAG-EQ/releases/download/v0.1/deep-EQ-d.10_k.1_gtype.SF_noise.Gaussian_mat.COR_step-30000.bson][d=10]]
-- [[https://github.com/lihebi/DAG-EQ/releases/download/v0.1/deep-EQ-d.20_k.1_gtype.SF_noise.Gaussian_mat.COR_step-30000.bson][d=20]]
-- [[https://github.com/lihebi/DAG-EQ/releases/download/v0.1/deep-EQ-d.50_k.1_gtype.SF_noise.Gaussian_mat.COR_step-30000.bson][d=50]]
-- [[https://github.com/lihebi/DAG-EQ/releases/download/v0.1/deep-EQ-d.100_k.1_gtype.SF_noise.Gaussian_mat.COR_step-30000.bson][d=100]]
+- [[https://github.com/lihebi/DAG-EQ/releases/download/v0.1/deep-EQ-d.10_k.1_gtype.SF_noise.Gaussian_mat.COR_step-30000.bson][d=10 pre-trained model]]
+- [[https://github.com/lihebi/DAG-EQ/releases/download/v0.1/deep-EQ-d.20_k.1_gtype.SF_noise.Gaussian_mat.COR_step-30000.bson][d=20 pre-trained model]]
+- [[https://github.com/lihebi/DAG-EQ/releases/download/v0.1/deep-EQ-d.50_k.1_gtype.SF_noise.Gaussian_mat.COR_step-30000.bson][d=50 pre-trained model]]
+- [[https://github.com/lihebi/DAG-EQ/releases/download/v0.1/deep-EQ-d.100_k.1_gtype.SF_noise.Gaussian_mat.COR_step-30000.bson][d=100 pre-trained model]]
+You can also found them in the [[https://github.com/lihebi/DAG-EQ/releases/tag/v0.1][release page]].
 
 Load the pretrained models:
 
