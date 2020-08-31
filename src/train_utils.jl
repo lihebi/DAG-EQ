@@ -14,9 +14,9 @@ function add!(m::MeanMetric{T}, v) where {T}
     m.sum += v
     m.n += 1
 end
-get(m::MeanMetric) = if m.n != 0 m.sum / m.n else m.sum / 1 end
+_get(m::MeanMetric) = if m.n != 0 m.sum / m.n else m.sum / 1 end
 function get!(m::MeanMetric)
-    res = get(m)
+    res = _get(m)
     reset!(m)
     res
 end
@@ -126,6 +126,5 @@ function test()
 
     m = MeanMetric{GraphMetric}()
     add!(m, GraphMetric(1,1,1,1,3,1,0,0))
-    get(m)
     reset!(m)
 end

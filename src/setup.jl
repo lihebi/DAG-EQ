@@ -48,29 +48,18 @@ Pkg.add(Pkg.PackageSpec(url="https://github.com/mcabbott/TensorGrad.jl", rev="ma
 Pkg.free("TensorOperations")
 Pkg.status()
 Pkg.update()
-Pkg.build("CuArrays")
+Pkg.build("CUDA")
 Pkg.rm("Zygote")
 Pkg.add("Zygote")
 Pkg.build()
-using CuArrays
 import GPUArrays
-Pkg.add(Pkg.PackageSpec(name="CuArrays", rev="master"))
 Pkg.add("FillArrays")
-Pkg.rm("CUDAapi")
-Pkg.rm("CuArrays")
-Pkg.add("GPUArrays")
-
 Pkg.add("DataFrames")
 
+# FIXME I have to manually specify the version
+# Pkg.update does not update the package
+Pkg.add(Pkg.PackageSpec(name="Flux", version="0.11"))
 
-# Flux
-Pkg.add("CuArrays")
-Pkg.add("CUDAnative")
-Pkg.rm("CUDAnative")
-Pkg.rm("CuArrays")
-Pkg.add("CUDAdrv")
-Pkg.rm("CUDAdrv")
-Pkg.add("CUDAapi")
 
 #!!!
 Pkg.add("Distributions")
@@ -96,12 +85,10 @@ Pkg.rm("Tracker")
 Pkg.add(PackageSpec(name="Flux", rev="master"))
 Pkg.free("Flux")
 Pkg.add(Pkg.PackageSpec(name="Zygote", rev="master"))
-# Pkg.rm("CuArrays")
 
 ##############################
 ## Or using Flux 0.9 and Tracker
 Pkg.rm("Flux")
-Pkg.rm("CuArrays")
 Pkg.rm("GPUArrays")
 Pkg.rm("Distributions")
 Pkg.add(PackageSpec(name="Flux", version="0.9"))

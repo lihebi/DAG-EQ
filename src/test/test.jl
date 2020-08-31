@@ -135,7 +135,7 @@ function (l::Equivariant)(input)
     λ = reshape(l.λ, 1, 1, size(l.λ)...)
     γ = reshape(l.γ, 1, 1, size(l.γ)...)
 
-    # FIXME maximum is problematic on CuArrays
+    # FIXME maximum is problematic on CuArray
     # gradient(()->sum(maximum(gpu(rand(5,5)), dims=2)))
     # gradient(()->sum(maximum(gpu(rand(5,5)), dims=(1,2))))
     # gradient(()->sum(maximum(rand(5,5), dims=(1,2))))
@@ -278,15 +278,15 @@ function test_tensor()
     Libdl.dlopen("libcuda")
     Libdl.dlopen("libssl")
     Libdl.dlopen("libcutensor")
-    using CuArrays
-    CuArrays.has_cutensor()
+    using CUDA
+    CUDA.has_cutensor()
     using TensorOperations
 
     using CUDAdrv
     CUDAdrv.functional()
     CUDAdrv.version()
 
-    CuArrays.cuda_version()
+    CUDA.cuda_version()
 
     Pkg.build("CUDAdrv")
 

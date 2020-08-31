@@ -1,5 +1,4 @@
 # I must always load config first
-include("config.jl")
 include("utils.jl")
 
 using Statistics
@@ -8,8 +7,8 @@ using Dates
 include("data_graph.jl")
 include("model.jl")
 
-import CuArrays
-CuArrays.has_cutensor()
+import CUDA
+CUDA.has_cutensor()
 
 include("train.jl")
 
@@ -451,6 +450,8 @@ end
 # However, although the date is string, it is saved without quotes. Then, the
 # read CSV.read() is too smart to that it converts that into DateTime. However,
 # it cannot convert DateTime to string when it saves it.
+#
+# FIXME this is causing ambiguous issues
 Base.convert(String, date::DateTime) = "$date"
 
 function result2csv(res, fname)

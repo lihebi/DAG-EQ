@@ -1,5 +1,5 @@
 import Base.show
-using CuArrays: CuArray
+using CUDA: CuArray
 
 # There is a data loader PR: https://github.com/FluxML/Flux.jl/pull/450
 mutable struct DataSetIterator

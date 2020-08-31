@@ -1,5 +1,5 @@
 using ProgressMeter
-using CuArrays: allowscalar
+using CUDA: allowscalar
 using Flux: @epochs, onecold
 using Statistics: mean
 using BSON: @save, @load
@@ -99,7 +99,7 @@ function myσxent(logŷ, y)
     # https://github.com/JuliaGPU/CuArrays.jl/issues/611
     # https://github.com/JuliaGPU/CuArrays.jl/pull/602
     # https://github.com/JuliaGPU/CuArrays.jl/issues/141
-    xent = Flux.logitbinarycrossentropy.(logŷ, y)
+    xent = Flux.Losses.logitbinarycrossentropy.(logŷ, y)
     loss = sum(xent)
     return loss * 1 // size(y)[end]
 end
@@ -239,7 +239,7 @@ function sup_train!(model, opt, ds;
             # l2 = sum((x)->sum(x.^2), weights)
             # show l2?
             # loss = loss + 1e-5 * l2
-            add!(loss_metric, loss)
+#             add!(loss_metric, loss)
 
             loss
         end

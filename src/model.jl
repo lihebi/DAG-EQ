@@ -1,6 +1,6 @@
 using Flux
 import Zygote
-using CuArrays
+using CUDA
 using TensorOperations
 
 include("model_utils.jl")
@@ -64,7 +64,7 @@ function eqfn(X::AbstractArray,
     d = size(X,1)
     if typeof(X) <: CuArray
         # FIXME performance hell!!!
-        one = CuArrays.ones(d,d)
+        one = CUDA.ones(d,d)
     else
         # support CPU as well
         # DEPRECATED convert to Float32, when moving this to GPU
@@ -93,7 +93,7 @@ Zygote.@adjoint function eqfn(X::AbstractArray,
     d = size(X,1)
     if typeof(X) <: CuArray
         # FIXME performance hell!!!
-        one = CuArrays.ones(d,d)
+        one = CUDA.ones(d,d)
     else
         one = ones(Float32, d, d)
     end

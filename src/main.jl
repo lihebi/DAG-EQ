@@ -25,12 +25,12 @@ function main_EQ_sep()
     # CAUTION this will be super slow. That's 10hour * 6
     for d in [10, 15, 20,
               # DEBUG see how long it takes for training d=50
-              50, 100
+#               50, 100
               ],
         # I'm putting SF first because they tends to perform better
-        gtype in [:SF
+        gtype in [:SF,
                   # Anyhow I still need to show ER graphs
-                  , :ER,
+                  :ER,
                   # :SF2, :SF4,
                   # :ER2, :ER4
                   ],
@@ -236,7 +236,8 @@ function main_CNN_sep()
     # FIXME use 8, 16, 32 in other models to keep consistent with CNN models?
     for d in [
         # 8,16,32,
-        10, 20, 50, 100
+        10, 20, 
+#             50, 100
     ],
         gtype in [
             # :ER,
@@ -406,4 +407,4 @@ function main()
     main_EQ_super_ensemble()
 end
 
-main()
+# main()
