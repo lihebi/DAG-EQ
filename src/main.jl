@@ -23,7 +23,7 @@ function main_EQ_sep()
     # seperate training
     # TODO testing code for these settings
     # CAUTION this will be super slow. That's 10hour * 6
-    for d in [10, 15, 20,
+    for d in [10, 20,
               # DEBUG see how long it takes for training d=50
 #               50, 100
               ],

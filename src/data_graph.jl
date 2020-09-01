@@ -1,3 +1,5 @@
+module MyDataGraph
+
 # CAUTION there are several problems about these two packages:
 #
 # 1. The Cairo and Fontconfig packages must be loaded before ImageMagick.
@@ -40,8 +42,22 @@ using RecursiveArrayTools
 
 using BSON: @save, @load
 
+export gen_graphs_hard, DataSpec, myplot
+
 include("display.jl")
 include("data.jl")
+
+function myplot(g)
+#     gplot(g, nodelabel=1:nv(g), layout=circular_layout)
+    gplot(g,
+          layout=circular_layout,
+          # TODO pass optional label
+          nodelabel=1:nv(g),
+          NODELABELSIZE = 4.0 * 2,
+          # nodelabeldist=2,
+          # nodelabelc="darkred",
+          arrowlengthfrac = is_directed(g) ? 0.15 : 0.0)
+end
 
 """Display a PNG by writing it to tmp file and show the filename. The filename
 would be replaced by an Emacs plugin.
@@ -597,4 +613,7 @@ function gen_graphs_hard(spec)
     end
     spec.ng == length(all_gs) || @warn "Not enougth unique graphs, $(length(all_gs)) < $n"
     all_gs
+end
+
+
 end
