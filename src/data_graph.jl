@@ -1,5 +1,3 @@
-module MyDataGraph
-
 # CAUTION there are several problems about these two packages:
 #
 # 1. The Cairo and Fontconfig packages must be loaded before ImageMagick.
@@ -42,10 +40,11 @@ using RecursiveArrayTools
 
 using BSON: @save, @load
 
-export gen_graphs_hard, DataSpec, myplot
+# export gen_graphs_hard, DataSpec, myplot, dataspec_to_id
 
 include("display.jl")
 include("data.jl")
+
 
 function myplot(g)
 #     gplot(g, nodelabel=1:nv(g), layout=circular_layout)
@@ -435,16 +434,9 @@ function dataspec_to_id(spec::DataSpec)
               "gtype=$(spec.gtype)",
               "noise=$(spec.noise)",
               "mat=$(spec.mat)",
+            "mec=$(spec.mechanism)"
               ],
              "_")
-    # FIMXE the naming of existing data must change
-    b = @match spec.mechanism begin
-        :Linear => ""
-        :MLP => "_mec=$(spec.mechanism)"
-        _ => error("Unsupported mechanism.")
-    end
-    # cannot put that @match inside join because that would create extra _
-    a * b
 end
 
 function dataspec_to_id(specs::Array{DataSpec, N} where N)
@@ -613,7 +605,4 @@ function gen_graphs_hard(spec)
     end
     spec.ng == length(all_gs) || @warn "Not enougth unique graphs, $(length(all_gs)) < $n"
     all_gs
-end
-
-
 end
