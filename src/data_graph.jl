@@ -385,10 +385,11 @@ struct DataSpec
     ng
     N
     bsize
+    seed
 end
 
 # FIXME previous 10000, 10
-function DataSpec(;d, k, gtype, noise, mat=:COR, mechanism=:Linear, ng=3000, N=3)
+function DataSpec(;d, k, gtype, noise, mat=:COR, mechanism=:Linear, ng=3000, N=3, seed=1234)
     # FIXME maybe check error here
     #
     # UPDATE set ng and N based on d
@@ -425,7 +426,7 @@ function DataSpec(;d, k, gtype, noise, mat=:COR, mechanism=:Linear, ng=3000, N=3
         N = 1
         bsize = 2
     end
-    DataSpec(d, k, gtype, noise, mat, mechanism, ng, N, bsize)
+    DataSpec(d, k, gtype, noise, mat, mechanism, ng, N, bsize, seed)
 end
 
 function dataspec_to_id(spec::DataSpec)
@@ -497,7 +498,7 @@ function load_sup_ds(spec, batch_size=100; use_raw=false)
     # create "data/" folder is not already there
     if !isdir("data") mkdir("data") end
     # 1. generate graph
-    gdir = "data/$(spec.gtype)-$(spec.d)"
+    gdir = "data/$(spec.gtype)-$(spec.d)-$(spec.seed)"
     if !isdir(gdir) mkdir(gdir) end
     gfile = "$gdir/g.hdf5"
     if isfile(gfile)
@@ -508,6 +509,9 @@ function load_sup_ds(spec, batch_size=100; use_raw=false)
     else
         @info "Generating graphs for " spec
         # generate graphs first
+        # CAUTION this seed! might overwrite existing seeding for training and experiments.
+        # I probably want to generate graphs before-hand?
+        Random.seed!(spec.seed)
         graphs = gen_graphs_hard(spec)
 
         # ratio
