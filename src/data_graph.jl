@@ -389,7 +389,7 @@ struct DataSpec
 end
 
 # FIXME previous 10000, 10
-function DataSpec(;d, k, gtype, noise, mat=:COR, mechanism=:Linear, ng=3000, N=3, seed=1234)
+function DataSpec(;d, k, gtype, noise, mat=:COV, mechanism=:Linear, ng=3000, N=3, seed=1234)
     # FIXME maybe check error here
     #
     # UPDATE set ng and N based on d

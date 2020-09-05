@@ -17,7 +17,7 @@ from baseline_common import compute_metrics
 from baseline_cdt import run_CDT, run_RCC
 
 from baseline_daggnn import dag_gnn
-from baseline_rlbic import rlbic
+# from baseline_rlbic import rlbic
 
 def read_hdf5(fname):
     f = h5py.File(fname, 'r')
@@ -278,7 +278,7 @@ def test_RLBIC():
 def main():
     for gtype in ['SF', 'ER']:
         for d in [10, 20, 50, 100]:
-            fname = 'data/{}-{}/d={}_k=1_gtype={}_noise=Gaussian_mat=COR.hdf5'.format(gtype, d, d, gtype)
+            fname = 'data/{}-{}/d={}_k=1_gtype={}_noise=Gaussian_mat=COR_mec=Linear.hdf5'.format(gtype, d, d, gtype)
             print('== processing', fname, '..')
             # read baseline
             res = load_results()
