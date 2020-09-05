@@ -178,6 +178,12 @@ git-tree-sha1 = "b11c8d607af357776a046889a7c32567d05f1319"
 uuid = "aaaa29a8-35af-508c-8bc3-b662a17a0fe5"
 version = "0.14.1"
 
+[[CodeTracking]]
+deps = ["InteractiveUtils", "UUIDs"]
+git-tree-sha1 = "ccc043a0df446cac279dca29d13e2827b40aceb5"
+uuid = "da1fd8a2-8d9e-5ec2-8556-3022fb5608a2"
+version = "0.5.12"
+
 [[CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
 git-tree-sha1 = "ded953804d019afa9a3f98981d99b33e3db7b6da"
@@ -711,6 +717,12 @@ git-tree-sha1 = "76e28bf35d0c179531b11e254f66bbcc1fd268ca"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "2.0.1+2"
 
+[[JuliaInterpreter]]
+deps = ["CodeTracking", "InteractiveUtils", "Random", "UUIDs"]
+git-tree-sha1 = "7b2a1b650cec61a7d8cd8ee9ee7a818b5764d502"
+uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
+version = "0.7.26"
+
 [[Juno]]
 deps = ["Base64", "Logging", "Media", "Profile"]
 git-tree-sha1 = "90976c3ab792a98d240d42f9df07420ccfc60668"
@@ -818,6 +830,12 @@ deps = ["DocStringExtensions", "LinearAlgebra", "OffsetArrays", "SIMDPirates", "
 git-tree-sha1 = "df625d1ac07cb4b630ec1c024a42b8bc6ee9927f"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
 version = "0.8.23"
+
+[[LoweredCodeUtils]]
+deps = ["JuliaInterpreter"]
+git-tree-sha1 = "dbd9336b43c2d6fa492efa09ba3bb10fbdbeeb64"
+uuid = "6f1432cf-f94c-5a45-995e-cdbf5db27b0b"
+version = "0.4.9"
 
 [[Lz4_jll]]
 deps = ["Libdl", "Pkg"]
@@ -1152,6 +1170,12 @@ deps = ["UUIDs"]
 git-tree-sha1 = "d37400976e98018ee840e0ca4f9d20baa231dc6b"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.0.1"
+
+[[Revise]]
+deps = ["CodeTracking", "Distributed", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "Pkg", "REPL", "UUIDs", "Unicode"]
+git-tree-sha1 = "a860e786779be1ab6407d427470e1415711dd459"
+uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
+version = "2.7.5"
 
 [[Rmath]]
 deps = ["Random", "Rmath_jll"]
