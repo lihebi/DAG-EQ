@@ -16,10 +16,15 @@ using BenchmarkTools: @btime
 import CSV
 using DataFrames: DataFrame, Not, All
 
+function readdir_nohidden(dir)
+    files = readdir(dir)
+    return filter((x)->!startswith(x, "."), files)
+end
+
 function load_most_recent(model_dir)
     if !isdir(model_dir) return nothing, 1 end
     # get the most recent one
-    files = readdir(model_dir)
+    files = readdir_nohidden(model_dir)
     if length(files) == 0 return nothing, 1 end
 
     # step-1000.bson
@@ -32,6 +37,31 @@ function load_most_recent(model_dir)
     @info "Loading $most_recent .."
     @load joinpath(model_dir, most_recent) model
     return model, max_step
+end
+
+function keep_most_recent!(model_dir)
+    @info "cleaning $model_dir .."
+    # if there's more than one bson file, keep the most recent, and delete the rest
+    if !isdir(model_dir) return nothing, 1 end
+    # get the most recent one
+    files = readdir_nohidden(model_dir)
+    if length(files) == 0 return nothing, 1 end
+
+    # step-1000.bson
+    steps = map(files) do fname
+        step_str = match(r"step-(\d+).bson", fname).captures[1]
+        parse(Int, step_str)
+    end
+    max_step = maximum(steps)
+    most_recent = files[argmax(steps)]
+    @info "will keep only $most_recent"
+    # delete all other files
+    for f in files
+        if f != most_recent
+            @info "Removing $f .."
+            rm(joinpath(model_dir, f))
+        end
+    end
 end
 
 
@@ -67,6 +97,7 @@ function exp_train(spec, model_fn;
 
     # FIXME load model if already trained
     most_recent_model, from_step = load_most_recent(model_dir)
+    keep_most_recent!(model_dir)
     if !isnothing(most_recent_model)
         @info "using trained model, starting at step $from_step"
         # FIXME it does not seem to be smooth at the resume point
