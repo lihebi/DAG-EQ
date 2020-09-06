@@ -131,6 +131,7 @@ function sup_test(model, test_ds; nbatch=test_ds.nbatch)
 end
 
 function sup_test_raw(model, test_ds; nbatch=test_ds.nbatch)
+    error("raw test disabled!")
     gm = MeanMetric{GraphMetric}()
     loss_metric = MeanMetric{Float64}()
 
@@ -139,6 +140,8 @@ function sup_test_raw(model, test_ds; nbatch=test_ds.nbatch)
     @showprogress 0.1 "Inner testing..." for i in 1:nbatch
         x, y = next_batch!(test_ds)
 
+        # shit!!! this should be cor or cov or cov/norm according to the true data
+        # I'm thus disabling this function
         x = cat([cor(x[:,:,i]) for i in 1:size(x, 3)]..., dims=3) |> gpu
         y = y |> gpu
 

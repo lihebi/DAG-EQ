@@ -4,24 +4,24 @@
 include("exp.jl")
 
 function main2()
-    for d in [10,20,50],
+    for d in [10,20],
         gtype in [:SF, :ER],
         mec in [:Linear],
-        mat in [:COV],
+        mat in [:medCOV],
         k in [1],
         noise in [:Gaussian],
         (prefix, model_fn,nsteps) in [
             ("EQ", deep_eq_model_fn, 1.5e4),
-#             ("FC", ()->deep_fc_model_fn(d), 1e5),
+            ("FC", ()->deep_fc_model_fn(d), 1e5),
             # FIXME the CNN always got killed
-#             ("CNN", flat_cnn_model, 3e4)
+            ("CNN", flat_cnn_model, 3e4)
         ]
         
         spec = DataSpec(d=d,k=k,gtype=gtype,noise=noise,mechanism=mec,mat=mat)
         @info "training" prefix d gtype mec mat k noise
         expID = exp_train(spec, model_fn, prefix=prefix, train_steps=nsteps)
         @info "testing" expID
-        exp_test(expID, spec, use_raw=true)
+        exp_test(expID, spec)
     end
 end
 
@@ -38,7 +38,7 @@ function main_ensemble()
         expID = exp_train(specs, deep_eq_model_fn,
                           # TODO I'll need to increase the training steps here
                           # CAUTION feed in the gtype in the model prefix
-                          prefix="deep-EQ-$gtype", train_steps=3e4)
+                          prefix="EQ-$gtype", train_steps=3e4)
         # Testing
         # get specs
         for d in [10,15,20,30],
