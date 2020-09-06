@@ -48,11 +48,16 @@ include("data.jl")
 
 function myplot(g)
 #     gplot(g, nodelabel=1:nv(g), layout=circular_layout)
+    if has_prop(g, :names)
+        names = get_prop(g, :names)
+    else
+        names = 1:nv(g)
+    end
     gplot(g,
           layout=circular_layout,
           # TODO pass optional label
-          nodelabel=1:nv(g),
-          NODELABELSIZE = 4.0 * 2,
+          nodelabel=names,
+          NODELABELSIZE = 4.0 * 1,
           # nodelabeldist=2,
           # nodelabelc="darkred",
           arrowlengthfrac = is_directed(g) ? 0.15 : 0.0)
@@ -309,6 +314,8 @@ function gen_sup_data_internal(g, spec)
             # DEBUG using adjacency_matrix(g) instead of W
             :COR => (cor(X), adjacency_matrix(g))
             :COV => (cov(X), adjacency_matrix(g))
+            :medCOV => ((cov(X) ./ median(var(X, dims=1))), adjacency_matrix(g))
+            :maxCOV => ((cov(X) ./ maximum(var(X, dims=1))), adjacency_matrix(g))
             _ => error("Unsupported matrix type")
         end
     end
@@ -609,4 +616,59 @@ function gen_graphs_hard(spec)
     end
     spec.ng == length(all_gs) || @warn "Not enougth unique graphs, $(length(all_gs)) < $n"
     all_gs
+end
+
+
+
+function named_graph(names)
+    g = MetaDiGraph(length(names))
+    set_prop!(g, :names, names)
+    g
+end
+
+function named_graph_add_edge!(g, from, to)
+    names = get_prop(g, :names)
+    from_idx = findall(x->x==String(from), names)[1]
+    to_idx = findall(x->x==String(to), names)[1]
+    add_edge!(g, from_idx, to_idx)
+end
+
+function display_named_graph(g)
+    names = get_prop(g, :names)
+    path = tempname() * ".png"
+    draw(PNG(path), gplot(g,
+                          layout=circular_layout,
+                          nodelabel=names,
+                          NODELABELSIZE = 4.0 * 1,
+                          arrowlengthfrac = is_directed(g) ? 0.15 : 0.0))
+    println("$(path)")
+    println("#<Image: $(path)>")
+end
+
+function Sachs_ground_truth()
+    # load 2005-Science-Sachs-Causal
+    df = CSV.read("Sachs/1.cd3cd28.csv")
+    greal = named_graph(names(df))
+    display_named_graph(greal)
+    named_graph_add_edge!(greal, :PKC, :PKA)
+    # ground truth
+    named_graph_add_edge!(greal, :PKC, :PKA)           # green
+    named_graph_add_edge!(greal, :PKC, :pjnk)
+    named_graph_add_edge!(greal, :PKC, :P38)
+    named_graph_add_edge!(greal, :PKC, :praf)
+    named_graph_add_edge!(greal, :PKC, :pmek)
+    named_graph_add_edge!(greal, :PKA, :pjnk)
+    named_graph_add_edge!(greal, :PKA, :P38)
+    named_graph_add_edge!(greal, :PKA, :praf)
+    named_graph_add_edge!(greal, :PKA, :pmek)
+    named_graph_add_edge!(greal, :PKA, :pakts473)
+    # FIXME :erk?
+    named_graph_add_edge!(greal, :PKA, Symbol("p44/42"))
+    named_graph_add_edge!(greal, :praf, :pmek)
+    named_graph_add_edge!(greal, :pmek, Symbol("p44/42"))
+    named_graph_add_edge!(greal, Symbol("p44/42"), :pakts473)           # green
+    named_graph_add_edge!(greal, :plcg, :PIP3)
+    named_graph_add_edge!(greal, :plcg, :PIP3)
+    named_graph_add_edge!(greal, :PIP2, :PIP3)
+    return greal
 end
