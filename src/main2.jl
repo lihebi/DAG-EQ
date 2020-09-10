@@ -4,17 +4,17 @@
 include("exp.jl")
 
 function main2()
-    for d in [10,20],
-        gtype in [:SF, :ER],
+    for d in [10,20,50,100],
+        gtype in [:ER, :SF],
         mec in [:Linear],
-        mat in [:medCOV],
+        mat in [:maxCOV],
         k in [1],
         noise in [:Gaussian],
         (prefix, model_fn,nsteps) in [
             ("EQ", deep_eq_model_fn, 1.5e4),
             ("FC", ()->deep_fc_model_fn(d), 1e5),
             # FIXME the CNN always got killed
-            ("CNN", flat_cnn_model, 3e4)
+            # ("CNN", flat_cnn_model, 3e4)
         ]
         
         spec = DataSpec(d=d,k=k,gtype=gtype,noise=noise,mechanism=mec,mat=mat)
@@ -25,29 +25,22 @@ function main2()
     end
 end
 
-# TODO ensemble
 function main_ensemble()
-    for gtype in [:ER, :SF],
-        mec in [:Linear]
+    specs = []
+    for d in [10,15],
+        gtype in [:ER, :SF],
+        k in [1,4]
 
-        # I'll be training just one EQ model on SF graph with d=10,15,20
-        specs = map([10, 20]) do d
-            # TODO mixed training of different noise models
-            DataSpec(d=d, k=1, gtype=gtype, noise=:Gaussian, mechanism=mec)
-        end
-        expID = exp_train(specs, deep_eq_model_fn,
-                          # TODO I'll need to increase the training steps here
-                          # CAUTION feed in the gtype in the model prefix
-                          prefix="EQ-$gtype", train_steps=3e4)
-        # Testing
-        # get specs
-        for d in [10,15,20,30],
-            gtype in [:ER, :SF],
-            k in [1,2,4]
-
-            @info "Testing" expID d gtype k
-            spec = DataSpec(d=d, k=k, gtype=gtype, noise=:Gaussian)
-            exp_test(expID, spec)
-        end
+        push!(specs, DataSpec(d=d, k=k, gtype=gtype,
+                noise=:Gaussian, mat=:medCOV))
     end
+    specs = Array{DataSpec}(specs)
+   
+    @info "Ensemble training .."
+    expID = exp_train(specs, deep_eq_model_fn,
+                      # TODO I'll need to increase the training steps here
+                      # CAUTION feed in the gtype in the model prefix
+                      prefix="ensemEQ", train_steps=3e4)
 end
+
+main2()

@@ -87,7 +87,8 @@ end
 
 function exp_train(spec, model_fn;
                    prefix,
-                   train_steps=1e5, test_throttle=10)
+                   train_steps=1e5, test_throttle=10,
+                   merge=false)
     train_steps=Int(train_steps)
 
     # setting expID
@@ -113,6 +114,10 @@ function exp_train(spec, model_fn;
     end
 
     ds, test_ds = spec2ds(spec)
+    if merge
+        ds = merge_dses(ds)
+        test_ds = merge_dses(test_ds)
+    end
     x, y = next_batch!(test_ds) |> gpu
 
     @info "warming up model with x .."
