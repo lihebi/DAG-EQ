@@ -45,18 +45,19 @@ using BSON: @save, @load
 include("display.jl")
 include("data.jl")
 
-
-function myplot(g)
+function myplot(g, labels=nothing)
 #     gplot(g, nodelabel=1:nv(g), layout=circular_layout)
-    if has_prop(g, :names)
-        names = get_prop(g, :names)
-    else
-        names = 1:nv(g)
+    if isnothing(labels)
+        if has_prop(g, :names)
+            labels = get_prop(g, :names)
+        else
+            labels = 1:nv(g)
+        end
     end
     gplot(g,
           layout=circular_layout,
           # TODO pass optional label
-          nodelabel=names,
+          nodelabel=labels,
           NODELABELSIZE = 4.0 * 1,
           # nodelabeldist=2,
           # nodelabelc="darkred",
