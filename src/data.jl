@@ -22,6 +22,17 @@ mutable struct CuDataSetIterator
     nbatch::Int
 end
 
+function merge_dses(dses)
+    # merge datasets
+    # 1. merge raw_x and raw_y
+    raw_x = cat([ds.raw_x for ds in dses]..., dims=3)
+    raw_y = cat([ds.raw_y for ds in dses]..., dims=3)
+    # 2. assert batch_size
+    batch_size = dses[1].batch_size
+    # 4. construct new ds
+    DataSetIterator(raw_x, raw_y, batch_size)
+end
+
 function Base.convert(::Type{CuDataSetIterator}, ds::DataSetIterator)
     CuDataSetIterator(ds.raw_x, ds.raw_y, ds.batch_size)
 end
