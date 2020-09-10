@@ -21,6 +21,8 @@ events.out.tfevents.*
 *.svg
 
 *.csv
+*.xls
 *.txt
 
 *-checkpoint*
+*.doc
