@@ -11,10 +11,10 @@ function main2()
         k in [1],
         noise in [:Gaussian],
         (prefix, model_fn,nsteps) in [
-            ("EQ", deep_eq_model_fn, 1.5e4),
+            ("EQ", deep_eq_model_fn, 2e4),
             ("FC", ()->deep_fc_model_fn(d), 1e5),
             # FIXME the CNN always got killed
-            # ("CNN", flat_cnn_model, 3e4)
+            ("CNN", flat_cnn_model, 3e4)
         ]
         
         spec = DataSpec(d=d,k=k,gtype=gtype,noise=noise,mechanism=mec,mat=mat)
