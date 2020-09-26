@@ -3,7 +3,7 @@
 
 include("exp.jl")
 
-function main2()
+function main()
     for d in [10,20,50,100],
         gtype in [:ER, :SF],
         mec in [:Linear],
@@ -43,4 +43,4 @@ function main_ensemble()
                       prefix="ensemEQ", train_steps=3e4)
 end
 
-main2()
+main()
