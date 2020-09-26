@@ -98,7 +98,7 @@ function exp_train(spec, model_fn;
 
     # FIXME load model if already trained
     most_recent_model, from_step = load_most_recent(model_dir)
-    keep_most_recent!(model_dir)
+#     keep_most_recent!(model_dir)
     if !isnothing(most_recent_model)
         @info "using trained model, starting at step $from_step"
         # FIXME it does not seem to be smooth at the resume point
