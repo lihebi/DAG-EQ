@@ -25,8 +25,13 @@ end
 function merge_dses(dses)
     # merge datasets
     # 1. merge raw_x and raw_y
-    raw_x = cat([ds.raw_x for ds in dses]..., dims=3)
-    raw_y = cat([ds.raw_y for ds in dses]..., dims=3)
+    xdim = length(size(dses[1].raw_x))
+    ydim = length(size(dses[1].raw_y))
+    @show xdim, ydim
+    # 4
+    raw_x = cat([ds.raw_x for ds in dses]..., dims=xdim)
+    # 3
+    raw_y = cat([ds.raw_y for ds in dses]..., dims=ydim)
     # 2. assert batch_size
     batch_size = dses[1].batch_size
     # 4. construct new ds

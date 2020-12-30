@@ -185,12 +185,15 @@ function (l::DimDrop)(x)
     dropdims(x, dims=3)
 end
 
-function eq_model(; z=300, reg=false, nlayer=3)
+function eq_model(; z=300, reg=false, nlayer=3, ch=1)
     nlayer >= 2 || error("nlayer must be >= 2")
 
     layers = []
 
-    push!(layers, Equivariant(1=>z))
+    # The ch is either 1 or 2.
+    # - ch==1: the input is a matrix, COR, COV, maxCOV, etc
+    # - ch==2: the first channel is the COR matrix, and the second channel is the variance in the diagonal.
+    push!(layers, Equivariant(ch=>z))
     push!(layers, LeakyReLU())
     if reg push!(layers, Dropout(0.5)) end
     for i in 1:(nlayer-2)
@@ -206,11 +209,13 @@ function eq_model(; z=300, reg=false, nlayer=3)
     push!(layers, Equivariant(z=>1))
 
     Chain(
-        DimAdd(),
+        # CAUTION I'm removing the DimAdd function, and expect the input to have d*d*ch*batch
+#         DimAdd(),
         layers...,
         # IMPORTANT drop the second-to-last dim 1
         DimDrop())
 end
+
 
 # TODO try a ResNet?
 # FIXME filter and channel sizes
@@ -239,7 +244,8 @@ function bottleneck_cnn_model()
 end
 
 function flat_cnn_model()
-    Chain(DimAdd(),
+    Chain(
+#         DimAdd(),
           Conv((3,3), 1=>32, relu, pad=(1,1)),
           BatchNorm(32),
           # FIXME channel size
@@ -277,3 +283,6 @@ eq_dropout_model_fn() = eq_model(z=300, reg=true, nlayer=3)
 # TODO wide model
 deep_eq_model_fn() = eq_model(z=300, reg=false, nlayer=6)
 deep_eq_dropout_model_fn() = eq_model(z=300, reg=true, nlayer=6)
+
+# CAUTION ch=2!!!
+eq2_model_fn() = eq_model(z=300, reg=false, nlayer=6, ch=2)

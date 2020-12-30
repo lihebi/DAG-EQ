@@ -8,6 +8,7 @@ include("model.jl")
 
 import CUDA
 CUDA.has_cutensor()
+import IterTools
 
 include("train.jl")
 
@@ -69,7 +70,8 @@ end
 is created only once, before first use.
 
 """
-function spec2ds(spec::DataSpec)
+function spec2ds(spec::DataSpec; merge=false)
+    # FIXME merge is not used, only to match the signature
     batch_size = spec.bsize
     ds, test_ds = load_sup_ds(spec, batch_size)
     # DEBUG move on GPU on demand to reduce memory usage
@@ -77,10 +79,26 @@ function spec2ds(spec::DataSpec)
     return ds, test_ds
 end
 
-function spec2ds(specs::Array{DataSpec, N} where N)
-    dses = map(specs) do spec
-        ds, test_ds = load_sup_ds(spec)
-        # ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
+function spec2ds(specs::Array{DataSpec, N} where N; merge=false)
+    if merge
+        # separate into groups with same d
+        gs = IterTools.groupby((x)->x.d, specs)
+        dses = map(gs) do g
+            dses = map(g) do spec
+                ds, test_ds = load_sup_ds(spec, spec.bsize)
+            end
+            ds = [ds[1] for ds in dses]
+            test_ds = [ds[2] for ds in dses]
+            # do the merge
+            ds = merge_dses(ds)
+            test_ds = merge_dses(test_ds)
+            ds, test_ds
+        end
+    else
+        dses = map(specs) do spec
+            ds, test_ds = load_sup_ds(spec)
+            # ds, test_ds = (ds, test_ds) .|> CuDataSetIterator
+        end
     end
     return [ds[1] for ds in dses], [ds[2] for ds in dses]
 end
@@ -113,17 +131,19 @@ function exp_train(spec, model_fn;
         return expID
     end
 
-    ds, test_ds = spec2ds(spec)
-    if merge
-        ds = merge_dses(ds)
-        test_ds = merge_dses(test_ds)
-    end
+
+    ds, test_ds = spec2ds(spec, merge=merge)
     x, y = next_batch!(test_ds) |> gpu
+    
+    @show size(x)
+    @show size(y)
 
     @info "warming up model with x .."
     model(x)
     @info "warming up gradient .."
+    @show size(x)
     gradient(()->sum(model(x)), Flux.params(model))
+    @info "actual training .."
 
     # TODO lr decay
     opt = ADAM(1e-4)
@@ -153,7 +173,8 @@ function exp_train(spec, model_fn;
                #
                # 1. delete old ones, i.e. rotating
                # 2. use a larger interval
-               save_cb=Flux.throttle(save_cb, 60),
+        # TODO the first save should be 60 later
+               save_cb=Flux.throttle(save_cb, 600),
                from_step=from_step,
                train_steps=train_steps)
 
@@ -287,5 +308,5 @@ end
 
 function inf_one(model, x)
     # assume x is (dim, dim), no batch
-    reshape(model(reshape(x, size(x)..., 1)), size(x)...)
+    reshape(model(reshape(x, size(x)..., 1)), size(x,1), size(x,1))
 end

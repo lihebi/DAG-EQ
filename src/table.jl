@@ -181,7 +181,7 @@ end
 function table_cmp_baseline(df)
     # comparison of EQ with FC and CNN (and random) baselines
     # only show d=10,15,20, SF and ER graphs, k=1
-    sel1 = in.(df.model, Ref(["deep-FC", "deep-EQ", "flat-CNN", "bottle-CNN"]))
+    sel1 = in.(df.model, Ref(["FC", "EQ", "CNN"]))
     # sel2 = in.(df.train_d, Ref([10, 15, 20,8,16,32]))
     sel2 = in.(df.train_d, Ref([10, 20, 50, 100]))
     selector = (sel1 .& sel2

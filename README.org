@@ -1,6 +1,6 @@
 #+TITLE: Supervised Full DAG Causal Discovery
 
-This is the implementation of our paper [[http://arxiv.org/abs/2006.04697][Supervised Full DAG Causal Discovery]]. If
+This is the implementation of our paper [[http://arxiv.org/abs/2006.04697][Supervised Whole DAG Causal Discovery]]. If
 this is helpful for your research, please consider cite our paper.
 
 * Running the code

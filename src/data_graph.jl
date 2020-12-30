@@ -36,6 +36,9 @@ using Distributions
 using HDF5
 using Match
 using RecursiveArrayTools
+import CSV
+
+using LinearAlgebra: Diagonal
 
 
 using BSON: @save, @load
@@ -281,6 +284,17 @@ function test()
     size(gen_MLP(g, :Gaussian, 100))
 end
 
+function getch2(X)
+    ch2 = Diagonal(dropdims(var(X, dims=1), dims=1))
+    return cat(cor(X), ch2, dims=3)
+end
+
+function getch3(X)
+    vars = dropdims(var(X, dims=1), dims=1)
+    vars = (vars .- mean(vars)) ./ std(vars)
+    ch3 = Diagonal(vars)
+    return cat(cor(X), ch3, dims=3)
+end
 
 # TODO more variables
 function gen_sup_data_internal(g, spec)
@@ -295,6 +309,12 @@ function gen_sup_data_internal(g, spec)
 
         X = @match spec.mechanism begin
             :Linear => begin
+                # [0.5, 0.5+k]
+                # k=4, [+-0.5, +-4.5], mean(W) = 2.5
+                #
+                # X
+                # cov(X)
+                # var(X, dims=1)
                 W = gen_weights(g, ()->((rand() * (0.5+spec.k) + 0.5) * rand([1,-1])))
                 # FIXME the number of data points generated
                 gen_data2(W, spec.noise, 1000)
@@ -317,19 +337,28 @@ function gen_sup_data_internal(g, spec)
             :COV => (cov(X), adjacency_matrix(g))
             :medCOV => ((cov(X) ./ median(var(X, dims=1))), adjacency_matrix(g))
             :maxCOV => ((cov(X) ./ maximum(var(X, dims=1))), adjacency_matrix(g))
+            :CH2 => (getch2(X), adjacency_matrix(g))
+            :CH3 => (getch3(X), adjacency_matrix(g))
             _ => error("Unsupported matrix type")
         end
     end
     input = map(ds) do x x[1] end
     output = map(ds) do x x[2] end
-    cat(input..., dims=3), cat(output..., dims=3)
+    cat(input..., dims=4), cat(output..., dims=3)
 end
+    
 
-function mycat(aoa)
+function mycat(aoa; dims)
     # array of array
     arr = similar(aoa[1], size(aoa[1])..., length(aoa))
     for i in 1:length(aoa)
-        arr[:,:,:,i] = aoa[i]
+        if dims==3
+            arr[:,:,:,i] = aoa[i]
+        elseif dims==4
+            arr[:,:,:,:,i] = aoa[i]
+        else
+            error("dims should be 3 or 4")
+        end
     end
     # combine the last two dims FIXME the order unchanged?
     reshape(arr, size(arr)[1:end-2]..., :)
@@ -342,6 +371,9 @@ function gen_sup_data_with_graphs(spec, gs)
     end
     input = map(ds) do x x[1] end
     output = map(ds) do x x[2] end
+    @show size(input)
+    @show size(input[1])
+    @show size(output)
 
     # FIXME this splat is too much and cause stack overflow. But looks like I
     # have only the way of cat() ..
@@ -349,7 +381,7 @@ function gen_sup_data_with_graphs(spec, gs)
     # cat(input..., dims=3), cat(output..., dims=3)
 
     # instead I'm going to pre-allocate an array and fill
-    mycat(input), mycat(output)
+    mycat(input, dims=4), mycat(output, dims=3)
     # This repo might be an alternative:
     # https://github.com/JuliaDiffEq/RecursiveArrayTools.jl
 end
@@ -464,6 +496,8 @@ function gs2hdf5mat(graphs)
     # from array of graphs to matrix suitable for saving as hdf5
     mats = Matrix.(adjacency_matrix.(graphs))
     # this seems to be slow
+    @show size(mats)
+    @show size(mats[1])
     @info "concating .."
     # onemat = cat(mats..., dims=3)
     onemat = convert(Array, VectorOfArray(mats))
@@ -502,11 +536,11 @@ function tmp_convert_bson_hdf5()
     end
 end
 
-function load_sup_ds(spec, batch_size=100; use_raw=false)
+function load_sup_ds(spec, batch_size=100; use_raw=false, suffix="")
     # create "data/" folder is not already there
     if !isdir("data") mkdir("data") end
     # 1. generate graph
-    gdir = "data/$(spec.gtype)-$(spec.d)-$(spec.seed)"
+    gdir = "data/$(spec.gtype)-$(spec.d)-$(spec.seed)$suffix"
     if !isdir(gdir) mkdir(gdir) end
     gfile = "$gdir/g.hdf5"
     if isfile(gfile)
@@ -566,6 +600,7 @@ function load_sup_ds(spec, batch_size=100; use_raw=false)
         @info "Saved to $fname"
     end
     if use_raw
+#         @info "raw info: " size(raw_x), size(raw_y)
         return DataSetIterator(raw_x, raw_y, batch_size)
     else
         return (DataSetIterator(train_x, train_y, batch_size),
@@ -629,8 +664,8 @@ end
 
 function named_graph_add_edge!(g, from, to)
     names = get_prop(g, :names)
-    from_idx = findall(x->x==String(from), names)[1]
-    to_idx = findall(x->x==String(to), names)[1]
+    from_idx = findall(x->String(x)==String(from), names)[1]
+    to_idx = findall(x->String(x)==String(to), names)[1]
     add_edge!(g, from_idx, to_idx)
 end
 
@@ -651,7 +686,7 @@ function Sachs_ground_truth()
     df = CSV.read("Sachs/1.cd3cd28.csv")
     greal = named_graph(names(df))
     display_named_graph(greal)
-    named_graph_add_edge!(greal, :PKC, :PKA)
+#     named_graph_add_edge!(greal, :PKC, :PKA)
     # ground truth
     named_graph_add_edge!(greal, :PKC, :PKA)           # green
     named_graph_add_edge!(greal, :PKC, :pjnk)
@@ -668,8 +703,64 @@ function Sachs_ground_truth()
     named_graph_add_edge!(greal, :praf, :pmek)
     named_graph_add_edge!(greal, :pmek, Symbol("p44/42"))
     named_graph_add_edge!(greal, Symbol("p44/42"), :pakts473)           # green
+    named_graph_add_edge!(greal, :plcg, :PIP2)
     named_graph_add_edge!(greal, :plcg, :PIP3)
-    named_graph_add_edge!(greal, :plcg, :PIP3)
-    named_graph_add_edge!(greal, :PIP2, :PIP3)
+    named_graph_add_edge!(greal, :PIP3, :PIP2)
     return greal
+end
+
+function read_syntren(fname)
+    df = CSV.read(fname)
+    X = convert(Matrix, df[:, Not(:GENE)])
+    newdf = DataFrame(X', df[:, :GENE])
+    return newdf
+end
+
+# read ground truth
+function syntren_ground_truth(fname, node_names)
+    lines = readlines(fname)
+    # 1. get all the nodes
+#     words = map(lines) do line
+#         split(line)
+#     end
+#     unique_words = setdiff(unique(cat(words..., dims=1)), ["ac", "du", "re"])
+    # 2. for each line, add edge
+    # use node_names so that it is consistent with the prediction
+    greal = named_graph(node_names)
+    for line in lines
+        from, rel, to = split(line)
+        # there seems to be many self edges
+        if from == to continue end
+        # FIXME ac, re
+        if rel == "ac"
+            named_graph_add_edge!(greal, from, to)
+        elseif rel == "re"
+            named_graph_add_edge!(greal, from, to)
+        elseif rel == "du"
+            # FIXME???
+            named_graph_add_edge!(greal, from, to)
+            named_graph_add_edge!(greal, to, from)
+
+        else
+            error("Unsupported relation.")
+        end
+    end
+    return greal
+end
+
+# TODO bnlearn dataset and groundtruth
+
+# donwload data in notebook
+# Assume data downloaded in data/bnlearn/xxx
+
+function bnlearn_ground_truth()
+    greal = named_graph([:A, :B, :C, :D, :E, :F, :G])
+    named_graph_add_edge!(greal, :B, :C)
+    named_graph_add_edge!(greal, :A, :C)
+    named_graph_add_edge!(greal, :D, :B)
+    named_graph_add_edge!(greal, :D, :F)
+    named_graph_add_edge!(greal, :A, :F)
+    named_graph_add_edge!(greal, :G, :F)
+    named_graph_add_edge!(greal, :E, :F)
+    greal
 end
