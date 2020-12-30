@@ -14,8 +14,6 @@ from tqdm import tqdm
 
 import networkx as nx
 
-import sys
-sys.path.append("/home/hebi/git/reading/DAG-GNN/src")
 from modules import *
 from utils import *
 
@@ -25,12 +23,15 @@ def clear_tqdm():
 
 clear_tqdm()
 
+# The DAG-GNN model mix CPU tensors in the computation, and passing in CUDA tensor would throw errors.
+# And the computation is not expensive on CPU anyway.
+use_cuda = False
+
 # graph_size = 10
 x_dims = 1
 z_dims = 1
 batch_size = 100
 graph_threshold = 0.3
-
 
 def get_model(graph_size):
     off_diag = np.ones([graph_size, graph_size]) - np.eye(graph_size)
@@ -70,10 +71,11 @@ def get_model(graph_size):
                              batch_size = batch_size,
                              n_hid=64,
                              do_prob=0).double()
-    encoder = encoder.cuda()
-    decoder = decoder.cuda()
-    rel_rec = rel_rec.cuda()
-    rel_send = rel_send.cuda()
+    if torch.cuda.is_available() and use_cuda:
+        encoder = encoder.cuda()
+        decoder = decoder.cuda()
+        rel_rec = rel_rec.cuda()
+        rel_send = rel_send.cuda()
 
     rel_rec = Variable(rel_rec)
     rel_send = Variable(rel_send)
@@ -133,7 +135,8 @@ def train(encoder, decoder, rel_rec, rel_send,
 
     # FIXME seems the dataset loader always return a list
     for _, (data,) in enumerate(train_loader):
-        data = data.cuda()
+        if torch.cuda.is_available() and use_cuda:
+            data = data.cuda()
         graph_size = data.shape[1]
         data = Variable(data).double()
 

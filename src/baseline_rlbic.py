@@ -11,10 +11,6 @@ import tensorflow as tf
 
 import networkx as nx
 
-import sys
-sys.path.append("/home/hebi/git/reading/trustworthyAI/Causal_Structure_Learning/Causal_Discovery_RL/src/")
-
-
 from data_loader.dataset_read_data import DataGenerator
 
 from models import Actor

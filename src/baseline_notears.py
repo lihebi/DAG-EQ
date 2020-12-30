@@ -6,8 +6,6 @@ import tempfile
 import numpy as np
 import random
 
-import sys
-sys.path.append("/home/hebi/git/reading/notears")
 from notears.linear import notears_linear
 from notears.nonlinear import NotearsMLP, notears_nonlinear
 

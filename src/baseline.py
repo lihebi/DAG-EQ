@@ -9,14 +9,19 @@ import time
 import networkx as nx
 
 import sys
-sys.path.append("/home/hebi/git/reading/notears")
-from notears.linear import notears_linear
-from notears.nonlinear import NotearsMLP, notears_nonlinear
+# Add to sys.path
 
 from baseline_common import compute_metrics
 from baseline_cdt import run_CDT, run_RCC
 
+sys.path.append(os.path.expanduser("~/notears"))
+from notears.linear import notears_linear
+from notears.nonlinear import NotearsMLP, notears_nonlinear
+
+sys.path.append(os.path.expanduser("~/DAG-GNN/src"))
 from baseline_daggnn import dag_gnn
+
+# sys.path.append(os.path.expanduser("~/trustworthyAI/Causal_Structure_Learning/Causal_Discovery_RL/src/"))
 # from baseline_rlbic import rlbic
 
 def read_hdf5(fname):
@@ -273,19 +278,33 @@ def test_RLBIC():
 
     return prec, recall, shd
     
-    
+# get dataset file name
+def get_dataset_fname(d, gtype, mat='COV'):
+    # FIXME since I'm using raw for the baselines, I should be fine using the previous results.
+    # But the previous result is for SF only. If I want to report the average of SF/ER, I need to run it again.
+    return 'data/{}-{}-1234/d={}_k=1_gtype={}_noise=Gaussian_mat={}_mec=Linear.hdf5'.format(gtype, d, d, gtype, mat)
+
+def get_dataset_fname_old(d, gtype):
+    # FIXME since I'm using raw for the baselines, I should be fine using the previous results.
+    # But the previous result is for SF only. If I want to report the average of SF/ER, I need to run it again.
+    return 'data/{}-{}/d={}_k=1_gtype={}_noise=Gaussian_mat=COR.hdf5'.format(gtype, d, d, gtype)
+
 
 def main():
-    for gtype in ['SF', 'ER']:
-        for d in [10, 20, 50, 100]:
-            fname = 'data/{}-{}/d={}_k=1_gtype={}_noise=Gaussian_mat=COR_mec=Linear.hdf5'.format(gtype, d, d, gtype)
+    for d in [10, 20, 50, 100]:
+        for gtype in ['SF', 'ER']:
+            fname = get_dataset_fname(d, gtype)
             print('== processing', fname, '..')
             # read baseline
             res = load_results()
             # FIXME notears seems to work too well
-            for alg in ['PC', 'CAM', 'GES',
+            for alg in ['PC', 
+#                         'CAM',
+                        'GES',
                         'RCC-CLF', 'RCC-NN',
-                        'notears', 'DAG-GNN', 'RL-BIC']:
+                        'notears', 'DAG-GNN',
+#                         'RL-BIC'
+                       ]:
                 print('-- running', alg, 'algorithm ..')
                 if fname not in res:
                     res[fname] = {}
@@ -308,12 +327,17 @@ def table():
         # header
         writer.writerow(['model', 'prec', 'recall', 'shd', 'time'])
         for d in [10, 20, 50, 100]:
-            name = "data/SF-{}/d={}_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5".format(d, d)
-            methods = ['PC', 'GES', 'CAM',
+            # CAUTION fixed "SF" here
+            #
+            # FIXME reading previous results
+            name = get_dataset_fname_old(d, 'SF')
+            methods = ['PC', 'GES', 
+                       # CAM is a little slow
+#                        'CAM',
                        'RCC-CLF', 'RCC-NN',
                        'notears', 'DAG-GNN']
-            if d < 50:
-                methods += ['RL-BIC']
+#             if d < 50:
+#                 methods += ['RL-BIC']
             for method in methods:
                 tmp = res[name][method]
                 tmp = ['{:.1f}'.format(tmp[0] * 100),
