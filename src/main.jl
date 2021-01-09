@@ -3,6 +3,37 @@
 
 include("exp.jl")
 
+
+function main_ch3()
+    for d in [10,20,50,100],
+        (prefix, model_fn,nsteps) in [
+            ("EQ2", eq2_model_fn, 3e4),
+            ("FC", ()->fc_model(d=d, ch=2, z=1024, nlayer=6), 3e4),
+            ("CNN", ()->cnn_model(2), 3e4)
+        ]
+        
+        specs = []
+        for gtype in [:ER, :SF],
+            k in [1]
+            push!(specs, DataSpec(d=d, k=k, gtype=gtype,
+                    noise=:Gaussian, mat=:CH3))
+        end
+        specs = Array{DataSpec}(specs)
+        
+        # print more frequently for CNN and FC to get more data to print
+        test_throttle = if prefix == "EQ2" 10 else 1 end
+
+        @info "training .." prefix d
+        expID = exp_train(specs, model_fn,
+                          # TODO I'll need to increase the training steps here
+                          # CAUTION feed in the gtype in the model prefix
+                          prefix="$prefix-ERSF-k1-d=$d", train_steps=nsteps,
+                          test_throttle = test_throttle,
+                          merge=true)
+    end
+end
+
+
 function main()
     for d in [10, 50,100],
         gtype in [:SF, :ER],
@@ -16,7 +47,7 @@ function main()
             ("EQ", deep_eq_model_fn, 5e4),
             ("FC", ()->deep_fc_model_fn(d), 1e5),
             # FIXME the CNN always got killed
-            ("CNN", flat_cnn_model, 3e4)
+            ("CNN", cnn_model, 3e4)
         ]
         
 #         prefix = "prefix-$(now())"
@@ -45,154 +76,5 @@ function main()
             test_spec = DataSpec(d=d,k=k,gtype=gtype,noise=noise,mechanism=mec,mat=mat)
             exp_test(expID, test_spec)
         end
-    end
-end
-
-function main_ch2()
-    for d in [10, 50,100],
-        gtype in [:SF, :ER],
-        mec in [:Linear],
-        # CAUTION using CH2, only eq2 model can be used
-        mat in [:CH2],
-        k in [1],
-        noise in [:Gaussian],
-        (prefix, model_fn,nsteps) in [
-            ("EQ2", eq2_model_fn, 3e4),
-        ]
-        
-        spec = DataSpec(d=d,k=k,gtype=gtype,noise=noise,mechanism=mec,mat=mat)
-        @info "training" prefix d gtype mec mat k noise
-        expID = exp_train(spec, model_fn, prefix=prefix, train_steps=nsteps)
-        @info "testing" expID
-        exp_test(expID, spec)
-    end
-end
-
-function main_newCOV()
-    "The new experiment for COV, this time, ensemble ER and SF."
-    for d in [10,20,50,100],
-        (prefix, model_fn,nsteps) in [
-            ("EQ", deep_eq_model_fn, 3e4),
-#             ("FC", ()->deep_fc_model_fn(d), 1e5),
-            # FIXME the CNN always got killed
-#             ("CNN", flat_cnn_model, 3e4)
-        ]
-        
-        specs = []
-        for gtype in [:ER, :SF],
-            k in [1]
-            push!(specs, DataSpec(d=d, k=k, gtype=gtype,
-                    noise=:Gaussian, mat=:COV))
-        end
-        specs = Array{DataSpec}(specs)
-
-        @info "Ensemble training .."
-        expID = exp_train(specs, model_fn,
-                          # TODO I'll need to increase the training steps here
-                          # CAUTION feed in the gtype in the model prefix
-                          prefix="$prefix-ERSF-k1-d=$d", train_steps=nsteps,
-                          merge=true)
-    end
-end
-
-
-function main_ch3()
-    for d in [10,20,50,100],
-        (prefix, model_fn,nsteps) in [
-            ("EQ2", eq2_model_fn, 3e4),
-        ]
-        
-        specs = []
-        for gtype in [:ER, :SF],
-            k in [1]
-            push!(specs, DataSpec(d=d, k=k, gtype=gtype,
-                    noise=:Gaussian, mat=:CH3))
-        end
-        specs = Array{DataSpec}(specs)
-
-        @info "Ensemble training .."
-        expID = exp_train(specs, model_fn,
-                          # TODO I'll need to increase the training steps here
-                          # CAUTION feed in the gtype in the model prefix
-                          prefix="$prefix-ERSF-k1-d=$d", train_steps=nsteps,
-                          merge=true)
-    end
-end
-
-function main_ensemble()
-    specs = []
-    for d in [10,20],
-        gtype in [:ER, :SF],
-        k in [1,4,10,20]
-
-        push!(specs, DataSpec(d=d, k=k, gtype=gtype,
-                noise=:Gaussian, mat=:maxCOV))
-    end
-    specs = Array{DataSpec}(specs)
-   
-    @info "Ensemble training .."
-    expID = exp_train(specs, deep_eq_model_fn,
-                      # TODO I'll need to increase the training steps here
-                      # CAUTION feed in the gtype in the model prefix
-                      prefix="ensemEQ-ICLR-1", train_steps=1e5,
-                      merge=true)
-    
-    # test the ensemble model
-    # TODO test ensemble data
-    # TODO test separate data
-    @info "testing .."
-    for k in [1],
-        d in [10,20,30],
-        gtype in [:ER, :SF],
-        noise in [:Gaussian],
-        mec in [:Linear],
-        mat in [:maxCOV]
-        
-        @info k d gtype noise mec mat
-        test_spec = DataSpec(d=d,k=k,gtype=gtype,noise=noise,mechanism=mec,mat=mat)
-        exp_test(expID, test_spec)
-    end
-end
-
-function main_ensemble_new()
-    specs = []
-    mat = :COR
-    for d in [11],
-        gtype in [:ER, :SF],
-#         k in [1,4,10,20]
-        k in 1:2:20
-
-        push!(specs, DataSpec(d=d, k=k, gtype=gtype,
-                noise=:Gaussian, mat=mat))
-    end
-    specs = Array{DataSpec}(specs)
-   
-    @info "Ensemble training .."
-    expID = exp_train(specs, deep_eq_model_fn,
-                      # TODO I'll need to increase the training steps here
-                      # CAUTION feed in the gtype in the model prefix
-                      prefix="ensemEQ-$(mat)-NEW-1:2:20", train_steps=1e5,
-                      merge=true)
-end
-
-function main_ensemble_ch2()
-    specs = []
-    for mat in [:CH3],
-        d in [20]
-        for gtype in [:ER, :SF],
-    #         k in [1,4,10,20]
-            k in 1:2:20
-
-            push!(specs, DataSpec(d=d, k=k, gtype=gtype,
-                    noise=:Gaussian, mat=mat))
-        end
-        specs = Array{DataSpec}(specs)
-
-        @info "Ensemble training .."
-        expID = exp_train(specs, eq2_model_fn,
-                          # TODO I'll need to increase the training steps here
-                          # CAUTION feed in the gtype in the model prefix
-                          prefix="ensemEQ-$(mat)-d=$d-1:2:20", train_steps=1e5,
-                          merge=true)
     end
 end

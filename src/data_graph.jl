@@ -436,7 +436,7 @@ function DataSpec(;d, k, gtype, noise, mat=:COV, mechanism=:Linear, ng=3000, N=3
     if d <= 20
         ng = 3000
         N = 3
-        bsize=128
+        bsize=64
     elseif d <= 40
         ng = 2000
         N = 2
@@ -446,13 +446,13 @@ function DataSpec(;d, k, gtype, noise, mat=:COV, mechanism=:Linear, ng=3000, N=3
         # just use it as testing data
         ng = 1000
         N = 1
-        bsize=32
+        bsize=16
     elseif d <= 150
         ng = 1000
         N = 1
         # DEBUG testing memory limit during training (pullback of EQ layer seems
         # to consume lots of memory)
-        bsize = 16
+        bsize = 8
     elseif d <= 200
         ng = 500
         N = 1
