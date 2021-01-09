@@ -150,12 +150,14 @@ function exp_train(spec, model_fn;
 
     # when continual training, new files are created
     # CAUTION there will be some overlapping
-    logger = TBLogger("tensorboard_logs/train-$expID",
-                      tb_append, min_level=Logging.Info)
+#     logger = TBLogger("tensorboard_logs/train-$expID",
+#                       tb_append, min_level=Logging.Info)
     test_logger = TBLogger("tensorboard_logs/test-$expID",
                            tb_append, min_level=Logging.Info)
 
-    print_cb = create_print_cb(logger=logger)
+#     print_cb = create_print_cb(logger=logger)
+    # do not log training loss
+    print_cb = (a,b)->nothing
     test_cb = create_test_cb(model, test_ds, "test_ds", logger=test_logger)
     save_cb = create_save_cb("saved_models/$expID", model)
 
