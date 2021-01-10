@@ -5,10 +5,11 @@ include("exp.jl")
 
 
 function main_ch3()
-    for d in [10,20,50,100],
+    for d in [10,20,50],
         (prefix, model_fn,nsteps) in [
             ("EQ2", eq2_model_fn, 3e4),
             ("FC", ()->fc_model(d=d, ch=2, z=1024, nlayer=6), 3e4),
+            ("FCreg", ()->fc_model(d=d, ch=2, z=1024, nlayer=6, reg=true), 3e4),
             ("CNN", ()->cnn_model(2), 3e4)
         ]
         
@@ -32,6 +33,33 @@ function main_ch3()
                           merge=true)
     end
 end
+
+
+function main_mat()
+    # test the different matrix, including: CH3, COV, COR
+    for d in [20],
+        (mat, model_fn) in [
+            (:CH3, eq2_model_fn),
+            (:COV, eq_model_fn),
+            (:COR, eq_model_fn)]
+        
+        specs = []
+        for gtype in [:ER, :SF],
+            k in [1,2,4,8]
+            push!(specs, DataSpec(d=d, k=k, gtype=gtype,
+                    noise=:Gaussian, mat=mat))
+        end
+        specs = Array{DataSpec}(specs)
+        
+        @info "training .." d mat
+        expID = exp_train(specs, eq2_model_fn,
+                          # TODO I'll need to increase the training steps here
+                          # CAUTION feed in the gtype in the model prefix
+                          prefix="EQ-d=$d-mat=$mat", train_steps=3e4,
+                          merge=true)
+    end
+end
+
 
 
 function main()
