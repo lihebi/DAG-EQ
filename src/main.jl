@@ -36,8 +36,8 @@ end
 
 
 function main_mat()
-    # test the different matrix, including: CH3, COV, COR
-    for d in [20],
+    # test the different matrix, including: CH3, COV, COR, ensemble on different k
+    for d in [20,50],
         (mat, model_fn) in [
             (:CH3, eq2_model_fn),
             (:COV, eq_model_fn),
@@ -58,6 +58,25 @@ function main_mat()
                           prefix="EQ-d=$d-mat=$mat", train_steps=3e4,
                           merge=true)
     end
+end
+
+function main_ensemble_d()
+    # ensemble on different d
+    specs = []
+    for gtype in [:ER, :SF],
+        d in [10,15,20] # TODO use more aggressive d, e.g. 10, 30, 50
+        
+        push!(specs, DataSpec(d=d, k=1, gtype=gtype,
+                noise=:Gaussian, mat=:CH3))
+    end
+    specs = Array{DataSpec}(specs)
+    
+    @info "training .."
+    expID = exp_train(specs, eq2_model_fn,
+                      # TODO I'll need to increase the training steps here
+                      # CAUTION feed in the gtype in the model prefix
+                      prefix="EQ2-CH3-d=[10,15,20]", train_steps=3e4,
+                      merge=false)
 end
 
 
