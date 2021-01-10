@@ -52,7 +52,7 @@ function main_mat()
         specs = Array{DataSpec}(specs)
         
         @info "training .." d mat
-        expID = exp_train(specs, eq2_model_fn,
+        expID = exp_train(specs, model_fn,
                           # TODO I'll need to increase the training steps here
                           # CAUTION feed in the gtype in the model prefix
                           prefix="EQ-d=$d-mat=$mat", train_steps=3e4,
