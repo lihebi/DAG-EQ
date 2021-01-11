@@ -64,7 +64,7 @@ function main_ensemble_d()
     # ensemble on different d
     specs = []
     for gtype in [:ER, :SF],
-        d in [10,15,20] # TODO use more aggressive d, e.g. 10, 30, 50
+        d in [20,30,40] # TODO use more aggressive d, e.g. 10, 30, 50
         
         push!(specs, DataSpec(d=d, k=1, gtype=gtype,
                 noise=:Gaussian, mat=:CH3))
@@ -75,10 +75,30 @@ function main_ensemble_d()
     expID = exp_train(specs, eq2_model_fn,
                       # TODO I'll need to increase the training steps here
                       # CAUTION feed in the gtype in the model prefix
-                      prefix="EQ2-CH3-d=[10,15,20]", train_steps=3e4,
+                      prefix="EQ2-CH3-d=[20,30,40]", train_steps=3e4,
                       merge=false)
 end
 
+
+function main_ensemble_d_cnn()
+    # ensemble on different d
+    specs = []
+    for gtype in [:ER, :SF],
+        d in [10,15,20] # TODO use more aggressive d, e.g. 10, 30, 50
+        
+        push!(specs, DataSpec(d=d, k=1, gtype=gtype,
+                noise=:Gaussian, mat=:CH3))
+    end
+    specs = Array{DataSpec}(specs)
+    
+    @info "training .."
+    expID = exp_train(specs, ()->cnn_model(2),
+                      # TODO I'll need to increase the training steps here
+                      # CAUTION feed in the gtype in the model prefix
+                      prefix="CNN-CH3-d=[10,15,20]", train_steps=3e4,
+                      test_throttle=1,
+                      merge=false)
+end
 
 
 function main()
