@@ -429,42 +429,56 @@ struct DataSpec
 end
 
 # FIXME previous 10000, 10
-function DataSpec(;d, k, gtype, noise, mat=:COV, mechanism=:Linear, ng=3000, N=3, seed=1234)
+function DataSpec(;d, k, gtype, noise, mat=:COV, mechanism=:Linear, ng=nothing, N=nothing, bsize=nothing, seed=1234)
     # FIXME maybe check error here
     #
     # UPDATE set ng and N based on d
-    if d <= 20
-        ng = 3000
-        N = 3
-        bsize=64
-    elseif d <= 40
-        ng = 2000
-        N = 2
-        bsize=64
-    elseif d <= 80
-        # FIXME this might be too small. But should be more than enough if we
-        # just use it as testing data
-        ng = 1000
-        N = 1
-        bsize=32
-    elseif d <= 150
-        ng = 1000
-        N = 1
-        # DEBUG testing memory limit during training (pullback of EQ layer seems
-        # to consume lots of memory)
-        bsize = 16
-    elseif d <= 200
-        ng = 500
-        N = 1
-        bsize = 8
-    elseif d <= 300
-        ng = 300
-        N = 1
-        bsize = 4
-    elseif d <= 400
-        ng = 300
-        N = 1
-        bsize = 2
+    if isnothing(ng) || isnothing(N)
+        if d <= 20
+            ng = 3000
+            N = 3
+            bsize=64
+        elseif d <= 40
+            ng = 2000
+            N = 2
+            bsize=64
+        elseif d <= 80
+            # FIXME this might be too small. But should be more than enough if we
+            # just use it as testing data
+            ng = 1000
+            N = 1
+            bsize=32
+        elseif d <= 150
+            ng = 1000
+            N = 1
+            # DEBUG testing memory limit during training (pullback of EQ layer seems
+            # to consume lots of memory)
+            bsize = 16
+        elseif d <= 200
+            ng = 500
+            N = 1
+            bsize = 8
+        elseif d <= 300
+            ng = 300
+            N = 1
+            bsize = 4
+        elseif d <= 400
+            ng = 300
+            N = 1
+            bsize = 2
+        end
+    end
+    # set bsize; batch size is not relevant to the data saving. Only relevant for data loading
+    if isnothing(bsize)
+        if d <= 40
+            bsize=64
+        elseif d<=80
+            bsize=32
+        elseif d<=150
+            bsize=16
+        else
+            error("too large d")
+        end
     end
     DataSpec(d, k, gtype, noise, mat, mechanism, ng, N, bsize, seed)
 end
@@ -475,7 +489,9 @@ function dataspec_to_id(spec::DataSpec)
               "gtype=$(spec.gtype)",
               "noise=$(spec.noise)",
               "mat=$(spec.mat)",
-            "mec=$(spec.mechanism)"
+            "mec=$(spec.mechanism)",
+            "ng=$(spec.ng)",
+            "N=$(spec.N)"
               ],
              "_")
 end
@@ -540,7 +556,7 @@ function load_sup_ds(spec, batch_size=100; use_raw=false, suffix="")
     # create "data/" folder is not already there
     if !isdir("data") mkdir("data") end
     # 1. generate graph
-    gdir = "data/$(spec.gtype)-$(spec.d)-$(spec.seed)$suffix"
+    gdir = "data/$(spec.gtype)-$(spec.d)-ng=$(spec.ng)-$(spec.seed)$suffix"
     if !isdir(gdir) mkdir(gdir) end
     gfile = "$gdir/g.hdf5"
     if isfile(gfile)

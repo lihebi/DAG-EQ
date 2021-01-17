@@ -242,7 +242,7 @@ function sup_train!(model, opt, ds;
             # l2 = sum((x)->sum(x.^2), weights)
             # show l2?
             # loss = loss + 1e-5 * l2
-#             add!(loss_metric, loss)
+            add!(loss_metric, loss)
 
             loss
         end

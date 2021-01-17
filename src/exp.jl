@@ -133,6 +133,8 @@ function exp_train(spec, model_fn;
 
 
     ds, test_ds = spec2ds(spec, merge=merge)
+    @show ds
+    @show test_ds
     x, y = next_batch!(test_ds) |> gpu
     
     @show size(x)
@@ -150,14 +152,14 @@ function exp_train(spec, model_fn;
 
     # when continual training, new files are created
     # CAUTION there will be some overlapping
-#     logger = TBLogger("tensorboard_logs/train-$expID",
-#                       tb_append, min_level=Logging.Info)
+    logger = TBLogger("tensorboard_logs/train-$expID",
+                      tb_append, min_level=Logging.Info)
     test_logger = TBLogger("tensorboard_logs/test-$expID",
                            tb_append, min_level=Logging.Info)
 
-#     print_cb = create_print_cb(logger=logger)
+    print_cb = create_print_cb(logger=logger)
     # do not log training loss
-    print_cb = (a,b)->nothing
+#     print_cb = (a,b)->nothing
     test_cb = create_test_cb(model, test_ds, "test_ds", logger=test_logger)
     save_cb = create_save_cb("saved_models/$expID", model)
 
@@ -165,7 +167,7 @@ function exp_train(spec, model_fn;
 
     sup_train!(model, opt, ds,
                # print tensorboard logs every 1 second
-               print_cb=Flux.throttle(print_cb, 1),
+               print_cb=Flux.throttle(print_cb, 10),
                # test throttle = 10
                test_cb=Flux.throttle(test_cb, test_throttle),
                # save every 60 seconds TODO use a ultra large number
@@ -201,7 +203,7 @@ _results = nothing
 function load_results!()
     global _results
     if isfile("result.csv")
-        df = CSV.read("result.csv")
+        df = CSV.read("result.csv", DataFrame)
         df.date
         _results = Dict((df.expID .=> df.testID)
                         .=>
@@ -247,16 +249,18 @@ function test()
     result2csv(result, "result.csv")
 end
 
-function exp_test(expID, spec; use_raw=false)
+function exp_test(expID, spec, testID=nothing; use_raw=false)
     global _results
     if isnothing(_results)
         load_results!()
     end
 
-    testID = dataspec_to_id(spec)
+    if isnothing(testID)
+        testID = dataspec_to_id(spec)
 
-    if use_raw
-        testID = "raw-$testID"
+        if use_raw
+            testID = "raw-$testID"
+        end
     end
 
     if !haskey(_results, expID=>testID)

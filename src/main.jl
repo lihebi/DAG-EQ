@@ -4,6 +4,61 @@
 include("exp.jl")
 
 
+function main_ngraph()
+    "Test how many graphs are needed to learn the model."
+    # this requires the data generating spec to be different
+    
+    # TODO maybe start with d=10 first
+    d=20
+    
+    # TODO these are a lot of configs
+    for ng in [100, 500, 1000, 2000, 5000, 10000, 50000, 100000, 500000, 1000000]
+        specs = []
+        for gtype in [:ER, :SF],
+            k in [1]
+            push!(specs, DataSpec(d=d, k=k, gtype=gtype,
+                    noise=:Gaussian, mat=:CH3,
+                    # when ng=100, total graph is 200, testing is 200*0.2=40, not enough for a batch of 64
+                    ng=ng, bsize=32,
+                    N=1))
+        end
+        specs = Array{DataSpec}(specs)
+        
+        @info "training .." ng
+        expID = exp_train(specs, eq2_model_fn,
+                          # TODO I'll need to increase the training steps here
+                          # CAUTION feed in the gtype in the model prefix
+                          prefix="ngraph-ng=$ng-d=$d", train_steps=3e4,
+                          test_throttle = 10,
+                          merge=true)
+    end
+end
+
+function main_ersf124()
+    # test on different number of nodes
+    for d in [10,20],
+        (prefix, model_fn,nsteps) in [
+            ("EQ2", eq2_model_fn, 3e4),
+        ]
+        
+        specs = []
+        for gtype in [:ER, :SF, :ER2, :SF2, :ER4, :SF4],
+            k in [1]
+            push!(specs, DataSpec(d=d, k=k, gtype=gtype,
+                    noise=:Gaussian, mat=:CH3))
+        end
+        specs = Array{DataSpec}(specs)
+        
+        @info "training .." prefix d
+        expID = exp_train(specs, model_fn,
+                          # TODO I'll need to increase the training steps here
+                          # CAUTION feed in the gtype in the model prefix
+                          prefix="$prefix-ERSF124-d=$d", train_steps=nsteps,
+                          test_throttle = 10,
+                          merge=true)
+    end
+end
+
 function main_ch3()
     for d in [10,20,50],
         (prefix, model_fn,nsteps) in [
