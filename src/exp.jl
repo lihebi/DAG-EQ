@@ -275,7 +275,10 @@ function exp_test(expID, spec, testID=nothing; use_raw=false)
             test_ds = load_sup_ds(spec, 16, use_raw=true);
             metrics, t = sup_test_raw(model, test_ds, nbatch=16)
         else
-            ds, test_ds = spec2ds(spec)
+            # FIXME the merge has to be true, otherwise batchsize is messed up, e.g. 100 for d=80
+            ds, test_ds = spec2ds(spec, merge=true)
+            @show ds
+            @show test_ds
             # DEBUG TODO not using all data for testing
             metrics, t = sup_test(model, test_ds, nbatch=16)
         end

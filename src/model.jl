@@ -217,24 +217,41 @@ function eq_model(; z=300, reg=false, nlayer=3, ch=1)
 end
 
 
-function cnn_model(ch=1)
+# function cnn_model(ch=1)
+#     Chain(
+# #         DimAdd(),
+#           Conv((3,3), ch=>32, relu, pad=(1,1)),
+#           BatchNorm(32),
+#           # FIXME channel size
+#           # FIXME number of layers
+#           # FIXME normalization
+#           Conv((3,3), 32=>32, relu, pad=(1,1)),
+#           BatchNorm(32),
+#           Conv((3,3), 32=>32, relu, pad=(1,1)),
+#           BatchNorm(32),
+#           Conv((3,3), 32=>32, relu, pad=(1,1)),
+#           BatchNorm(32),
+#           Conv((3,3), 32=>32, relu, pad=(1,1)),
+#           BatchNorm(32),
+#           # CAUTION no relu in the last layer
+#           Conv((3,3), 32=>1, pad=(1,1)),
+#           DimDrop())
+# end
+
+function cnn_model(ch=1, midch=32, kernel=(3,3), pad=(1,1))
     Chain(
-#         DimAdd(),
-          Conv((3,3), ch=>32, relu, pad=(1,1)),
-          BatchNorm(32),
-          # FIXME channel size
-          # FIXME number of layers
-          # FIXME normalization
-          Conv((3,3), 32=>32, relu, pad=(1,1)),
-          BatchNorm(32),
-          Conv((3,3), 32=>32, relu, pad=(1,1)),
-          BatchNorm(32),
-          Conv((3,3), 32=>32, relu, pad=(1,1)),
-          BatchNorm(32),
-          Conv((3,3), 32=>32, relu, pad=(1,1)),
-          BatchNorm(32),
+          Conv(kernel, ch=>midch, relu, pad=pad),
+          BatchNorm(midch),
+          Conv(kernel, midch=>midch, relu, pad=pad),
+          BatchNorm(midch),
+          Conv(kernel, midch=>midch, relu, pad=pad),
+          BatchNorm(midch),
+          Conv(kernel, midch=>midch, relu, pad=pad),
+          BatchNorm(midch),
+          Conv(kernel, midch=>midch, relu, pad=pad),
+          BatchNorm(midch),
           # CAUTION no relu in the last layer
-          Conv((3,3), 32=>1, pad=(1,1)),
+          Conv(kernel, midch=>1, pad=pad),
           DimDrop())
 end
 

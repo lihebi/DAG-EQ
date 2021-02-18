@@ -8,11 +8,10 @@ function main_ngraph()
     "Test how many graphs are needed to learn the model."
     # this requires the data generating spec to be different
     
-    # TODO maybe start with d=10 first
-    d=20
-    
     # TODO these are a lot of configs
-    for ng in [100, 500, 1000, 2000, 5000, 10000, 50000, 100000, 500000, 1000000]
+    for d in [10, 20],
+        ng in [100, 200, 500, 1000, 2000, 5000, 10000]
+        
         specs = []
         for gtype in [:ER, :SF],
             k in [1]
@@ -24,11 +23,11 @@ function main_ngraph()
         end
         specs = Array{DataSpec}(specs)
         
-        @info "training .." ng
+        @info "training .." d ng
         expID = exp_train(specs, eq2_model_fn,
                           # TODO I'll need to increase the training steps here
                           # CAUTION feed in the gtype in the model prefix
-                          prefix="ngraph-ng=$ng-d=$d", train_steps=3e4,
+                          prefix="ngraph-ng=$ng-d=$d", train_steps=1e5,
                           test_throttle = 10,
                           merge=true)
     end
@@ -38,7 +37,7 @@ function main_ersf124()
     # test on different number of nodes
     for d in [10,20],
         (prefix, model_fn,nsteps) in [
-            ("EQ2", eq2_model_fn, 3e4),
+            ("EQ2", eq2_model_fn, 1e5),
         ]
         
         specs = []
@@ -65,7 +64,8 @@ function main_ch3()
             ("EQ2", eq2_model_fn, 3e4),
             ("FC", ()->fc_model(d=d, ch=2, z=1024, nlayer=6), 3e4),
             ("FCreg", ()->fc_model(d=d, ch=2, z=1024, nlayer=6, reg=true), 3e4),
-            ("CNN", ()->cnn_model(2), 3e4)
+            ("CNN", ()->cnn_model(2), 3e4),
+            ("CNN2", ()->cnn_model(2, 128, (5,5), (2,2)), 3e4)
         ]
         
         specs = []
