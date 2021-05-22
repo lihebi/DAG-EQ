@@ -1,0 +1,16 @@
+services:
+  lab:
+    build: .
+    # image: jupyter/datascience-notebook
+    ports:
+      - "8888:8888"
+    runtime: nvidia
+    volumes:
+      - ..:/home/jovyan/DAG-EQ
+    #   - logvolume01:/var/log
+#     links:
+#       - redis
+#   redis:
+#     image: redis
+# volumes:
+#   logvolume01: {}
