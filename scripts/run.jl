@@ -1,5 +1,5 @@
 @info "Including main.jl .."
-include("../main.jl")
+include("../src/main.jl")
 
 @info "Running main() .."
 main()
