@@ -4,13 +4,14 @@ services:
     # image: jupyter/datascience-notebook
     ports:
       - "8888:8888"
+      - "6006:6006"
     runtime: nvidia
     volumes:
       - ..:/home/jovyan/DAG-EQ
-    #   - logvolume01:/var/log
+      - dotjulia:/home/jovyan/.julia
 #     links:
 #       - redis
 #   redis:
 #     image: redis
-# volumes:
-#   logvolume01: {}
+volumes:
+  dotjulia: {}
