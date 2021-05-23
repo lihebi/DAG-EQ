@@ -30,6 +30,7 @@ RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
 # Install all OS dependencies for fully functional notebook server
 RUN apt-get update && apt-get install -yq --no-install-recommends \
     build-essential \
+    curl \
     vim-tiny \
     git \
     inkscape \
@@ -86,6 +87,14 @@ RUN echo "auth requisite pam_deny.so" >> /etc/pam.d/su && \
     fix-permissions $HOME && \
     fix-permissions $CONDA_DIR
 
+
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
+
+RUN echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook
+
+
 # R pre-requisites
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -101,7 +110,7 @@ RUN apt-get update && \
     iputils-ping iproute2 htop locate libzmq5
 
 RUN apt-get update && apt-get install -yq --no-install-recommends\
-    tmux silversearcher-ag emacs curl
+    tmux silversearcher-ag emacs
 
 # Using Ubuntu, install nodejs
 # https://github.com/nodesource/distributions/blob/master/README.md#debinstall
@@ -138,12 +147,40 @@ RUN wget --quiet https://repo.continuum.io/miniconda/Miniconda3-py38_${MINICONDA
     fix-permissions /home/$NB_USER
 
 
-# Install Tini
-RUN conda install --quiet --yes 'tini=0.18.0' && \
-    conda list tini | grep tini | tr -s ' ' | cut -d ' ' -f 1,2 >> $CONDA_DIR/conda-meta/pinned && \
+# R packages including IRKernel which gets installed globally.
+# https://github.com/jupyter/docker-stacks/blob/master/datascience-notebook/Dockerfile
+#
+# FIXME this is so slow
+RUN conda install -c conda-forge --quiet --yes \
+    'r-base=4.0.3'  \
+    'r-caret=6.0*' \
+    'r-crayon=1.4*' \
+    'r-devtools=2.4*' \
+    'r-forecast=8.14*' \
+    'r-hexbin=1.28*' \
+    'r-htmltools=0.5*' \
+    'r-htmlwidgets=1.5*' \
+    'r-irkernel=1.1*' \
+    'r-nycflights13=1.0*' \
+    'r-randomforest=4.6*' \
+    'r-rcurl=1.98*' \
+    'r-rmarkdown=2.7*' \
+    'r-rsqlite=2.2*' \
+    'r-shiny=1.6*' \
+    'r-tidyverse=1.3*' \
+    'rpy2=3.4*' && \
     conda clean --all -f -y && \
-    fix-permissions $CONDA_DIR && \
-    fix-permissions /home/$NB_USER
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
+
+# Install Tini
+# FIXME this does not seem to install correctly. I installed tini later by apt
+#
+# RUN conda install --quiet --yes 'tini=0.18.0' && \
+#     conda list tini | grep tini | tr -s ' ' | cut -d ' ' -f 1,2 >> $CONDA_DIR/conda-meta/pinned && \
+#     conda clean --all -f -y && \
+#     fix-permissions $CONDA_DIR && \
+#     fix-permissions /home/$NB_USER
 
 # Install Jupyter Notebook, Lab, and Hub
 # Generate a notebook server config
@@ -179,10 +216,6 @@ RUN mkdir "/opt/julia-${JULIA_VERSION}" && \
     rm "/tmp/julia-${JULIA_VERSION}-linux-x86_64.tar.gz"
 RUN ln -fs /opt/julia-*/bin/julia /usr/local/bin/julia
 
-
-ENV TINI_VERSION v0.19.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod +x /tini
 
 ##############################
 USER $NB_UID
@@ -240,9 +273,32 @@ USER $NB_UID
 # TODO install R and setup kernels
 # RUN conda install r-base=3.6.3
 
+
+# USER root
+
+# DEBUG using apt to install R
+# FIXME however, I'll need to install irkernel and r packages separately. Not
+# very pleasent.
+#
+# update indices
+# RUN apt-get update -qq && \
+#     # install two helper packages we need
+#     apt-get install -yq --no-install-recommends software-properties-common dirmngr &&\
+#     # import the signing key (by Michael Rutter) for these repo
+#     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 &&\
+#     # add the R 4.0 repo from CRAN -- adjust 'focal' to 'groovy' or 'bionic' as needed
+#     add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" &&\
+#     apt-get install -yq --no-install-recommends r-base
+
+
 # TODO all the R packages for DAG-EQ
 # RUN R -e "install.packages('devtools')"
 
+# USER $NB_UID
+# RUN Rscript -e "install.packages(c(\"devtools\", \"testthat\", \"roxygen2\"), repos = c(\"http://irkernel.github.io/\", \"http://cran.rstudio.com\"))"
+# RUN Rscript -e "library(\"devtools\")" -e "install_github(\"IRkernel/repr\")" -e "install_github(\"IRkernel/IRdisplay\")"
+# RUN pip install jupyter_kernel_test ndjson-testrunner
+# RUN unlink /opt/conda/lib/libstdc++.so.6
 
 USER $NB_UID
 

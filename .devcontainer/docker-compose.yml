@@ -9,9 +9,11 @@ services:
     volumes:
       - ..:/home/jovyan/DAG-EQ
       - dotjulia:/home/jovyan/.julia
+      - dotR:/home/jovyan/R
 #     links:
 #       - redis
 #   redis:
 #     image: redis
 volumes:
   dotjulia: {}
+  dotR: {}
