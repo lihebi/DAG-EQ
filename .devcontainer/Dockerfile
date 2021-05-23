@@ -95,6 +95,20 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 
+# My additional packages
+RUN apt-get update && \
+    apt-get install -yq --no-install-recommends\
+    iputils-ping iproute2 htop locate libzmq5
+
+RUN apt-get update && apt-get install -yq --no-install-recommends\
+    tmux silversearcher-ag emacs curl
+
+# Using Ubuntu, install nodejs
+# https://github.com/nodesource/distributions/blob/master/README.md#debinstall
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends nodejs
+
 ARG PYTHON_VERSION=default
 
 # Install conda as jovyan and check the md5 sum provided on the download site
@@ -137,12 +151,18 @@ RUN conda install --quiet --yes 'tini=0.18.0' && \
 # Correct permissions
 # Do all this in a single RUN command to avoid duplicating all of the
 # files across image layers when the permissions change
-RUN conda install --quiet --yes \
-    'notebook=6.1.3' \
-    'jupyterhub=1.1.0' \
-    'jupyterlab=2.2.5' && \
+#
+# UPDATE upgrading to jupyterlab v3
+# 'notebook=6.1.3' \
+#     'jupyterhub=1.1.0' \
+#     'jupyterlab=2.2.5' && \
+#
+# NOTE: Official jupyterlab
+# conda install -c conda-forge jupyterlab
+RUN conda install --quiet --yes jupyterlab && \
     conda clean --all -f -y && \
-    npm cache clean --force && \
+    # FIXME why npm here? npm is not installed thus caused error
+    # npm cache clean --force && \
     jupyter notebook --generate-config && \
     rm -rf $CONDA_DIR/share/jupyter/lab/staging && \
     rm -rf /home/$NB_USER/.cache/yarn && \
@@ -150,20 +170,15 @@ RUN conda install --quiet --yes \
     fix-permissions /home/$NB_USER
 
 # Julia
-ENV JULIA_VERSION=1.5.0
+ENV JULIA_VERSION=1.6.1
 WORKDIR /tmp
 
 RUN mkdir "/opt/julia-${JULIA_VERSION}" && \
     wget -q https://julialang-s3.julialang.org/bin/linux/x64/$(echo "${JULIA_VERSION}" | cut -d. -f 1,2)"/julia-${JULIA_VERSION}-linux-x86_64.tar.gz" && \
-    echo "be7af676f8474afce098861275d28a0eb8a4ece3f83a11027e3554dcdecddb91 *julia-${JULIA_VERSION}-linux-x86_64.tar.gz" | sha256sum -c - && \
     tar xzf "julia-${JULIA_VERSION}-linux-x86_64.tar.gz" -C "/opt/julia-${JULIA_VERSION}" --strip-components=1 && \
     rm "/tmp/julia-${JULIA_VERSION}-linux-x86_64.tar.gz"
 RUN ln -fs /opt/julia-*/bin/julia /usr/local/bin/julia
 
-# My additional packages
-RUN apt-get update && \
-    apt-get install -yq --no-install-recommends\
-    iputils-ping iproute2 htop locate libzmq5
 
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
@@ -185,28 +200,25 @@ USER $NB_UID
 RUN pip install --upgrade jupyterlab-git
 # FIXME NOT WORKING seems that I have to install tensorflow and tensorboard 2.2 for nbtensorboard extension to work
 # tensorflow==2.2 tensorboard==2.2
-RUN pip install tensorflow==2.2
+RUN pip install tensorflow==2.2 tensorboard==2.2
 RUN pip install jupyter-tensorboard
-RUN jupyter labextension install --no-build jupyterlab_tensorboard
+# RUN jupyter labextension install --no-build jupyterlab_tensorboard
 RUN jupyter labextension install --no-build @jupyterlab/toc
 RUN pip install pynvml bokeh jupyterlab-nvdashboard
-RUN jupyter labextension install --no-build jupyterlab-nvdashboard
+# RUN jupyter labextension install --no-build jupyterlab-nvdashboard
 RUN jupyter labextension install --no-build @ijmbarr/jupyterlab_spellchecker
 RUN jupyter labextension install --no-build @aquirdturtle/collapsible_headings
-RUN jupyter labextension install --no-build https://github.com/lihebi/jupyterlab-racket
+# RUN jupyter labextension install --no-build https://github.com/lihebi/jupyterlab-racket
 # TODO ipywidgets and its lab companion @jupyter-widgets/jupyterlab-manager@2.0
 #
 # # FIXME this really feels too slow
 # # FIXME but if I have minimize set to False, the download (page open) will be slow
 # --dev-build=False --minimize=False
-RUN jupyter lab build -y --dev-build=False --minimize=False && \
-    fix-permissions "${CONDA_DIR}" && \
-    fix-permissions "/home/${NB_USER}"
-
-# DEBUG Additional packages
-USER root
-RUN apt-get update && apt-get install -yq --no-install-recommends\
-    tmux silversearcher-ag emacs
+#
+# CAUTION I'm not building it, it's too slow
+# RUN jupyter lab build -y --dev-build=False --minimize=False && \
+#     fix-permissions "${CONDA_DIR}" && \
+#     fix-permissions "/home/${NB_USER}"
 
 
 
@@ -245,6 +257,7 @@ USER $NB_UID
 
 
 EXPOSE 8888
+EXPOSE 6006
 WORKDIR $HOME
 
 
