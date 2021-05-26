@@ -58,14 +58,69 @@ function main_ersf124()
     end
 end
 
+function main_data()
+    # generate data for baseline usage
+    for d in [10, 20, 50, 100]
+        @info "Generating for" d ".."
+        specs = []
+        # this is combined specs. What was the filename?
+        # will generate separate data files, and combine when loading
+        for gtype in [:ER, :SF],
+            k in [1]
+            push!(specs, DataSpec(d=d, k=k, gtype=gtype,
+                    noise=:Gaussian, mat=:CH3))
+        end
+        specs = Array{DataSpec}(specs)
+        ds, test_ds = spec2ds(specs)
+    end
+end
+
+function main_large()
+    # large d, large ng and N, longer training time
+    for (d, ng, N, bsize) in [
+            (200, 1000, 1, 2),
+            (150, 3000, 3, 4),
+            (100, 3000, 3, 8),
+            # DEBUG testing whether d=200 is trainable
+            # d=200 is very slow
+            
+        ],
+        (prefix, model_fn,nsteps) in [
+            # previous try didn't actually set ng, N, bsize, and it was marked
+            # with old- prefix
+            ("EQ2", eq2_model_fn, 5e4)
+        ]
+        
+        specs = []
+        for gtype in [:ER, :SF],
+            k in [1]
+            push!(specs, DataSpec(d=d, k=k, gtype=gtype,
+                    noise=:Gaussian, mat=:CH3,
+                    ng=ng, N=N, bsize=bsize))
+        end
+        specs = Array{DataSpec}(specs)
+        
+        # print more frequently for CNN and FC to get more data to print
+        test_throttle = if prefix == "EQ2" 10 else 1 end
+
+        @info "training .." prefix d
+        expID = exp_train(specs, model_fn,
+                          # TODO I'll need to increase the training steps here
+                          # CAUTION feed in the gtype in the model prefix
+                          prefix="$prefix-ERSF-k1-d=$d-ng=$ng-N=$N", train_steps=nsteps,
+                          test_throttle = test_throttle,
+                          merge=true)
+    end
+end
+
 function main_ch3()
-    for d in [10,20,50],
+    for d in [10,20,50,100],
         (prefix, model_fn,nsteps) in [
             ("EQ2", eq2_model_fn, 3e4),
             ("FC", ()->fc_model(d=d, ch=2, z=1024, nlayer=6), 3e4),
-            ("FCreg", ()->fc_model(d=d, ch=2, z=1024, nlayer=6, reg=true), 3e4),
+            # ("FCreg", ()->fc_model(d=d, ch=2, z=1024, nlayer=6, reg=true), 3e4),
             ("CNN", ()->cnn_model(2), 3e4),
-            ("CNN2", ()->cnn_model(2, 128, (5,5), (2,2)), 3e4)
+            # ("CNN2", ()->cnn_model(2, 128, (5,5), (2,2)), 3e4)
         ]
         
         specs = []
@@ -153,50 +208,4 @@ function main_ensemble_d_cnn()
                       prefix="CNN-CH3-d=[10,15,20]", train_steps=3e4,
                       test_throttle=1,
                       merge=false)
-end
-
-
-function main()
-    for d in [10, 50,100],
-        gtype in [:SF, :ER],
-        mec in [:Linear],
-        mat in [:COV],
-        # CAUTION using CH2, only eq2 model can be used
-#         mat in [:CH2],
-        k in [1],
-        noise in [:Gaussian],
-        (prefix, model_fn,nsteps) in [
-            ("EQ", deep_eq_model_fn, 5e4),
-            ("FC", ()->deep_fc_model_fn(d), 1e5),
-            # FIXME the CNN always got killed
-            ("CNN", cnn_model, 3e4)
-        ]
-        
-#         prefix = "prefix-$(now())"
-        
-        spec = DataSpec(d=d,k=k,gtype=gtype,noise=noise,mechanism=mec,mat=mat)
-        @info "training" prefix d gtype mec mat k noise
-        expID = exp_train(spec, model_fn, prefix=prefix, train_steps=nsteps)
-        @info "testing" expID
-        exp_test(expID, spec)
-        # testing other specs
-        # 1. transfer with k
-            @info "testing differet k .."
-        for k in [1,2,4]
-            test_spec = DataSpec(d=d,k=k,gtype=gtype,noise=noise,mechanism=mec,mat=mat)
-            exp_test(expID, test_spec)
-        end
-        @info "testing different noise .."
-        # 2. transfer with noise
-        for noise in [:Poisson, :Exp, :Gumbel]
-            test_spec = DataSpec(d=d,k=k,gtype=gtype,noise=noise,mechanism=mec,mat=mat)
-            exp_test(expID, test_spec)
-        end
-        @info "testing different gtype .."
-        # 3. transfer with gtype
-        for gtype in [:ER, :SF]
-            test_spec = DataSpec(d=d,k=k,gtype=gtype,noise=noise,mechanism=mec,mat=mat)
-            exp_test(expID, test_spec)
-        end
-    end
 end

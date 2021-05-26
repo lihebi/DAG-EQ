@@ -2,4 +2,4 @@
 include("../src/main.jl")
 
 @info "Running main() .."
-main()
+main_large()

@@ -95,6 +95,7 @@ function spec2ds(specs::Array{DataSpec, N} where N; merge=false)
             ds, test_ds
         end
     else
+        # FIXME this does not seem to be used in training?
         dses = map(specs) do spec
             ds, test_ds = load_sup_ds(spec)
             # ds, test_ds = (ds, test_ds) .|> CuDataSetIterator

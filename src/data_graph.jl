@@ -451,7 +451,7 @@ function DataSpec(;d, k, gtype, noise, mat=:COV, mechanism=:Linear, ng=nothing, 
             # DEBUG testing memory limit during training (pullback of EQ layer seems
             # to consume lots of memory)
         elseif d <= 200
-            ng = 500
+            ng = 1000
             N = 1
         elseif d <= 300
             ng = 300
@@ -463,12 +463,17 @@ function DataSpec(;d, k, gtype, noise, mat=:COV, mechanism=:Linear, ng=nothing, 
     end
     # set bsize; batch size is not relevant to the data saving. Only relevant for data loading
     if isnothing(bsize)
-        if d <= 40
+        if d <= 30
             bsize=64
-        elseif d<=80
+        elseif d<=50
             bsize=32
-        elseif d<=150
+        elseif d<=70
             bsize=16
+        elseif d<=100
+            bsize=8
+        elseif d<=400
+            # FIXME still too large?
+            bsize=8
         else
             error("too large d")
         end
