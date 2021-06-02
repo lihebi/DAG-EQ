@@ -8,17 +8,19 @@ import json
 import time
 import networkx as nx
 
+
 import sys
 # Add to sys.path
 
 from baseline_common import compute_metrics
 from baseline_cdt import run_CDT, run_RCC
+from bl_gob import run_Gob
 
-sys.path.append(os.path.expanduser("~/notears"))
+sys.path.append(os.path.abspath("./notears"))
 from notears.linear import notears_linear
 from notears.nonlinear import NotearsMLP, notears_nonlinear
 
-sys.path.append(os.path.expanduser("~/DAG-GNN/src"))
+sys.path.append(os.path.abspath("./DAG-GNN/src"))
 from baseline_daggnn import dag_gnn
 
 # sys.path.append(os.path.expanduser("~/trustworthyAI/Causal_Structure_Learning/Causal_Discovery_RL/src/"))
@@ -68,21 +70,27 @@ def run_hdf5_alg(fname, alg):
           'shd:', all_shd / ct)
 
 def run_one(alg, x, y):
-    start = time.time()
     if alg in ['PC', 'SAM', 'CAM', 'GES']:
         mat = run_CDT(alg, x, y, False)
-        prec, recall, shd = compute_metrics(mat, y)
-        print('prec:', prec, 'recall:', recall, 'shd:', shd)
+        prec, recall, shd = compute_metrics(mat, y, isPDAG=True)
+        # print('prec:', prec, 'recall:', recall, 'shd:', shd)
+        return prec, recall, shd
+    elif alg == 'gob':
+        mat = run_Gob(x, y)
+        prec, recall, shd = compute_metrics(mat, y, isPDAG=True)
+        # print('prec:', prec, 'recall:', recall, 'shd:', shd)
         return prec, recall, shd
     elif alg == 'notears':
         # np.numpy(x)
         # x.numpy()
         # np.array(pd.DataFrame(np.zeros((3,2)))).shape
-        mat = notears_linear(np.array(x), lambda1=0, loss_type='l2')
+        #
+        # FIXME should I use lambda1=0.1?
+        mat = notears_linear(np.array(x), lambda1=0.1, loss_type='l2')
         mat = (mat != 0).astype(np.int)
         # CAUTION here seems that I must do y.transpose()
         prec, recall, shd = compute_metrics(mat, y.transpose())
-        print('prec:', prec, 'recall:', recall, 'shd:', shd)
+        # print('prec:', prec, 'recall:', recall, 'shd:', shd)
         return prec, recall, shd
     elif alg == 'DAG-GNN':
         d = x.shape[1]
@@ -91,7 +99,7 @@ def run_one(alg, x, y):
         # CAUTION I have to convert it into 1/0
         mat = (mat != 0).astype(np.int)
         prec, recall, shd = compute_metrics(mat, y.transpose())
-        print('prec:', prec, 'recall:', recall, 'shd:', shd)
+        # print('prec:', prec, 'recall:', recall, 'shd:', shd)
         return prec, recall, shd
     elif alg == 'RL-BIC':
         d = x.shape[1]
@@ -102,7 +110,7 @@ def run_one(alg, x, y):
             mat = (mat != 0).astype(np.int)
             # FIXME this seems to be wrong
             prec, recall, shd = compute_metrics(mat, y.transpose())
-            print('prec:', prec, 'recall:', recall, 'shd:', shd)
+            # print('prec:', prec, 'recall:', recall, 'shd:', shd)
 
             # And yes, no tranpose will result in worse performance
             # prec2, recall2, shd2 = compute_metrics(mat, y)
@@ -115,31 +123,81 @@ def run_one(alg, x, y):
     else:
         print('Unsupport alg', alg)
         assert(False)
+
+
+from multiprocessing import Process, Queue
+from multiprocessing import Pool, TimeoutError
+from multiprocessing.pool import ThreadPool
+
+def f(data):
+    alg, x, y = data
+    print('running one run for', alg, '..')
+    start = time.time()
+    # FIXME testing only 10 graphs
+    # DEBUG 6 for d=100
+    prec, recall, shd = run_one(alg, x, y)
     end = time.time()
-    print('time: {:.3f}'.format(end-start))
+    oneresult = [prec, recall, shd, end-start]
+    print('finished one run, the one result:', oneresult)
+    return oneresult
 
-def test():
-    fname = 'data/SF-100/d=100_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5'
-    fname = 'data/SF-200/d=200_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5'
-    fname = 'data/SF-300/d=300_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5'
-    fname = 'data/SF-400/d=400_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5'
-    # run_many('GES', fname)
-    it = read_hdf5_iter(fname)
-    x, y = next(it)
-    mat = run_CDT('GES', x, y, False)
-    mat.astype(np.int)
-    sum(sum(np.array(mat)))
-    compute_metrics(mat, y)
-    compute_metrics(np.array(mat), y)
-    prec, recall, shd = compute_metrics(mat, y)
-    print('prec:', prec, 'recall:', recall, 'shd:', shd)
-    np.sum(mat != y)
-    # number of predicted edges
-    np.sum(mat == 1)
-    # fp:
-    np.sum(mat[y == 1] == 1)
+def timeout_f(data):
+    with ThreadPool(processes=1) as pool:
+        res = pool.apply_async(f, (data,))
+        try:
+            # FIXME hardcoded timeout
+            return res.get(timeout=5000)
+        except TimeoutError:
+            print('timeout, returning none')
+            return None
 
-def run_many(alg, fname):
+def run_many_parallel(alg, fname, nruns=5):
+    # run all the runs in parallel
+    assert nruns <= 20
+    # q = Queue()
+    # for i in range(nruns):
+    #     p = Process(target=f, args=(q,))
+    #     p.start()
+    #     p.join()
+    # FIXME what if nruns larger than nprocesses?
+    with Pool(processes=1) as pool:
+        # get the data
+        it = read_hdf5_iter(fname)
+        # get the nruns data
+        data = [[alg] + list(next(it)) for _ in range(nruns)]
+        print('spawn out workers on the task ..')
+        # Option 1
+        # results = pool.map(f, data)
+        #
+        # Option 2
+        # DEBUG timeout_f
+        # FIXME handle the None values
+        results = pool.map(timeout_f, data)
+        #
+        # Option 3
+        # async
+        # async_results = [pool.apply_async(f, (d,)) for d in data]
+        # results = []
+        # for a in async_results:
+        #     try:
+        #         # FIXME the first one get up to 100s, the second one get up to 200s
+        #         results.append(a.get(timeout=100))
+        #     except TimeoutError:
+        #         # do not append
+        #         print("warning: timeout, result skipped")
+        #         pass
+        print('results:', results)
+        # remove None
+        results = [x for x in results if x]
+        # check how many results left
+        print("CAUTION: No. of results left", len(results))
+        # FIXME return average of results
+        avgres = np.mean(results, axis=0).tolist()
+        print('avg:', avgres)
+        return avgres
+
+def run_many(alg, fname, nruns=5):
+    assert os.path.exists(fname), fname
     if alg in ['RCC-CLF', 'RCC-NN']:
         # test different methods
         raw_x, raw_y = read_hdf5(fname)
@@ -150,49 +208,24 @@ def run_many(alg, fname):
             return run_RCC(raw_x, raw_y, 'NN')
     else:
         it = read_hdf5_iter(fname)
-        all_prec = 0
-        all_recall = 0
-        all_shd = 0
-        ct = 0
-        start = time.time()
+        
         # FIXME testing only 10 graphs
         # DEBUG 6 for d=100
-        for _ in range(5):
+        results = []
+        for i in range(nruns):
+            print("Run No.{}".format(i+1))
             x, y = next(it)
+            start = time.time()
             prec, recall, shd = run_one(alg, x, y)
-            ct += 1
-            all_prec += prec
-            all_recall += recall
-            all_shd += shd
-        end = time.time()
-        return all_prec/ct, all_recall/ct, all_shd/ct, (end-start)/ct
+            end = time.time()
+            oneresult = [prec, recall, shd, end-start]
+            print('the one result:', oneresult)
+            results.append(oneresult)
+        avgres = np.mean(results, axis=0).tolist()
+        print('avg:', avgres)
+        return avgres
 
-def test():
-    os.chdir('julia/src')
-    raw_x, raw_y = read_hdf5('data/SF-10/d=10_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5')
-    it = read_hdf5_iter('data/SF-10/d=10_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5')
-    it = read_hdf5_iter('data/SF-20/d=20_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5')
-    it = read_hdf5_iter('data/SF-50/d=50_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5')
-    it = read_hdf5_iter('data/SF-100/d=100_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5')
-    x, y = next(it)
-    x
-    y
-    # also I want to measure the time
-    timeit.timeit(1+1)
-    run_one('PC', x, y)
-    run_one('CAM', x, y)
-    # FIXME this is pretty fast, maybe I don't need FGS
-    run_one('GES', x, y)
-    # TODO CAUTION this is very slow
-    # run_one('SAM', x, y)
-    run_one('notears', x, y)
-    run_one('DAG-GNN', x, y)
-
-    run_RCC(raw_x, raw_y, 'CLF')
-    run_RCC(raw_x, raw_y, 'NN')
-
-def load_results():
-    fname = 'results/baseline.json'
+def load_results(fname = 'results/baseline.json'):
     # I'm going to use object of:
     #
     # result_obj = {'data/xxx.hdf5': {'RCC-CLF': [prec, recall, shd],
@@ -210,14 +243,14 @@ def load_results():
     else:
         return {}
 
-def save_results(res):
+
+# CAUTION fname must be kept consistent with load_results!!
+def save_results(res, fname = 'results/baseline.json'):
     # TODO baseline results
-    fname = 'results/baseline.json'
+    if not os.path.exists('results'):
+        os.makedirs('results')
     with open(fname, 'w') as fp:
         json.dump(res, fp, indent=2)
-
-def test():
-    os.chdir('julia/src')
 
 def main_large():
     for gtype in ['SF']:
@@ -232,88 +265,75 @@ def main_large():
                 if fname not in res:
                     res[fname] = {}
                 if alg not in res[fname]:
-                    prec, recall, shd, t = run_many(alg, fname)
-                    res[fname][alg] = [prec, recall, shd, t]
-                    print('-- testing result:', [prec, recall, shd, t])
+                    # prec, recall, shd, t
+                    oneresult = run_many(alg, fname)
+                    res[fname][alg] = oneresult
+                    print('-- testing result:', oneresult)
                     print('-- writing ..')
                     save_results(res)
 
-def test_RLBIC():
-    gtype = 'SF'
-    d = 10
-    fname = 'data/{}-{}/d={}_k=1_gtype={}_noise=Gaussian_mat=COR.hdf5'.format(
-        gtype, d, d, gtype)
-    alg = 'RL-BIC'
-
-    # prec, recall, shd, t = run_many(alg, fname)
-    # print('-- testing result:', [prec, recall, shd, t])
-
-    # running one
-    it = read_hdf5_iter(fname)
-    x, y = next(it)
-    # prec, recall, shd = run_one(alg, x, y)
-
-    # even inside for RL-BIC only
-    d = x.shape[1]
-    mat = rlbic(d, np.array(x), y.transpose(),
-                lambda_iter_num=500, nb_epoch=2000)
-
-    # compare mat with y
-    compute_metrics(mat, y)
-    # this seems to make sense the most
-    compute_metrics(mat, y.transpose())
-    # and this seems not necessary
-    mat2 = (mat != 0).astype(np.int)
-    compute_metrics(mat2, y)
-    compute_metrics(mat2, y.transpose())
-
-    # FIXME the mat seems to be already int
-    mat = (mat != 0).astype(np.int)
-    # FIXME this seems to be wrong
-    prec, recall, shd = compute_metrics(mat, y.transpose())
-    print('prec:', prec, 'recall:', recall, 'shd:', shd)
-
-    prec2, recall2, shd2 = compute_metrics(mat, y)
-    print('prec2:', prec2, 'recall2:', recall2, 'shd2:', shd2)
-
-    return prec, recall, shd
     
 # get dataset file name
-def get_dataset_fname(d, gtype, mat='COV'):
+def get_dataset_fname(datadir, d, gtype, mat='CH3'):
     # FIXME since I'm using raw for the baselines, I should be fine using the previous results.
-    # But the previous result is for SF only. If I want to report the average of SF/ER, I need to run it again.
-    return 'data/{}-{}-1234/d={}_k=1_gtype={}_noise=Gaussian_mat={}_mec=Linear.hdf5'.format(gtype, d, d, gtype, mat)
+    # But the previous result is for SF only. If I want to report the average of
+    # SF/ER, I need to run it again.
+    #
+    # FIXME this is ugly
+    if d >= 300:
+        ng = 300
+        N = 1
+    elif d >= 50:
+        ng = 1000
+        N = 1
+    else:
+        ng = 3000
+        N = 3
+    return '{}/{}-{}-ng={}-1234/d={}_k=1_gtype={}_noise=Gaussian_mat={}_mec=Linear_ng={}_N={}.hdf5'.format(datadir, gtype, d, ng, d, gtype, mat, ng, N)
 
-def get_dataset_fname_old(d, gtype):
-    # FIXME since I'm using raw for the baselines, I should be fine using the previous results.
-    # But the previous result is for SF only. If I want to report the average of SF/ER, I need to run it again.
-    return 'data/{}-{}/d={}_k=1_gtype={}_noise=Gaussian_mat=COR.hdf5'.format(gtype, d, d, gtype)
 
-
-def main():
-    for d in [10, 20, 50, 100]:
+def main_parallel(ds, algs, nruns):
+    for d in ds:
         for gtype in ['SF', 'ER']:
-            fname = get_dataset_fname(d, gtype)
+            fname = get_dataset_fname("../notebooks/data", d, gtype)
             print('== processing', fname, '..')
             # read baseline
+            # DEBUG using a testing json file
             res = load_results()
             # FIXME notears seems to work too well
-            for alg in ['PC', 
-#                         'CAM',
-                        'GES',
-                        'RCC-CLF', 'RCC-NN',
-                        'notears', 'DAG-GNN',
-#                         'RL-BIC'
-                       ]:
+            for alg in algs:
                 print('-- running', alg, 'algorithm ..')
                 if fname not in res:
                     res[fname] = {}
                 if alg not in res[fname]:
                     # run RL-BIC only on d=10,20,50
                     if alg == 'RL-BIC' and d > 50: continue
-                    prec, recall, shd, t = run_many(alg, fname)
-                    res[fname][alg] = [prec, recall, shd, t]
-                    print('-- testing result:', [prec, recall, shd, t])
+                    # prec, recall, shd, t
+                    oneresult = run_many_parallel(alg, fname, nruns=nruns)
+                    res[fname][alg] = oneresult
+                    print('-- testing result:', oneresult)
+                    print('-- writing ..')
+                    save_results(res)
+
+def main(ds, algs, nruns):
+    for d in ds:
+        for gtype in ['SF', 'ER']:
+            fname = get_dataset_fname("../notebooks/data", d, gtype)
+            print('== processing', fname, '..')
+            # read baseline
+            res = load_results()
+            # FIXME notears seems to work too well
+            for alg in algs:
+                print('-- running', alg, 'algorithm ..')
+                if fname not in res:
+                    res[fname] = {}
+                if alg not in res[fname]:
+                    # run RL-BIC only on d=10,20,50
+                    if alg == 'RL-BIC' and d > 50: continue
+                    # prec, recall, shd, t
+                    oneresult = run_many(alg, fname, nruns=nruns)
+                    res[fname][alg] = oneresult
+                    print('-- testing result:', oneresult)
                     print('-- writing ..')
                     save_results(res)
 import csv
@@ -335,7 +355,8 @@ def table():
                        # CAM is a little slow
 #                        'CAM',
                        'RCC-CLF', 'RCC-NN',
-                       'notears', 'DAG-GNN']
+                       'notears', 'DAG-GNN'
+                       ]
 #             if d < 50:
 #                 methods += ['RL-BIC']
             for method in methods:
@@ -350,5 +371,12 @@ def table():
             writer.writerow([])
 
 if __name__ == '__main__':
-    main()
+    main([10, 20, 50, 100], ['PC', 
+                        'GES',
+                        'CAM',
+                        # 'RCC-CLF', 'RCC-NN',
+                        'notears',
+                        # 'DAG-GNN',
+#                         'RL-BIC'
+                       ])
     # main_large()

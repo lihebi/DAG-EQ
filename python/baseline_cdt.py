@@ -144,9 +144,9 @@ class MyRCC(RCC):
     def fit_NN(self, x, y, num_epochs=1000):
         d = x.shape[1]
 
-        tx = torch.Tensor(x)
+        # tx = torch.Tensor(x)
         # ty = torch.Tensor(y).type(torch.long)
-        ty = torch.Tensor(y)
+        # ty = torch.Tensor(y)
 
         model = nn.Sequential(nn.Linear(d, 100),
                               nn.Sigmoid(),
@@ -165,16 +165,15 @@ class MyRCC(RCC):
         loss_fn = nn.BCELoss()
 
         for i in tqdm(range(num_epochs)):
-            outputs = nn.Sigmoid()(model(tx))
-            loss_fn(outputs, ty)
-
-            loss = loss_fn(outputs, torch.Tensor(y))
+            outputs = nn.Sigmoid()(model(torch.Tensor(x)))
+            loss = loss_fn(outputs, torch.unsqueeze(torch.Tensor(y), 1))
             opt.zero_grad()
             loss.backward()
             opt.step()
             running_loss = loss.item()
-            if i % 100 == 0:
-                print('running loss:', running_loss)
+            # UPDATE disabled because this is distracting from tqdm progressbar
+            # if i % 100 == 0:
+            #     print('running loss:', running_loss)
 
     def predict(self, npx):
         _dfx = pd.DataFrame(npx.transpose())
@@ -412,11 +411,13 @@ def test_CAM():
 
 def run_CDT(alg, x, y, vis=True, verbose=False):
     if alg == 'PC':
-        obj = PC()
+        obj = PC(alpha=0.1)
     elif alg == 'SAM':
         obj = SAM()
     elif alg == 'CAM':
-        obj = CAM()
+        # FIXME linear creashes
+        # obj = CAM(score='linear')
+        obj = CAM(score='nonlinear')
     elif alg == 'GES':
         obj = GES()
     else:
@@ -465,6 +466,8 @@ def run_RCC(raw_x, raw_y, model):
     else:
         # FIXME monitor the loss to see whether it is overfitted
         # obj.fit_NN(x, y, 1000)
+        print("x.shape", x.shape)
+        print("y.shape", y.shape)
         obj.fit_NN(x, y, 10000)
 
     print('testing ..')
