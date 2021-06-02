@@ -60,7 +60,7 @@ end
 
 function main_data()
     # generate data for baseline usage
-    for d in [10, 20, 50, 100]
+    for d in [10, 20, 50, 100, 150, 200, 300, 400]
         @info "Generating for" d ".."
         specs = []
         # this is combined specs. What was the filename?
@@ -80,10 +80,12 @@ function main_large()
     for (d, ng, N, bsize) in [
             (200, 1000, 1, 2),
             (150, 3000, 3, 4),
-            (100, 3000, 3, 8),
+            # DEBUG test ng=10000
+            (100, 10000, 3, 8),
             # DEBUG testing whether d=200 is trainable
             # d=200 is very slow
-            
+            # d=400
+            (400, 1000, 1, 1)
         ],
         (prefix, model_fn,nsteps) in [
             # previous try didn't actually set ng, N, bsize, and it was marked
@@ -113,10 +115,42 @@ function main_large()
     end
 end
 
+# Train on ER and test on SF and vice versa
+function main_ersf()
+    for d in [10,20,50, 100],
+        (prefix, model_fn,nsteps) in [
+            ("EQ2", eq2_model_fn, 3e4),
+        ],
+        gtype in [:ER, :SF]
+
+        specs = DataSpec(d=d, k=1, gtype=gtype,
+                        noise=:Gaussian, mat=:CH3)
+        
+        # print more frequently for CNN and FC to get more data to print
+        test_throttle = if prefix == "EQ2" 10 else 1 end
+
+        @info "training $prefix-$gtype-k1-d=$d .."
+        expID = exp_train(specs, model_fn,
+                          # TODO I'll need to increase the training steps here
+                          # CAUTION feed in the gtype in the model prefix
+                          prefix="$prefix-$gtype-k1-d=$d", train_steps=nsteps,
+                          test_throttle = test_throttle,
+                          merge=true)
+        # Do the test here
+        begin
+            for gtype in [:ER, :SF]
+                test_spec = DataSpec(d=d, k=1, gtype=gtype,
+                                    noise=:Gaussian, mat=:CH3)
+                exp_test(expID, test_spec, "TEST-gtype=$gtype")
+            end
+        end
+    end
+end
+
 function main_ch3()
     for d in [10,20,50,100],
         (prefix, model_fn,nsteps) in [
-            ("EQ2", eq2_model_fn, 3e4),
+            ("EQ2", eq2_model_fn, 5e4),
             ("FC", ()->fc_model(d=d, ch=2, z=1024, nlayer=6), 3e4),
             # ("FCreg", ()->fc_model(d=d, ch=2, z=1024, nlayer=6, reg=true), 3e4),
             ("CNN", ()->cnn_model(2), 3e4),
