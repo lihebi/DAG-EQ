@@ -281,7 +281,7 @@ function exp_test(expID, spec, testID=nothing; use_raw=false)
             @show ds
             @show test_ds
             # DEBUG TODO not using all data for testing
-            metrics, t = sup_test(model, test_ds, nbatch=16)
+            metrics, t = sup_test(model, test_ds, nbatch=4)
         end
 
         # add this to result
