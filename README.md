@@ -40,16 +40,12 @@ instantiate the project invironment, then run
 julia --project src/main.jl
 #+end_example
 
-Or you can use the pre-trained models. Pre-trained models can be found at:
-- [d=10 pre-trained model](https://github.com/lihebi/DAG-EQ/releases/download/v0.1/deep-EQ-d.10_k.1_gtype.SF_noise.Gaussian_mat.COR_step-30000.bson)
-- [d=20 pre-trained
-  model](https://github.com/lihebi/DAG-EQ/releases/download/v0.1/deep-EQ-d.20_k.1_gtype.SF_noise.Gaussian_mat.COR_step-30000.bson)
-- [d=50 pre-trained
-  model](https://github.com/lihebi/DAG-EQ/releases/download/v0.1/deep-EQ-d.50_k.1_gtype.SF_noise.Gaussian_mat.COR_step-30000.bson)
-- [d=100 pre-trained
-  model](https://github.com/lihebi/DAG-EQ/releases/download/v0.1/deep-EQ-d.100_k.1_gtype.SF_noise.Gaussian_mat.COR_step-30000.bson)
-
-You can also found them in the [release page](https://github.com/lihebi/DAG-EQ/releases/tag/v0.1).
+Or you can use the pre-trained models. Pre-trained models can be found at
+release page:
+- d=10 pre-trained model
+- d=20 pre-trained model
+- d=50 pre-trained model
+- d=100 pre-trained model
 
 Load the pretrained models:
 

@@ -51,7 +51,7 @@ def test_notears_nonlinear():
 
     d = 10
     model = NotearsMLP(dims=[d, 10, 1], bias=True)
-    # (HEBI: seems to be very slow), the example they tried is (200,5) while
+    # NOTE: seems to be very slow, the example they tried is (200,5) while
     # here it is (1000,10). And yet it finishes in 20 seconds, with very bad
     # results: {'fdr': 0.6666666666666666, 'tpr': 0.3333333333333333, 'fpr':
     # 6.0, 'shd': 15, 'nnz': 9}

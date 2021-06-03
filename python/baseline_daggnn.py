@@ -204,14 +204,6 @@ def train(encoder, decoder, rel_rec, rel_send,
 
     one = np.mean(np.mean(kl_train)  + np.mean(nll_train))
     return one, np.mean(nll_train), np.mean(mse_train), graph, origin_A
-
-def main():
-    for gtype in ['SF', 'ER']:
-        for d in [10, 20, 50, 100]:
-            prefix = '/home/hebi/git/supervised-causal/julia/src/'
-            fname = prefix + 'data/{}-{}/d={}_k=1_gtype={}_noise=Gaussian_mat=COR.hdf5'.format(gtype, d, d, gtype)
-            print('== processing', fname, '..')
-            dag_gnn(fname, d)
     
 def dag_gnn(d, npx, npy, max_iter=5, num_epochs=100):
     # fname = '/data/SF-10/d=10_k=1_gtype=SF_noise=Gaussian_mat=COR.hdf5'

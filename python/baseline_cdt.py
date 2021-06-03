@@ -36,7 +36,7 @@ def test_ANM():
     obj = ANM()
     
     # This example uses the predict() method
-    # (HEBI: this is too slow)
+    # NOTE This is too slow
     output = obj.predict(data)
     
     # This example uses the orient_graph() method. The dataset used
@@ -57,7 +57,7 @@ def test_NCC():
     # This example uses the predict() method
     output = obj.predict(X_te)
 
-    # (HEBI: I'll need to compare with this)
+    # NOTE: I'll need to compare with this
     # This example uses the orient_graph() method. The dataset used
     # can be loaded using the cdt.data module
     data, graph = load_dataset("sachs")
@@ -94,8 +94,9 @@ def test():
     pred = obj.predict(train_dfx[np.array(train_dfy == 1).ravel()].sample(20))
     pred = obj.predict(train_dfx[np.array(train_dfy == 0).ravel()].sample(20))
 
-    # (HEBI: it cannot even fit the training data well) TODO I'm going to
-    # implement a neural network to fit the feature vector
+    # NOTE: it cannot even fit the training data well
+    #
+    # TODO I'm going to implement a neural network to fit the feature vector
     obj.predict(aug_dfx[np.array(aug_dfy == 1).ravel()].sample(20))
     obj.predict(aug_dfx[np.array(aug_dfy == 0).ravel()].sample(20))
 
@@ -330,7 +331,7 @@ def test_RCC():
     # This example uses the predict() method
     output = obj.predict(X_te)
 
-    # (HEBI: and this as well)
+    # NOTE: and this as well
     # This example uses the orient_graph() method. The dataset used
     # can be loaded using the cdt.data module
     data, graph = load_dataset('sachs')
@@ -367,8 +368,8 @@ def test_PC():
     data, graph = load_dataset("sachs")
     # nx.draw_networkx(graph, font_size=8)
 
-    # (HEBI: this requires pcalg, kpcalg, and
-    # https://github.com/Diviyan-Kalainathan/RCIT)
+    # NOTE: this requires pcalg, kpcalg, and
+    # https://github.com/Diviyan-Kalainathan/RCIT
     obj = PC()
     #The predict() method works without a graph, or with a
     #directed or undirected graph provided as an input
@@ -390,7 +391,7 @@ def test_SAM():
     #The predict() method works without a graph, or with a
     #directed or undirected graph provided as an input
     #
-    # (HEBI: this seems to be very slow, 6+ hours)
+    # NOTE: this seems to be very slow, 6+ hours
     output = obj.predict(data)    #No graph provided as an argument
     
     output = obj.predict(data, nx.Graph(graph))  #With an undirected graph
@@ -487,7 +488,7 @@ def run_RCC(raw_x, raw_y, model):
     # FIXME variation is very large, I might want to report this as the downside
     # of this pairwise approach
     #
-    # (HEBI: the featurization time of our method should be considered as well)
+    # NOTE: the featurization time of our method should be considered as well
     start = time.time()
     for i in indices:
         if model == 'CLF':
