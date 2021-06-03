@@ -2,7 +2,6 @@
 # FROM nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04
 # FROM nvidia/cuda:11.0-runtime-ubuntu20.04
 FROM nvidia/cuda:10.1-devel-ubuntu18.04
-LABEL maintainer="Hebi Li <hebi@lihebi.com>"
 RUN chmod 1777 /tmp && chmod 1777 /var/tmp
 ARG NB_USER="jovyan"
 ARG NB_UID="1000"
@@ -241,7 +240,6 @@ RUN pip install pynvml bokeh jupyterlab-nvdashboard
 # RUN jupyter labextension install --no-build jupyterlab-nvdashboard
 RUN jupyter labextension install --no-build @ijmbarr/jupyterlab_spellchecker
 RUN jupyter labextension install --no-build @aquirdturtle/collapsible_headings
-# RUN jupyter labextension install --no-build https://github.com/lihebi/jupyterlab-racket
 # TODO ipywidgets and its lab companion @jupyter-widgets/jupyterlab-manager@2.0
 #
 # # FIXME this really feels too slow
@@ -252,26 +250,6 @@ RUN jupyter labextension install --no-build @aquirdturtle/collapsible_headings
 # RUN jupyter lab build -y --dev-build=False --minimize=False && \
 #     fix-permissions "${CONDA_DIR}" && \
 #     fix-permissions "/home/${NB_USER}"
-
-
-
-# TODO DEBUG install BHDL deps, including:
-USER $NB_UID
-# ENV JULIA_DEPOT_PATH=$HOME/.julia:/opt/julia
-
-# FIXME this is private repo
-# RUN git clone --recursive https://github.com/lihebi/bhdl $HOME/bhdl
-# RUN cd $HOME/bhdl &&\
-#         raco pkg install --batch --deps search-auto --link; exit 0
-# RUN cd $HOME/bhdl/placement &&\
-#         julia --project -e 'import Pkg; Pkg.update(); Pkg.instantiate(verbose=true); Pkg.precompile(verbose=true)'
-
-# RUN pip uninstall -y tensorflow
-# RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorflow==2.2
-# RUN pip install tensorflow==2.2
-
-# TODO install R and setup kernels
-# RUN conda install r-base=3.6.3
 
 
 # USER root
