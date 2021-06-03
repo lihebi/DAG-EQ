@@ -33,6 +33,36 @@ CUDA.has_cuda()
 CUDA.has_cutensor()
 ```
 
+## Data
+
+The synthetic data will be generated as you run the training or evaluation.
+
+
+## Pre-trained Models
+
+Pre-trained models are also avaiable, including (d=10, 20, 50, 100, 200, 400).
+The pre-trained model file is in `bson` (binary json) format.
+To use the pre-trained models, put the `saved_models` in the same directory as
+you run the evaluation script.
+
+The content of the saved models:
+
+```
+saved_models
+├── EQ2-ERSF-k1-d=10-ensemble
+│   └── step-50000.bson
+├── EQ2-ERSF-k1-d=20-ensemble
+│   └── step-50000.bson
+├── EQ2-ERSF-k1-d=50-ensemble
+│   └── step-50000.bson
+├── EQ2-ERSF-k1-d=100-ensemble
+│   └── step-50000.bson
+├── EQ2-ERSF-k1-d=200-ng=1000-N=1-ensemble
+│   └── step-50000.bson
+└── EQ2-ERSF-k1-d=400-ng=1000-N=1-ensemble
+    └── step-50000.bson
+```
+
 ## Training
 
 There's a `run.jl` script on notebooks directory. To run it, simply:
@@ -44,7 +74,7 @@ julia --project run.jl
 
 The hyper-parameters (e.g., training steps, graph types, number of nodes) are
 coded in that script, you can adjust based on your needs. The model will be
-saved to `notebooks/saved_models`.
+saved to `saved_models`.
 
 ## Evaluation
 
@@ -60,25 +90,15 @@ julia --project run.jl
 The results will be saved to `result.csv`. The notebook `plot.ipynb` will turn
 the results into tables used in the paper.
 
-
-## Pre-trained Models
-
-
-Pre-trained models are also avaiable, including (d=10, 20, 50, 100, 200, 400).
-The pre-trained model file is in `bson` (binary json) format.
-To use the pre-trained models, put the `saved_models` in the `notebooks`
-directory before running the evaluation.
-
-
-## Results
-Please see our paper for details.
-
 ## Additional experiments
 
 Additional experiments are available in the following files and notebooks
 - `src/main.jl`
 - `notebooks/main.ipynb`
 - `python/`: this folder contains all the code for running baseline methods for comparison.
+
+## Results
+Please see our paper for details.
 
 ## Contributing
 
