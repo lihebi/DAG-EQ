@@ -1,0 +1,24 @@
+version: "3.9" # optional since v1.27.0
+services:
+  tf:
+    # image: tensorflow/tensorflow:latest-gpu-jupyter
+    build: compose/tf
+    runtime: nvidia
+    # working_dir: /DAG-EQ
+    ports:
+      - 8889:8888
+    volumes:
+      - .:/DAG-EQ
+  torch:
+    # image: pytorch/pytorch:1.9.1-cuda11.1-cudnn8-runtime
+    build: compose/torch
+    runtime: nvidia
+    # working_dir: /DAG-EQ
+    # command: tail -f /dev/null
+    volumes:
+      - .:/DAG-EQ
+    ports:
+      - 8890:8888
+
+volumes:
+  logvolume01: {}
